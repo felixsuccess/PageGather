@@ -1,12 +1,15 @@
 # Gradle files
 .gradle/
 build/
+gradle-app.setting # Gradle 设置文件
 
 # Local configuration file (sdk path, etc)
 local.properties
-
 # Log/OS Files
 *.log
+.DS_Store         # macOS 系统文件
+Thumbs.db         # Windows 缩略图缓存
+
 
 # Android Studio generated files and folders
 captures/
@@ -14,6 +17,8 @@ captures/
 .cxx/
 *.apk
 output.json
+*.ap_             # APK 资源文件
+*.aab             # Android App Bundle
 
 # IntelliJ
 *.iml
@@ -31,3 +36,12 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# --- 其他 ---
+*.tmp             # 临时文件
+*.bak             # 备份文件
+*.swp             # Vim 交换文件
+
+# VS Code
+.vscode/
+*.code-workspace
