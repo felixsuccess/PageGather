@@ -51,7 +51,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.compose.material.icons)
     //room
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
@@ -59,8 +59,12 @@ dependencies {
     // hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    //navigation
+    implementation(libs.androidx.navigation.compose)
     // Hilt Navigation Compose
     implementation(libs.androidx.hilt.navigation.compose)
+    //coil
+    implementation (libs.coil.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
