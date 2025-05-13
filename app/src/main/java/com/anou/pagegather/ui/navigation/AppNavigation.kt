@@ -2,7 +2,6 @@ package com.anou.pagegather.ui.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -10,10 +9,13 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
 
 @Composable
 fun AppNavigation(
-    modifier: Modifier = Modifier, navController: NavHostController
+    modifier: Modifier = Modifier, navController: NavHostController,
 ) {
     NavHost(
         navController = navController,
@@ -50,11 +52,9 @@ fun AppNavigation(
 
         // 书架页面
         composable(Routes.BookRoutes.BOOKS) {
-            BooksScreen(
-                onNavigateToBookList = { navController.navigate(Routes.BookRoutes.BOOK_LIST) },
+            BookShelfScreen(
                 onToBookViewClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
-
                 },
                 onToBookAddClick = {
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
@@ -64,6 +64,41 @@ fun AppNavigation(
 
         }
 
+        composable(
+            route = "${Routes.BookRoutes.BOOK_EDIT}/{${Routes.BookRoutes.BOOK_ID}}",
+            arguments = listOf(navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getString(Routes.BookRoutes.BOOK_ID)
+            BookEditScreen(bookId = bookId, navController = navController)
+        }
+
+        composable(
+            route = "${Routes.BookRoutes.BOOK_DETAIL}/{${Routes.BookRoutes.BOOK_ID}}",
+            arguments = listOf(navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.StringType })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getString(Routes.BookRoutes.BOOK_ID)
+
+            BookDetailScreen(
+                navController = navController,
+                bookId = bookId,
+                onEditBookClick = { bookId ->
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
+                },
+                onNavigateToNoteEdit = { noteId ->
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/$noteId")
+                },
+                onNavigateToNewNote = {
+                    navController.navigate(Routes.NoteRoutes.NOTE_EDIT)
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                },
+
+                )
+        }
+
+
+        // 统计子页面
 
 
         // 统计页面
@@ -79,7 +114,6 @@ fun AppNavigation(
         composable(Routes.ProfileRoutes.GROUP_SETTINGS) { GroupSettingsScreen() }
 
 
-
         // 随记页面
         composable(Routes.NoteRoutes.NOTE_LIST) {
             NotesScreen(
@@ -87,13 +121,14 @@ fun AppNavigation(
                 onNavigateToNoteTags = { navController.navigate(Routes.ProfileRoutes.TAG_SETTINGS) },
                 //  modifier = TODO(),
                 // viewModel = TODO(),
-                onNoteClick = { }
-            )
+                onNoteClick = { })
         }
 
         composable(
             route = "${Routes.NoteRoutes.NOTE_EDIT}/{${Routes.NoteRoutes.ARG_NOTE_ID}}",
-            arguments = listOf(navArgument(Routes.NoteRoutes.ARG_NOTE_ID) { type = NavType.StringType })
+            arguments = listOf(navArgument(Routes.NoteRoutes.ARG_NOTE_ID) {
+                type = NavType.StringType
+            })
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString(Routes.NoteRoutes.ARG_NOTE_ID)
             NoteEditScreen(noteId = noteId)
@@ -101,40 +136,14 @@ fun AppNavigation(
 
         composable(
             route = "${Routes.NoteRoutes.NOTE_VIEW}/{${Routes.NoteRoutes.ARG_NOTE_ID}}",
-            arguments = listOf(navArgument(Routes.NoteRoutes.ARG_NOTE_ID) { type = NavType.StringType })
+            arguments = listOf(navArgument(Routes.NoteRoutes.ARG_NOTE_ID) {
+                type = NavType.StringType
+            })
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString(Routes.NoteRoutes.ARG_NOTE_ID)
             NoteViewScreen(noteId = noteId)
         }
 
-        composable(
-            route = "${Routes.BookRoutes.BOOK_DETAIL}/{${Routes.BookRoutes.BOOK_ID}}",
-            arguments = listOf(navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.StringType })
-        ) { backStackEntry ->
-            val bookId = backStackEntry.arguments?.getString(Routes.BookRoutes.BOOK_ID)
-
-            BookDetailScreen(
-                navController = navController,
-                bookId = bookId,
-                //viewModel = TODO(),
-                onEditBookClick = { bookId ->
-                    //TODO:
-                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
-                },
-
-                onNavigateToNoteEdit = { noteId ->
-                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/$noteId")
-                },
-                onNavigateToNewNote = {
-                    navController.navigate(Routes.NoteRoutes.NOTE_EDIT)
-                },
-                onBackClick = { },
-
-            )
-        }
-
-
-        // 统计子页面
         composable(Routes.DashboardRoutes.TIMELINE) { TimelineScreen() }
         composable(Routes.DashboardRoutes.CALENDAR) { CalendarScreen() }
         composable(Routes.DashboardRoutes.CHARTS) { ChartsScreen() }

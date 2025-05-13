@@ -1,6 +1,5 @@
 package com.anou.pagegather.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -13,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryBlueLight,
+    primary = PrimaryLight,
     secondary = SecondaryPurple,
     tertiary = AccentOrange,
     background = BackgroundWhite,
@@ -25,7 +24,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlueDark,
+    primary = PrimaryDark,
     secondary = SecondaryPurple,
     tertiary = AccentGreen,
     background = BackgroundWhite,

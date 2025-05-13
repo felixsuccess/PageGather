@@ -34,8 +34,11 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.anou.pagegather.ui.navigation.MainScreen
 import com.anou.pagegather.ui.theme.PageGatherTheme
+import com.anou.pagegather.ui.theme.TextDark
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,7 +104,7 @@ fun SplashScreen() {
                 Text(
                     char.toString(),
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color =  TextDark
                 )
             }
         }
