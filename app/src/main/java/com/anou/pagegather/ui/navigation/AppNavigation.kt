@@ -12,6 +12,9 @@ import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
+import com.anou.pagegather.ui.feature.notes.NoteEditScreen
+import com.anou.pagegather.ui.feature.notes.NoteViewScreen
+import com.anou.pagegather.ui.feature.notes.NotesScreen
 
 @Composable
 fun AppNavigation(
@@ -119,8 +122,6 @@ fun AppNavigation(
             NotesScreen(
                 onNavigateToNoteList = { navController.navigate(Routes.NoteRoutes.NOTE_LIST) },
                 onNavigateToNoteTags = { navController.navigate(Routes.ProfileRoutes.TAG_SETTINGS) },
-                //  modifier = TODO(),
-                // viewModel = TODO(),
                 onNoteClick = { })
         }
 
