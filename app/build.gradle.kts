@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     id("com.google.devtools.ksp")
+    id("kotlin-parcelize") // 添加 kotlin-parcelize 插件
+    alias(libs.plugins.kotlinx.serialization)// 添加 kotlinx-serialization 插件
 }
 
 android {
@@ -65,6 +67,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     //coil
     implementation (libs.coil.compose)
+    // serialization
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
