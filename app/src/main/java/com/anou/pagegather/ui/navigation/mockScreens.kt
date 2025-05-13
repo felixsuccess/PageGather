@@ -17,18 +17,6 @@ fun ProfileScreen(
         color = MaterialTheme.colorScheme.primary)
 }
 
-// 随记页面
-@Composable
-fun NotesScreen(
-    onNavigateToNoteList: () -> Unit,
-    onNoteClick: () -> Unit,
-    onNavigateToNoteTags: () -> Unit,
-) {
-    Text(text = "随记页面：记录和管理随记的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
 
 
 // 统计页面
@@ -59,33 +47,7 @@ fun GroupSettingsScreen() {
         color = MaterialTheme.colorScheme.primary)
 }
 
-// 随记子页面 - 随记列表
-@Composable
-fun NoteListScreen(
-    onNavigateToNoteEdit: (String) -> Unit,
-    onNavigateToNoteView: (String) -> Unit,
-    onNavigateToNoteRoaming: (String) -> Unit,
-) {
-    Text(text = "随记列表：展示随记列表的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
 
-// 随记子页面 - 随记编辑
-@Composable
-fun NoteEditScreen(noteId: String?) {
-    Text(text = "随记编辑：编辑指定随记的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
-// 随记子页面 - 随记查看
-@Composable
-fun NoteViewScreen(noteId: String?) {
-    Text(text = "随记查看：查看指定随记详情的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
 
 // 随记子页面 - 随记分类
 @Composable
@@ -140,17 +102,7 @@ fun SearchResultsScreen(
         color = MaterialTheme.colorScheme.primary)
 }
 
-// 搜索相关 - 书籍查看
-@Composable
-fun BookViewScreen(
-    bookId: String?,
-    onNavigateToNoteEdit: (String) -> Unit,
-    onNavigateToNewNote: () -> Unit,
-) {
-    Text(text = "书籍查看：查看指定书籍的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
+
 
 // 时间管理相关页面 - 正计时
 @Composable
