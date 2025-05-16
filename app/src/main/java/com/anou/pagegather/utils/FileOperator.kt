@@ -12,7 +12,7 @@ object FileOperator {
     suspend fun saveBookCover(context: Context, uri: Uri): File {
         return withContext(Dispatchers.IO) {
             //val storageDir = File(context.filesDir, "bookCover")
-            val storageDir = File(context.filesDir, "bookCover")
+            val storageDir = File(context.externalCacheDir, "bookCover")
             if (!storageDir.exists()) storageDir.mkdirs()
 
             val timestamp = System.currentTimeMillis()

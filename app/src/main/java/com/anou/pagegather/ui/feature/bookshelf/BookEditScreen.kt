@@ -1,7 +1,9 @@
 package com.anou.pagegather.ui.feature.bookshelf
 
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -71,6 +73,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -87,6 +90,7 @@ import com.anou.pagegather.utils.FileOperator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 private val PRICE_REGEX = Regex("^\\d+(\\.\\d{1,2})?$")
 private val DATE_REGEX = Regex("^\\d{4}-\\d{2}-\\d{2}$")
@@ -100,13 +104,39 @@ private val PUB_DATE_REGEX = Regex("^$|^\\d{4}$|^\\d{4}-\\d{1,2}$|^\\d{4}-\\d{1,
 private val PURCHASE_DATE_REGEX = Regex("^$|^\\d{4}$|^\\d{4}-\\d{1,2}$|^\\d{4}-\\d{1,2}-\\d{1,2}$")
 
 // 新增统一处理函数
-private fun handleSuccess(context: Context, message: String) {
-    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+// 图片处理结果回调
+private sealed class ImageResult {
+    data class Success(val filePath: String) : ImageResult()
+    data class Error(val message: String, val exception: Exception?) : ImageResult()
 }
 
-private fun handleError(context: Context, prefix: String, e: Exception) {
-    val errorMsg = "$prefix: ${e.localizedMessage ?: "未知错误"}"
-    Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+// 统一处理图片结果
+private fun handleImageResult(context: Context, result: ImageResult) {
+    when (result) {
+        is ImageResult.Success -> {
+            Toast.makeText(context, "封面保存成功", Toast.LENGTH_SHORT).show()
+        }
+
+        is ImageResult.Error -> {
+            val errorMsg = result.message + (result.exception?.localizedMessage ?: "")
+            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+            Log.e("BookEditScreen", errorMsg, result.exception)
+        }
+    }
+}
+
+// 保存图片到本地
+private suspend fun saveImageToLocal(context: Context, uri: Uri): ImageResult {
+    return try {
+        val outputFile = FileOperator.saveBookCover(context, uri)
+        if (outputFile.exists()) {
+            ImageResult.Success(outputFile.absolutePath)
+        } else {
+            ImageResult.Error("封面保存失败: 文件未创建", null)
+        }
+    } catch (e: Exception) {
+        ImageResult.Error("封面保存失败: ", e)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,6 +149,40 @@ fun BookEditScreen(
     val book by viewModel.book.collectAsState()
     val formState = remember { mutableStateOf(BookFormState()) }
     var localCoverPath by remember { mutableStateOf("") }
+    var photoImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    fun updateFormState(book: BookEntity): BookFormState {
+        return BookFormState(
+            name = book.name ?: "",
+            author = book.author ?: "",
+            isbn = book.isbn ?: "",
+            press = book.press ?: "",
+            purchasePrice = book.purchasePrice.toString(),
+            publishDate = book.publishDate ?: "",
+            summary = book.summary ?: "",
+            coverUrl = book.coverUrl ?: "",
+            authorIntro = book.authorIntro ?: "",
+            translator = book.translator ?: "",
+            readPosition = book.readPosition.toString(),
+            totalPosition = book.totalPosition.toString(),
+            totalPagination = book.totalPagination,
+            type = book.type,
+            positionUnit = book.positionUnit,
+            bookSourceId = book.bookSourceId,
+            purchaseDate = book.purchaseDate.toString(),
+            bookOrder = book.bookOrder,
+            rating = book.rating,
+            bookMarkModifiedTime = book.bookMarkModifiedTime.toString(),
+            readStatusId = book.readStatus,
+            readStatusChangedDate = book.readStatusChangedDate.toString(),
+            pinned = book.pinned,
+            pinOrder = book.pinOrder,
+            createdDate = book.createdDate.toString(),
+            updatedDate = book.updatedDate.toString(),
+            lastSyncDate = book.lastSyncDate.toString(),
+            isDeleted = book.isDeleted
+        )
+    }
 
     LaunchedEffect(bookId) {
         Log.i("BookEditScreen", "" + bookId)
@@ -129,47 +193,18 @@ fun BookEditScreen(
                 }
             }
         } catch (e: Exception) {
-            Log.e("BookEditScreen", "加载书籍失败: ${e.message}")
+            Log.e("BookEditScreen", "加载书籍失败: ${e.message}", e)
         }
     }
 
     LaunchedEffect(book) {
         try {
             book?.let {
-                formState.value = BookFormState(
-                    name = it.name ?: "",
-                    author = it.author ?: "",
-                    isbn = it.isbn ?: "",
-                    press = it.press ?: "",
-                    purchasePrice = it.purchasePrice.toString(),
-                    publishDate = it.publishDate ?: "",
-                    summary = it.summary ?: "",
-                    coverUrl = it.coverUrl ?: "",
-                    authorIntro = it.authorIntro ?: "",
-                    translator = it.translator ?: "",
-                    readPosition = it.readPosition.toString(),
-                    totalPosition = it.totalPosition.toString(),
-                    totalPagination = it.totalPagination,
-                    type = it.type,
-                    positionUnit = it.positionUnit,
-                    bookSourceId = it.bookSourceId,
-                    purchaseDate = it.purchaseDate.toString(),
-                    bookOrder = it.bookOrder,
-                    rating = it.rating,
-                    bookMarkModifiedTime = it.bookMarkModifiedTime.toString(),
-                    readStatusId = it.readStatus,
-                    readStatusChangedDate = it.readStatusChangedDate.toString(),
-                    pinned = it.pinned,
-                    pinOrder = it.pinOrder,
-                    createdDate = it.createdDate.toString(),
-                    updatedDate = it.updatedDate.toString(),
-                    lastSyncDate = it.lastSyncDate.toString(),
-                    isDeleted = it.isDeleted
-                )
+                formState.value = updateFormState(it)
                 localCoverPath = it.coverUrl ?: ""
             }
         } catch (e: Exception) {
-            Log.e("BookEditScreen", "更新表单状态失败: ${e.message}")
+            Log.e("BookEditScreen", "更新表单状态失败: ${e.message}", e)
         }
     }
     var showModal by remember { mutableStateOf(false) }
@@ -179,28 +214,52 @@ fun BookEditScreen(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    val pickImageLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let {
-                coroutineScope.launch(Dispatchers.IO) {
-                    try {
-                        val outputFile = FileOperator.saveBookCover(context, it).also {
-                            formState.value = formState.value.copy(coverUrl = it.absolutePath)
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            coroutineScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    saveImageToLocal(context, it)
+                }
+                when (result) {
+                    is ImageResult.Success -> {
+                        formState.value = formState.value.copy(coverUrl = result.filePath)
+                        localCoverPath = result.filePath
+                    }
+
+                    else -> {}
+                }
+                withContext(Dispatchers.Main) {
+                    handleImageResult(context, result)
+                }
+            }
+        }
+    }
+
+    val takePhoto =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                photoImageUri?.let { uri ->
+                    coroutineScope.launch {
+                        val result = withContext(Dispatchers.IO) {
+                            saveImageToLocal(context, uri)
+                        }
+                        when (result) {
+                            is ImageResult.Success -> {
+                                formState.value = formState.value.copy(coverUrl = result.filePath)
+                                localCoverPath = result.filePath
+                            }
+
+                            else -> {}
                         }
                         withContext(Dispatchers.Main) {
-                            localCoverPath = outputFile.absolutePath
-                            handleSuccess(context, "封面保存成功")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("ImagePicker", "保存封面失败: ${e.stackTraceToString()}")
-                        withContext(Dispatchers.Main) {
-                            handleError(context, "封面保存失败", e)
+                            handleImageResult(context, result)
                         }
                     }
                 }
             }
         }
-
 
     // 在线图片输入对话框状态
     var netImageUrl by remember { mutableStateOf("") }
@@ -209,487 +268,479 @@ fun BookEditScreen(
     val scrollState = rememberScrollState()
 
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = {
 
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-                modifier = Modifier.fillMaxWidth(),
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                title = {
-                    AnimatedVisibility(
-                        (scrollState.value > 64),
-                        enter = slideInVertically(initialOffsetY = { it / 4 }),
-                        exit = slideOutVertically(targetOffsetY = { it / 4 })
-                    ) {
-                        Text(
-                            text = if (bookId != null && bookId.toLongOrNull() != 0L) "编辑书籍" else "新建书籍",
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(end = 16.dp)
-                        )
-                    }
-                },
-                actions = {
-                    val showToast = rememberToast()
-                    // 定义保存逻辑函数
-                    val saveBookLogic = {
-                        val priceValue =
-                            formState.value.purchasePrice.ifBlank { "0" }.toDoubleOrNull() ?: 0.0
-                        when {
-                            formState.value.name.isBlank() -> showToast("书名不能为空")
-                            formState.value.purchasePrice.isNotBlank() && !formState.value.purchasePrice.matches(
-                                PRICE_REGEX
-                            ) -> showToast(
-                                "请输入有效的数字格式（如12.34）"
-                            )
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxWidth(),
+            navigationIcon = {
+                IconButton(
+                    onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "返回",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            },
+            title = {
+                AnimatedVisibility(
+                    (scrollState.value > 64),
+                    enter = slideInVertically(initialOffsetY = { it / 4 }),
+                    exit = slideOutVertically(targetOffsetY = { it / 4 })
+                ) {
+                    Text(
+                        text = if (bookId != null && bookId.toLongOrNull() != 0L) "编辑书籍" else "新建书籍",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                }
+            },
+            actions = {
+                val showToast = rememberToast()
+                // 定义保存逻辑函数
+                val saveBookLogic = {
 
-                            formState.value.publishDate.isNotBlank() && !formState.value.publishDate.matches(
-                                PUB_DATE_REGEX
-                            ) -> showToast(
-                                "出版日期格式不正确，支持格式：空、年、年月、年月日"
-                            )
-
-                            formState.value.isbn.isNotBlank() && !formState.value.isbn.matches(
-                                ISBN_REGEX
-                            ) -> showToast(
-                                "ISBN格式无效"
-                            )
-
-                            else -> {
-                                val newBook = createBookEntity(bookId, formState.value)
-                                viewModel.saveBook(newBook) {
-                                    navController.popBackStack()
-                                }
+                    fun validateForm(formState: BookFormState): Boolean {
+                        return when {
+                            formState.name.isBlank() -> {
+                                showToast("书名不能为空")
+                                false
                             }
+
+                            formState.purchasePrice.isNotBlank() && !formState.purchasePrice.matches(
+                                PRICE_REGEX
+                            ) -> {
+                                showToast("请输入有效的数字格式（如12.34）")
+                                false
+                            }
+
+                            formState.publishDate.isNotBlank() && !formState.publishDate.matches(
+                                PUB_DATE_REGEX
+                            ) -> {
+                                showToast("出版日期格式不正确，支持格式：空、年、年月、年月日")
+                                false
+                            }
+
+                            formState.isbn.isNotBlank() && !formState.isbn.matches(ISBN_REGEX) -> {
+                                showToast("ISBN格式无效")
+                                false
+                            }
+
+                            else -> true
                         }
                     }
-                    Text(
-                        text = if (bookId != null && bookId.toLongOrNull() != 0L) "保存" else "添加",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .padding(horizontal = 5.dp)
-                            .clickable(onClick = saveBookLogic)
-                    )
-                })
-        },
-        content = {
+
+                    if (validateForm(formState.value)) {
+                        val newBook = createBookEntity(bookId, formState.value)
+                        viewModel.saveBook(newBook) {
+                            navController.popBackStack()
+                        }
+                    }
+
+                }
+                Text(
+                    text = if (bookId != null && bookId.toLongOrNull() != 0L) "保存" else "添加",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp)
+                        .clickable(onClick = saveBookLogic)
+                )
+            })
+    }, content = {
+        Column(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.height(it.calculateTopPadding()))
             Column(
                 modifier = Modifier
-                    .navigationBarsPadding()
                     .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .verticalScroll(scrollState)
+                    .padding(10.dp)
             ) {
-                Spacer(modifier = Modifier.height(it.calculateTopPadding()))
                 Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(160.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current).data(localCoverPath)
+                            .crossfade(true).build(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(5.dp)
+                            .height(120.dp)
+                            .aspectRatio(7f / 10f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { // 点击封面触发选择模态
+                                showModal = true
+                            },
+                        error = painterResource(id = R.mipmap.default_cover)
+                    )
+                }
+
+                // 更新封面URL到表单状态
+                LaunchedEffect(localCoverPath) {
+                    formState.value = formState.value.copy(coverUrl = localCoverPath)
+                }
+
+
+                CommonTextField(
+                    value = formState.value.name,
+                    onValueChange = { formState.value = formState.value.copy(name = it) },
+                    label = "书名",
+                    placeholder = "书名",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .verticalScroll(scrollState)
-                        .padding(10.dp)
-                ) {
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(160.dp),
-                        verticalArrangement = Arrangement.SpaceBetween,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(localCoverPath).crossfade(true).build(),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(5.dp)
-                                .height(120.dp)
-                                .aspectRatio(7f / 10f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { // 点击封面触发选择模态
-                                    showModal = true
-                                },
-                            error = painterResource(id = R.mipmap.default_cover)
-                        )
-                    }
-
-                    // 更新封面URL到表单状态
-                    LaunchedEffect(localCoverPath) {
-                        formState.value = formState.value.copy(coverUrl = localCoverPath)
-                    }
+                        .padding(5.dp),
+                    isError = formState.value.name.isBlank(),
+                    validator = { it.isNotBlank() },
+                    errorMessage = "书名不能为空"
+                )
 
 
-                        CommonTextField(
-                            value = formState.value.name,
-                            onValueChange = { formState.value = formState.value.copy(name = it) },
-                            label = "书名",
-                            placeholder = "书名",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp),
-                            isError = formState.value.name.isBlank(),
-                            validator = { it.isNotBlank() },
-                            errorMessage = "书名不能为空"
-                        )
+                CommonTextField(
+                    value = formState.value.author,
+                    onValueChange = { formState.value = formState.value.copy(author = it) },
+                    label = "作者",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                )
 
 
-                        CommonTextField(
-                            value = formState.value.author,
-                            onValueChange = { formState.value = formState.value.copy(author = it) },
-                            label = "作者",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                        )
+                CommonTextField(
+                    value = formState.value.translator,
+                    // 修改为使用 copy 方法
+                    onValueChange = {
+                        formState.value = formState.value.copy(translator = it)
+                    }, label = "译者", modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                )
 
+                // 为 authorIntro 添加展开折叠状态
+                var isAuthorIntroExpanded by remember { mutableStateOf(false) }
 
-                        CommonTextField(
-                            value = formState.value.translator,
-                            // 修改为使用 copy 方法
-                            onValueChange = {
-                                formState.value = formState.value.copy(translator = it)
-                            },
-                            label = "译者",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                        )
-
-                        // 为 authorIntro 添加展开折叠状态
-                        var isAuthorIntroExpanded by remember { mutableStateOf(false) }
-
-                        CommonTextField(
-                            value = formState.value.authorIntro,
-                            onValueChange = {
-                                formState.value = formState.value.copy(authorIntro = it)
-                            },
-                            label = "作者简介",
-                            modifier = Modifier
-                                .height(if (isAuthorIntroExpanded) 200.dp else 100.dp)
-                                .fillMaxWidth()
-                                .padding(5.dp),
-                            maxLines = if (isAuthorIntroExpanded) Int.MAX_VALUE else 3,
-                            trailingIcon = {
-                                Text(
-                                    text = if (isAuthorIntroExpanded) "收起" else "展开",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.clickable {
-                                        isAuthorIntroExpanded = !isAuthorIntroExpanded
-                                    })
+                CommonTextField(
+                    value = formState.value.authorIntro,
+                    onValueChange = {
+                        formState.value = formState.value.copy(authorIntro = it)
+                    },
+                    label = "作者简介",
+                    modifier = Modifier
+                        .height(if (isAuthorIntroExpanded) 200.dp else 100.dp)
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    maxLines = if (isAuthorIntroExpanded) Int.MAX_VALUE else 3,
+                    trailingIcon = {
+                        Text(
+                            text = if (isAuthorIntroExpanded) "收起" else "展开",
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable {
+                                isAuthorIntroExpanded = !isAuthorIntroExpanded
                             })
+                    })
 
 
+                CommonTextField(
+                    value = formState.value.isbn,
+                    // 修改为使用 copy 方法
+                    onValueChange = { formState.value = formState.value.copy(isbn = it) },
+                    label = "ISBN",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                )
+
+                CommonTextField(
+                    value = formState.value.press,
+                    // 修改为使用 copy 方法
+                    onValueChange = { formState.value = formState.value.copy(press = it) },
+                    label = "出版社",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                )
+
+
+
+
+                CommonTextField(
+                    value = formState.value.publishDate,
+                    onValueChange = {
+                        formState.value = formState.value.copy(publishDate = it)
+                    },
+                    label = "出版日期",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    validator = { it.isEmpty() || it.matches(PUB_DATE_REGEX) },
+                    errorMessage = "出版日期格式不正确，支持格式：空、年、年月、年月日"
+                )
+                CommonTextField(
+                    value = formState.value.purchasePrice,
+                    onValueChange = { newValue ->
+                        formState.value =
+                            formState.value.copy(purchasePrice = newValue.filter { it.isDigit() || it == '.' })
+                    },
+                    label = "购买价格",
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    validator = { it.isEmpty() || it.matches(Regex("^\\d+(\\.\\d{1,2})?$")) },
+                    errorMessage = "请输入有效的数字格式（如12.34）"
+                )
+
+                var isSummaryExpanded by remember { mutableStateOf(false) }
+                CommonTextField(
+                    value = formState.value.summary,
+                    onValueChange = {
+                        formState.value = formState.value.copy(summary = it)
+                    },
+                    label = "内容简介",
+                    modifier = Modifier
+                        .height(if (isSummaryExpanded) 200.dp else 100.dp) // 根据
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    maxLines = if (isSummaryExpanded) Int.MAX_VALUE else 5, // 根据展开状态调整最大行数
+                    placeholder = "内容简介",
+                    trailingIcon = {
+                        Text(
+                            text = if (isSummaryExpanded) "收起" else "展开",
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable {
+                                isSummaryExpanded = !isSummaryExpanded
+                            })
+                    })
+                CommonExposedDropdown(
+                    items = BookType.entries,
+                    selectedItem = BookType.entries.firstOrNull { it.code == formState.value.type }
+                        ?: BookType.PAPER_BOOK,
+                    onItemSelected = {
+                        formState.value = formState.value.copy(type = it.code)
+                    },
+                    label = "书籍类型",
+                    itemToString = { it.message })
+
+
+                if (formState.value.type == BookType.PAPER_BOOK.code) {
+
+                    CommonTextField(
+                        value = formState.value.readPosition.toString(), onValueChange = {
+                            val newPagination = it.toIntOrNull() ?: 0
+                            formState.value =
+                                formState.value.copy(readPosition = newPagination.toString())
+                        }, label = "已读页数", keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number
+                        ), modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp)
+                    )
+
+                    CommonTextField(
+                        value = formState.value.totalPagination.toString(), onValueChange = {
+                            val newPagination = it.toIntOrNull() ?: 0
+                            formState.value = formState.value.copy(totalPagination = newPagination)
+                        }, label = "总页数", keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Number
+                        ), modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp)
+                    )
+                } else {
+                    CommonExposedDropdown(
+                        items = ReadPositionUnit.entries,
+                        selectedItem = ReadPositionUnit.entries.firstOrNull { it.code == formState.value.positionUnit }
+                            ?: ReadPositionUnit.PAGE,
+                        onItemSelected = {
+                            formState.value = formState.value.copy(positionUnit = it.code)
+                        },
+                        label = "位置单位",
+                        itemToString = { it.message })
+
+
+
+                    if (formState.value.positionUnit == ReadPositionUnit.PAGE.code) {
                         CommonTextField(
-                            value = formState.value.isbn,
-                            // 修改为使用 copy 方法
-                            onValueChange = { formState.value = formState.value.copy(isbn = it) },
-                            label = "ISBN",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                        )
-
-                        CommonTextField(
-                            value = formState.value.press,
-                            // 修改为使用 copy 方法
-                            onValueChange = { formState.value = formState.value.copy(press = it) },
-                            label = "出版社",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                        )
-
-
-
-
-                        CommonTextField(
-                            value = formState.value.publishDate,
+                            value = formState.value.readPosition.toString(),
                             onValueChange = {
-                                formState.value = formState.value.copy(publishDate = it)
-                            },
-                            label = "出版日期",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp),
-                            validator = { it.isEmpty() || it.matches(PUB_DATE_REGEX) },
-                            errorMessage = "出版日期格式不正确，支持格式：空、年、年月、年月日"
-                        )
-                        CommonTextField(
-                            value = formState.value.purchasePrice,
-                            onValueChange = { newValue ->
+                                val newPagination = it.toIntOrNull() ?: 0
                                 formState.value =
-                                    formState.value.copy(purchasePrice = newValue.filter { it.isDigit() || it == '.' })
+                                    formState.value.copy(readPosition = newPagination.toString())
                             },
-                            label = "购买价格",
+                            label = "已读页数",
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.Number
                             ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(5.dp),
-                            validator = { it.isEmpty() || it.matches(Regex("^\\d+(\\.\\d{1,2})?$")) },
-                            errorMessage = "请输入有效的数字格式（如12.34）"
+                                .padding(5.dp)
                         )
 
-                        var isSummaryExpanded by remember { mutableStateOf(false) }
                         CommonTextField(
-                            value = formState.value.summary,
+                            value = formState.value.totalPagination.toString(),
                             onValueChange = {
-                                formState.value = formState.value.copy(summary = it)
+                                val newPagination = it.toIntOrNull() ?: 0
+                                formState.value =
+                                    formState.value.copy(totalPagination = newPagination)
                             },
-                            label = "内容简介",
-                            modifier = Modifier
-                                .height(if (isSummaryExpanded) 200.dp else 100.dp) // 根据
-                                .fillMaxWidth()
-                                .padding(5.dp),
-                            maxLines = if (isSummaryExpanded) Int.MAX_VALUE else 5, // 根据展开状态调整最大行数
-                            placeholder = "内容简介",
-                            trailingIcon = {
-                                Text(
-                                    text = if (isSummaryExpanded) "收起" else "展开",
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.clickable {
-                                        isSummaryExpanded = !isSummaryExpanded
-                                    })
-                            })
-                        CommonExposedDropdown(
-                            items = BookType.entries,
-                            selectedItem = BookType.entries.firstOrNull { it.code == formState.value.type }
-                                ?: BookType.PAPER_BOOK,
-                            onItemSelected = {
-                                formState.value = formState.value.copy(type = it.code)
-                            },
-                            label = "书籍类型",
-                            itemToString = { it.message }
-                        )
-
-
-                        if (formState.value.type == BookType.PAPER_BOOK.code) {
-
-                            CommonTextField(
-                                value = formState.value.readPosition.toString(),
-                                onValueChange = {
-                                    val newPagination = it.toIntOrNull() ?: 0
-                                    formState.value =
-                                        formState.value.copy(readPosition = newPagination.toString())
-                                },
-                                label = "已读页数",
-                                keyboardOptions = KeyboardOptions.Default.copy(
-                                    keyboardType = KeyboardType.Number
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(5.dp)
-                            )
-
-                            CommonTextField(
-                                value = formState.value.totalPagination.toString(),
-                                onValueChange = {
-                                    val newPagination = it.toIntOrNull() ?: 0
-                                    formState.value =
-                                        formState.value.copy(totalPagination = newPagination)
-                                },
-                                label = "总页数",
-                                keyboardOptions = KeyboardOptions.Default.copy(
-                                    keyboardType = KeyboardType.Number
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(5.dp)
-                            )
-                        } else {
-                            CommonExposedDropdown(
-                                items = ReadPositionUnit.entries,
-                                selectedItem = ReadPositionUnit.entries.firstOrNull { it.code == formState.value.positionUnit }
-                                    ?: ReadPositionUnit.PAGE,
-                                onItemSelected = {
-                                    formState.value = formState.value.copy(positionUnit = it.code)
-                                },
-                                label = "位置单位",
-                                itemToString = { it.message })
-
-
-
-                            if (formState.value.positionUnit == ReadPositionUnit.PAGE.code) {
-                                CommonTextField(
-                                    value = formState.value.readPosition.toString(),
-                                    onValueChange = {
-                                        val newPagination = it.toIntOrNull() ?: 0
-                                        formState.value =
-                                            formState.value.copy(readPosition = newPagination.toString())
-                                    },
-                                    label = "已读页数",
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        keyboardType = KeyboardType.Number
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(5.dp)
-                                )
-
-                                CommonTextField(
-                                    value = formState.value.totalPagination.toString(),
-                                    onValueChange = {
-                                        val newPagination = it.toIntOrNull() ?: 0
-                                        formState.value =
-                                            formState.value.copy(totalPagination = newPagination)
-                                    },
-                                    label = "总页数",
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        keyboardType = KeyboardType.Number
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(5.dp)
-                                )
-                            } else {
-
-
-                                CommonTextField(
-                                    value = formState.value.readPosition.toString(),
-                                    onValueChange = {
-                                        val newPagination = it.toDoubleOrNull() ?: 0
-                                        formState.value =
-                                            formState.value.copy(readPosition = newPagination.toString())
-                                    },
-                                    label = "阅读进度",
-                                    keyboardOptions = KeyboardOptions.Default.copy(
-                                        keyboardType = KeyboardType.Decimal
-                                    ),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(5.dp)
-                                )
-                            }
-
-                        }
-
-
-                        var bookSourceExpanded by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(
-                            expanded = bookSourceExpanded,
-                            onExpandedChange = { bookSourceExpanded = !bookSourceExpanded },
+                            label = "总页数",
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(5.dp)
-                        ) {
-                            TextField(
-                                readOnly = true,
-                                value = BookSource.entries.firstOrNull { it.code == formState.value.bookSourceId }?.message
-                                    ?: "",
-                                onValueChange = {},
-                                label = { Text("来源") },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(
-                                        expanded = bookSourceExpanded
-                                    )
-                                },
-                                modifier = Modifier.menuAnchor(
-                                    type = MenuAnchorType.PrimaryNotEditable, enabled = true
-                                ),
-                            )
-                            ExposedDropdownMenu(
-                                expanded = bookSourceExpanded,
-                                onDismissRequest = { bookSourceExpanded = false }) {
-                                BookSource.entries.forEach { source ->
-                                    DropdownMenuItem(text = { Text(source.message) }, onClick = {
-                                        formState.value.bookSourceId = source.code
-                                        bookSourceExpanded = false
-                                    })
-                                }
-                            }
-                        }
-                        //TODO：  日历控件
+                        )
+                    } else {
+
 
                         CommonTextField(
-                            value = formState.value.purchaseDate,
+                            value = formState.value.readPosition.toString(),
                             onValueChange = {
-                                formState.value = formState.value.copy(purchaseDate = it)
+                                val newPagination = it.toDoubleOrNull() ?: 0
+                                formState.value =
+                                    formState.value.copy(readPosition = newPagination.toString())
                             },
-                            label = "购买日期",
+                            label = "阅读进度",
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Decimal
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(5.dp),
-                            validator = { it.isEmpty() || it.matches(PURCHASE_DATE_REGEX) },
-                            errorMessage = "购买日期格式不正确，支持格式：空、年、年月、年月日"
+                                .padding(5.dp)
                         )
-
-                        //TODO:
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "评分", color = TextGray,
-                            )
-                            RateBar(
-                                rate = formState.value.rating,
-                                onRateChanged = {
-                                    formState.value = formState.value.copy(rating = it)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(5.dp),
-
-
-                                )
-                        }
-
-                        //TODO:
-                        var readStatusExpanded by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(
-                            expanded = readStatusExpanded,
-                            onExpandedChange = { readStatusExpanded = !readStatusExpanded }) {
-                            TextField(
-                                readOnly = true,
-                                value = ReadStatus.entries.firstOrNull { it.code == formState.value.readStatusId }?.message
-                                    ?: "",
-                                onValueChange = {},
-                                label = { Text("阅读状态") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = readStatusExpanded) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(5.dp)
-                                    .menuAnchor(
-                                        type = MenuAnchorType.PrimaryNotEditable, enabled = true
-                                    ),
-                            )
-                            ExposedDropdownMenu(
-                                expanded = readStatusExpanded,
-                                onDismissRequest = { readStatusExpanded = false }) {
-                                ReadStatus.entries.forEach { status ->
-                                    DropdownMenuItem(text = { Text(status.message) }, onClick = {
-                                        formState.value.readStatusId = status.code
-                                        readStatusExpanded = false
-                                    })
-                                }
-                            }
-                        }
                     }
 
+                }
 
+
+                var bookSourceExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = bookSourceExpanded,
+                    onExpandedChange = { bookSourceExpanded = !bookSourceExpanded },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp)
+                ) {
+                    TextField(
+                        readOnly = true,
+                        value = BookSource.entries.firstOrNull { it.code == formState.value.bookSourceId }?.message
+                            ?: "",
+                        onValueChange = {},
+                        label = { Text("来源") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = bookSourceExpanded
+                            )
+                        },
+                        modifier = Modifier.menuAnchor(
+                            type = MenuAnchorType.PrimaryNotEditable, enabled = true
+                        ),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = bookSourceExpanded,
+                        onDismissRequest = { bookSourceExpanded = false }) {
+                        BookSource.entries.forEach { source ->
+                            DropdownMenuItem(text = { Text(source.message) }, onClick = {
+                                formState.value.bookSourceId = source.code
+                                bookSourceExpanded = false
+                            })
+                        }
+                    }
+                }
+                //TODO：  日历控件
+
+                CommonTextField(
+                    value = formState.value.purchaseDate,
+                    onValueChange = {
+                        formState.value = formState.value.copy(purchaseDate = it)
+                    },
+                    label = "购买日期",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
+                    validator = { it.isEmpty() || it.matches(PURCHASE_DATE_REGEX) },
+                    errorMessage = "购买日期格式不正确，支持格式：空、年、年月、年月日"
+                )
+
+                //TODO:
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "评分", color = TextGray,
+                    )
+                    RateBar(
+                        rate = formState.value.rating,
+                        onRateChanged = {
+                            formState.value = formState.value.copy(rating = it)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp),
+
+
+                        )
+                }
+
+                //TODO:
+                var readStatusExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = readStatusExpanded,
+                    onExpandedChange = { readStatusExpanded = !readStatusExpanded }) {
+                    TextField(
+                        readOnly = true,
+                        value = ReadStatus.entries.firstOrNull { it.code == formState.value.readStatusId }?.message
+                            ?: "",
+                        onValueChange = {},
+                        label = { Text("阅读状态") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = readStatusExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp)
+                            .menuAnchor(
+                                type = MenuAnchorType.PrimaryNotEditable, enabled = true
+                            ),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = readStatusExpanded,
+                        onDismissRequest = { readStatusExpanded = false }) {
+                        ReadStatus.entries.forEach { status ->
+                            DropdownMenuItem(text = { Text(status.message) }, onClick = {
+                                formState.value.readStatusId = status.code
+                                readStatusExpanded = false
+                            })
+                        }
+                    }
+                }
             }
+
+
         }
-    )
+    })
 
 
     // 封面选择底部模态
     if (showModal) {
         ModalBottomSheet(
-            onDismissRequest = { showModal = false },
-            sheetState = sheetState
+            onDismissRequest = { showModal = false }, sheetState = sheetState
         ) {
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
                 Text(
@@ -700,23 +751,43 @@ fun BookEditScreen(
                 HorizontalDivider()
 
                 // 在线URL输入
+//                DropdownMenuItem(
+//                    text = { Text("在线URL") },
+//                    leadingIcon = { Icon(Icons.Default.Link, contentDescription = null) },
+//                    onClick = {
+//                        showModal = false
+//                        showPickNetImgModal = true
+//                    }
+//                )
+                //拍照
                 DropdownMenuItem(
-                    text = { Text("在线URL") },
+                    text = { Text("拍照") },
                     leadingIcon = { Icon(Icons.Default.Link, contentDescription = null) },
                     onClick = {
                         showModal = false
-                        showPickNetImgModal = true
-                    }
-                )
+                        try {
+                            val imagesFolder = File(context.cacheDir, "capture_picture")
+                            if (!imagesFolder.exists()) {
+                                imagesFolder.mkdirs()
+                            }
+                            val file = File.createTempFile("capture_picture_", ".jpg", imagesFolder)
+                            val uri = FileProvider.getUriForFile(
+                                context, context.packageName + ".provider", file
+                            )
+                            photoImageUri = uri
+                            takePhoto.launch(uri)
+                        } catch (e: ActivityNotFoundException) {
+                            //Toast.makeText(e.localizedMessage ?: "Unable to take picture.").show();
+                        }
+                    })
                 // 本地图片选择
                 DropdownMenuItem(
                     text = { Text("本地图片") },
                     leadingIcon = { Icon(Icons.Default.Image, contentDescription = null) },
                     onClick = {
                         showModal = false
-                        pickImageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly).toString())
-                    }
-                )
+                        pickImageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    })
                 HorizontalDivider()
                 Text(
                     text = "取消",
@@ -736,7 +807,9 @@ fun BookEditScreen(
         Dialog(onDismissRequest = { showPickNetImgModal = false }) {
             Box(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+                    .background(
+                        MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp)
+                    )
                     .padding(16.dp)
             ) {
                 Column(
@@ -771,8 +844,7 @@ fun BookEditScreen(
                             .fillMaxWidth()
                             .padding(8.dp)
                             .background(color = MaterialTheme.colorScheme.background)
-                            .align(Alignment.End),
-                        horizontalArrangement = Arrangement.End
+                            .align(Alignment.End), horizontalArrangement = Arrangement.End
                     ) {
                         Text(
                             text = "取消",
