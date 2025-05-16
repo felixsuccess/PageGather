@@ -4,8 +4,8 @@ import androidx.compose.ui.graphics.Color
 
 
 // 主色调
-val PrimaryDark = Color(0xFF4bCCAA)
-val PrimaryLight = Color(0xFF4bCCAA)
+val PrimaryDark = Color(0xFF327642)
+val PrimaryLight = Color(0xFF327642)
 
 // 辅助色调
 val SecondaryPurple = Color(0xFF7C4DFF)
