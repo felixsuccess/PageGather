@@ -122,7 +122,13 @@ fun AppNavigation(
             NotesScreen(
                 onNavigateToNoteList = { navController.navigate(Routes.NoteRoutes.NOTE_LIST) },
                 onNavigateToNoteTags = { navController.navigate(Routes.ProfileRoutes.TAG_SETTINGS) },
-                onNoteClick = { })
+                onNoteClick = { noteId ->
+                    navController.navigate("${Routes.NoteRoutes.NOTE_VIEW}/$noteId")
+                },
+                onNavigateToNoteEdit = { noteId ->
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/$noteId")
+                },
+            )
         }
 
         composable(
@@ -132,7 +138,7 @@ fun AppNavigation(
             })
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString(Routes.NoteRoutes.ARG_NOTE_ID)
-            NoteEditScreen(noteId = noteId)
+            NoteEditScreen(noteId = noteId, navController = navController)
         }
 
         composable(

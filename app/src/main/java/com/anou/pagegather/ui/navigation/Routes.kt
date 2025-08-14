@@ -32,6 +32,8 @@ object Routes {
         const val NOTE_EDIT = "${PREFIX}/edit/{$ARG_NOTE_ID}"
         const val NOTE_VIEW = "${PREFIX}/view/{$ARG_NOTE_ID}"
         // const val NOTE_ROAMING = "note_roaming"
+        fun noteEdit(noteId: Long): String = "$PREFIX/edit/$noteId"
+        fun noteDetail(noteId: Long): String = "$PREFIX/detail/$noteId"
     }
 
 

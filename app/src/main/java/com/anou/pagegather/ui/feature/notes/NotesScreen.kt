@@ -77,6 +77,7 @@ fun NotesScreen(
     onNavigateToNoteList: () -> Unit,
     onNavigateToNoteTags: () -> Unit,
     onNoteClick: (NoteEntity) -> Unit,
+    onNavigateToNoteEdit: (Long) -> Unit,
 ) {
 
     val notes by viewModel.notes.collectAsState(initial = emptyList<NoteEntity>())
@@ -86,6 +87,8 @@ fun NotesScreen(
     )
     var selectedTab by remember { mutableIntStateOf(0) }
     var isShowInput = remember { mutableStateOf(false) }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -116,10 +119,10 @@ fun NotesScreen(
                                     .clickable { selectedTab = index })
                         }
                     }
+
                     Row(
                         horizontalArrangement = Arrangement.End
                     ) {
-
 
                         IconButton(onClick = {
                             /* TODO: 添加搜索功能 */
@@ -131,7 +134,7 @@ fun NotesScreen(
                             )
                         }
                         IconButton(onClick = {
-                            isShowInput.value = true;
+                            onNavigateToNoteEdit(0)
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Add,
@@ -146,7 +149,7 @@ fun NotesScreen(
                                 imageVector = Icons.Filled.MoreVert,
                                 contentDescription = "更多选项",
                                 tint = MaterialTheme.colorScheme.onSurface
-                                   )
+                            )
                         }
                     }
                 }
@@ -210,7 +213,7 @@ fun NotesScreen(
                             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
                             color = MaterialTheme.colorScheme.background
                         )
-                        .padding(horizontal = 10.dp, vertical = 15.dp)
+                        .padding(horizontal = 8.dp, vertical = 16.dp)
 
                 ) {
 
@@ -247,13 +250,6 @@ fun NotesScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
 
-//                            Button(onClick = {
-//
-//
-//                            }
-//                            ) {
-//                                Text("选图")
-//                            }
                             IconButton(onClick = {
                                 //TODO: 选 Tag 逻辑
                             }) {
@@ -272,13 +268,7 @@ fun NotesScreen(
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
-//                            Button(onClick = {
-////TODO: 选音频 逻辑
-//
-//                            }
-//                            ) {
-//                                Text("音频")
-//                            }
+
 
                             IconButton(onClick = {
                                 //TODO: 选音频 逻辑
@@ -292,13 +282,6 @@ fun NotesScreen(
 
                             //TODO: OCR
 
-//                            Button(onClick = {
-////TODO: 音转文 逻辑
-//
-//                            }
-//                            ) {
-//                                Text("音转文")
-//                            }
 
                             IconButton(onClick = {
                                 //TODO: 音转文 逻辑
@@ -474,7 +457,7 @@ private fun NoteCard(
 //                                )
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             //  style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -561,16 +544,7 @@ private fun LazyItemScope.ShowNoteContextMenu(noteEntity: NoteEntity) {
 }
 
 
-// 随记子页面 - 随记编辑
-@Composable
-fun NoteEditScreen(noteId: String?) {
-    Text(
-        text = "随记编辑：编辑指定随记的页面",
-        overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary
-    )
-}
+
 
 // 随记子页面 - 随记查看
 @Composable

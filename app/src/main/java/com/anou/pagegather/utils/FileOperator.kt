@@ -31,4 +31,26 @@ object FileOperator {
             }
         }
     }
+        suspend fun saveNoteAttachment(context: Context, uri: Uri): File {
+        return withContext(Dispatchers.IO) {
+            //val storageDir = File(context.filesDir, "attachments")
+            val storageDir = File(context.externalCacheDir, "attachments")
+            if (!storageDir.exists()) storageDir.mkdirs()
+
+            val timestamp = System.currentTimeMillis()
+            val outputFile = File(storageDir, "note_${timestamp}.jpg")
+
+            try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(outputFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                outputFile
+            } catch (e: Exception) {
+                Log.e("FileOperator", "Save book cover failed", e)
+                throw e
+            }
+        }
+    }
 }

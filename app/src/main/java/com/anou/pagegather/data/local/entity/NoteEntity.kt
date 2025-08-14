@@ -4,8 +4,8 @@ import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
 @Entity(
     tableName = "note",
@@ -31,7 +31,7 @@ data class NoteEntity(
     @ColumnInfo(name = "id")
     val id: Long = 0,
 
-    @ColumnInfo(name = "book_id" , index = true)
+    @ColumnInfo(name = "book_id", index = true)
     val bookId: Long?,
 
     @ColumnInfo(name = "chapter_id")
@@ -64,28 +64,57 @@ data class NoteEntity(
     @ColumnInfo(name = "is_deleted")
     val isDeleted: Int,
 
-//    @ColumnInfo(name = "attachments")
-//    var attachments: List<Attachment> = arrayListOf(),
-)
+    @ColumnInfo(name = "attachment_count")
+    val attachmentCount: Int = 0,
 
-//// 附件， 只支持图片
-//@Serializable
-//@Parcelize
-//data class Attachment(
-//    val type: Type = Type.IMAGE,
-//    val path: String = "",
-//    val description: String = "",
-//    val fileName: String = "",
-//) : Parcelable {
-//    enum class Type { AUDIO, IMAGE }
-//
-//    fun isEmpty() = path.isEmpty() && description.isEmpty() && fileName.isEmpty()
-//}
-//
-//data class NoteIdWithPath(
-//    val noteId: Long,
-//    val path: String,
-//)
+
+    )
+
+
+@Entity(
+    tableName = "note_attachment",
+    foreignKeys = [
+        ForeignKey(
+            entity = NoteEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["note_id"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ]
+)
+@Parcelize
+data class NoteAttachmentEntity(
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
+
+    @ColumnInfo(name = "note_id", index = true)
+    val noteId: Long,
+
+    @ColumnInfo(name = "type")
+    val type: Type = Type.IMAGE,
+
+    @ColumnInfo(name = "path")
+    val path: String,
+
+    @ColumnInfo(name = "description")
+    val description: String = "",
+
+    @ColumnInfo(name = "file_name")
+    val fileName: String = "",
+
+    @ColumnInfo(name = "order_index")
+    val orderIndex: Int = 1,
+
+    @ColumnInfo(name = "created_date")
+    val createdDate: Long = System.currentTimeMillis(),
+
+    ) : Parcelable {
+    enum class Type { AUDIO, IMAGE }
+
+    fun isEmpty() = path.isEmpty() && description.isEmpty() && fileName.isEmpty()
+}
 
 //TODO: 评论，待定
 ////评论

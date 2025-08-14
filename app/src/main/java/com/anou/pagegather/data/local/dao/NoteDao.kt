@@ -2,6 +2,7 @@ package com.anou.pagegather.data.local.dao
 
 
 import androidx.room.*
+import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.NoteEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -9,6 +10,10 @@ import kotlinx.coroutines.flow.Flow
 interface NoteDao {
     @Query("SELECT * FROM note WHERE is_deleted = 0")
     fun getAllNotes(): Flow<List<NoteEntity>>
+
+
+    @Query("SELECT * FROM note WHERE id = :id")
+    fun getById(id: Long): NoteEntity?
 
     @Query("SELECT * FROM note WHERE book_id = :bookId AND is_deleted = 0")
     fun getNotesByBookId(bookId: Long): Flow<List<NoteEntity>>
