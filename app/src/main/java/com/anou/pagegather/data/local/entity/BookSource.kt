@@ -1,5 +1,21 @@
 package com.anou.pagegather.data.local.entity
 
+/**
+ * 书籍来源枚举
+ * 
+ * @deprecated 此枚举已弃用，请使用 BookSourceEntity 进行来源管理。
+ * BookSourceEntity 提供了更灵活的内置+自定义来源管理功能，支持动态添加、编辑、排序等操作。
+ * 
+ * 迁移指南：
+ * - 使用 BookSourceRepository.getAllEnabledSources() 获取可用来源
+ * - 使用 BookSourceRepository.addCustomSource() 添加自定义来源
+ * - 使用 BookSourceEntity.id 作为书籍的来源引用
+ */
+@Deprecated(
+    message = "使用 BookSourceEntity 替代，支持动态管理内置和自定义来源",
+    replaceWith = ReplaceWith("BookSourceEntity"),
+    level = DeprecationLevel.WARNING
+)
 enum class BookSource(val code: Int, val message: String) {
     UNKNOWN(0, "未知"),
     APPLE_BOOKS(1, "Apple Books"),

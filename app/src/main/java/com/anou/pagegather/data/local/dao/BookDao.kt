@@ -29,4 +29,19 @@ interface BookDao {
 
     @Query("SELECT * FROM book WHERE id = :id")
     fun getById(id: Long): BookEntity?
+
+    /** 根据关键词搜索书籍 */
+    @Query("""
+        SELECT * FROM book 
+        WHERE is_deleted = 0 
+        AND (name LIKE '%' || :query || '%' 
+             OR author LIKE '%' || :query || '%' 
+             OR summary LIKE '%' || :query || '%')
+        ORDER BY updated_date DESC
+    """)
+    fun searchBooks(query: String): Flow<List<BookEntity>>
+
+    /** 根据阅读状态获取书籍 */
+    @Query("SELECT * FROM book WHERE read_status = :status AND is_deleted = 0 ORDER BY updated_date DESC")
+    fun getBooksByStatus(status: Int): Flow<List<BookEntity>>
 }

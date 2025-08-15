@@ -34,10 +34,10 @@ class BookEditViewModel @Inject  constructor(
             repository.runInTransaction {
                 try {
                     if (book.id == 0L) {
-                        val insertedId = repository.insert(book)
+                        val insertedId = repository.insertBook(book)
                         Log.d("BookEdit", "Inserted book with id: $insertedId")
                     } else {
-                        repository.update(book)
+                        repository.updateBook(book)
                         Log.d("BookEdit", "Updated book with id: ${book.id}")
                     }
                     withContext(Dispatchers.Main) {
@@ -51,6 +51,6 @@ class BookEditViewModel @Inject  constructor(
     }
 
     fun deleteBook(note: BookEntity) = viewModelScope.launch {
-        repository.delete(note)
+        repository.deleteBook(note)
     }
 }

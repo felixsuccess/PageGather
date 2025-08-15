@@ -2,9 +2,15 @@ package com.anou.pagegather.di
 
 import android.content.Context
 import androidx.room.Room
+import com.anou.pagegather.data.local.dao.BookCollectionDao
 import com.anou.pagegather.data.local.dao.BookDao
+import com.anou.pagegather.data.local.dao.BookGroupRefDao
+import com.anou.pagegather.data.local.dao.BookSourceDao
+import com.anou.pagegather.data.local.dao.GroupDao
 import com.anou.pagegather.data.local.dao.NoteDao
 import com.anou.pagegather.data.local.dao.ReadingRecordDao
+import com.anou.pagegather.data.local.dao.BookTagRefDao
+import com.anou.pagegather.data.local.dao.TagDao
 import com.anou.pagegather.data.local.database.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -57,9 +63,45 @@ object DatabaseModule {
         return database.noteDao()
     }
 
-    /** 提供阅读记录数据访问对象 - 任务4新增 */
+    /** 提供阅读记录数据访问对象 */
     @Provides
     fun provideReadingRecordDao(database: AppDatabase): ReadingRecordDao {
         return database.readingRecordDao()
+    }
+
+    /** 提供书籍收藏数据访问对象 */
+    @Provides
+    fun provideBookCollectionDao(database: AppDatabase): BookCollectionDao {
+        return database.bookCollectionDao()
+    }
+
+    /** 提供书籍来源数据访问对象 */
+    @Provides
+    fun provideBookSourceDao(database: AppDatabase): BookSourceDao {
+        return database.bookSourceDao()
+    }
+
+    /** 提供分组数据访问对象 */
+    @Provides
+    fun provideGroupDao(database: AppDatabase): GroupDao {
+        return database.groupDao()
+    }
+
+    /** 提供标签数据访问对象 */
+    @Provides
+    fun provideTagDao(database: AppDatabase): TagDao {
+        return database.tagDao()
+    }
+
+    /** 提供书籍分组关联数据访问对象 */
+    @Provides
+    fun provideBookGroupRefDao(database: AppDatabase): BookGroupRefDao {
+        return database.bookGroupRefDao()
+    }
+
+    /** 提供书籍标签关联数据访问对象 */
+    @Provides
+    fun provideBookTagRefDao(database: AppDatabase): BookTagRefDao {
+        return database.bookTagRefDao()
     }
 }
