@@ -1085,12 +1085,12 @@ data class BookFormState(
     var bookMarkModifiedTime: String = "",
     var readStatusId: Int = 0,
     var readStatusChangedDate: String = "",
-    var pinned: Int = 0,
+    var pinned: Boolean = false,
     var pinOrder: Int = 0,
     var createdDate: String = "",
     var updatedDate: String = "",
     var lastSyncDate: String = "",
-    var isDeleted: Int = 0,
+    var isDeleted: Boolean = false,
 ) {
     fun toBookEntity(bookId: Long?): BookEntity {
         return BookEntity(

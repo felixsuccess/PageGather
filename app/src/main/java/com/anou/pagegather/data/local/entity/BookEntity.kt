@@ -109,9 +109,9 @@ data class BookEntity(
     /** 用户自定义排序顺序 */
     @ColumnInfo(name = "custom_sort_order")
     val customSortOrder: Int = 0,
-    /** 是否置顶：0-否，1-是 */
+    /** 是否置顶 */
     @ColumnInfo(name = "pinned")
-    val pinned: Int = 0,
+    val pinned: Boolean = false,
     /** 置顶排序 */
     @ColumnInfo(name = "pin_order")
     val pinOrder: Int = 0,
@@ -129,9 +129,9 @@ data class BookEntity(
     /** 最后同步日期 */
     @ColumnInfo(name = "last_sync_date")
     val lastSyncDate: Long = 0,
-    /** 是否已删除：0-否，1-是 */
+    /** 是否已删除 */
     @ColumnInfo(name = "is_deleted")
-    val isDeleted: Int = 0
+    val isDeleted: Boolean = false
 ) {
     /**
      * 获取阅读进度百分比

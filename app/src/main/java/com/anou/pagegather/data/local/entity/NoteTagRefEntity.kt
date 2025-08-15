@@ -58,7 +58,7 @@ data class NoteTagRefEntity(
     @ColumnInfo(name = "last_sync_date")
     val lastSyncDate: Long,  
 
-    /** 是否已删除：0-否，1-是 */
+    /** 是否已删除 */
     @ColumnInfo(name = "is_deleted")
-    val isDeleted: Int = 0
+    val isDeleted: Boolean = false
 )

@@ -40,7 +40,7 @@ import com.anou.pagegather.data.local.entity.NoteTagRefEntity
         BookCollectionEntity::class,
         BookSourceEntity::class
     ],
-    version = 11, // 增加版本号，因为统一了关联表命名规范
+    version = 12,  
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
