@@ -8,6 +8,7 @@ import com.anou.pagegather.data.local.dao.BookGroupRefDao
 import com.anou.pagegather.data.local.dao.BookSourceDao
 import com.anou.pagegather.data.local.dao.BookGroupDao
 import com.anou.pagegather.data.local.dao.NoteDao
+import com.anou.pagegather.data.local.dao.NoteAttachmentDao
 import com.anou.pagegather.data.local.dao.ReadingRecordDao
 import com.anou.pagegather.data.local.dao.BookTagRefDao
 import com.anou.pagegather.data.local.dao.TagDao
@@ -61,6 +62,12 @@ object DatabaseModule {
     @Provides
     fun provideNoteDao(database: AppDatabase): NoteDao {
         return database.noteDao()
+    }
+
+    /** 提供笔记附件数据访问对象 */
+    @Provides
+    fun provideNoteAttachmentDao(database: AppDatabase): NoteAttachmentDao {
+        return database.noteAttachmentDao()
     }
 
     /** 提供阅读记录数据访问对象 */

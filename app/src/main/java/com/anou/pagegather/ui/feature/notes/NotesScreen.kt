@@ -301,18 +301,16 @@ fun NotesScreen(
                             viewModel.insertNote(
                                 NoteEntity(
                                     bookId = null,
-                                    chapterId = 0,
-                                    content = text,
+                                    chapterName = "",
+                                    quote = text,
                                     idea = "",
                                     position = "0",
                                     positionUnit = 0,
-                                    includeTime = System.currentTimeMillis(),
                                     createdDate = System.currentTimeMillis(),
                                     updatedDate = System.currentTimeMillis(),
                                     lastSyncDate = System.currentTimeMillis(),
-                                    isDeleted = 0
-                                )
-                            )
+                                    isDeleted =false
+                                )                            )
 
                             isShowInput.value = false
                         }
@@ -465,15 +463,15 @@ private fun NoteCard(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            if (note.content.toString().isNotEmpty()) {
+            if (note.quote.toString().isNotEmpty()) {
 
                 Text(
-                    text = note.content.toString(), maxLines = 4, overflow = TextOverflow.Ellipsis
+                    text = note.quote.toString(), maxLines = 4, overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
             }
-            if (note.idea.toString().isNotEmpty() == true) {
+            if (note.idea.toString().isNotEmpty()) {
                 Text(
                     text = note.idea.toString(), maxLines = 4, overflow = TextOverflow.Ellipsis
                 )

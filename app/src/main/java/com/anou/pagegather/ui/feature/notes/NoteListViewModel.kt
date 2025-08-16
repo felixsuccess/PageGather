@@ -20,7 +20,7 @@ class NoteListViewModel @Inject constructor(
 
     val notes: StateFlow<List<NoteEntity>> = noteRepository.getAllNotes()
         .map { notes ->
-            notes.filter { it.isDeleted == 0 }
+            notes.filter { !it.isDeleted }
         }
         .stateIn(
             scope = viewModelScope,
@@ -31,7 +31,7 @@ class NoteListViewModel @Inject constructor(
     fun getNotesByBookId(bookId: Long): StateFlow<List<NoteEntity>> {
         return noteRepository.getNotesByBookId(bookId)
             .map { notes ->
-                notes.filter { it.isDeleted == 0 }
+                notes.filter { !it.isDeleted }
             }
             .stateIn(
                 scope = viewModelScope,

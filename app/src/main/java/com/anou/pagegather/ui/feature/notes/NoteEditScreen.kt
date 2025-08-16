@@ -72,7 +72,7 @@ fun NoteEditScreen(
     }
 
     LaunchedEffect(note) {
-        text = note?.content ?: ""
+        text = note?.quote ?: ""
     }
 
     Scaffold(
@@ -112,16 +112,16 @@ fun NoteEditScreen(
                         .clickable(onClick = {
                             val newNote = NoteEntity(
                                 bookId = null,
-                                chapterId = 0,
-                                content = text,
+                                title  = "",
+                                quote = text,
                                 idea = idea,
+                                chapterName = "",
                                 position = "0",
                                 positionUnit = 0,
-                                includeTime = System.currentTimeMillis(),
                                 createdDate = System.currentTimeMillis(),
                                 updatedDate = System.currentTimeMillis(),
                                 lastSyncDate = System.currentTimeMillis(),
-                                isDeleted = 0
+                                isDeleted = false
                             )
                             viewModel.saveNote(newNote){
                                 navController.popBackStack()
