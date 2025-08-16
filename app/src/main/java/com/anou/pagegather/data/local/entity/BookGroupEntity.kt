@@ -5,13 +5,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * 分组实体类
+ * 书籍分组实体类
  * 用于书籍分组管理，保持简单实用
  */
 @Entity(
-    tableName = "group" 
+    tableName = "book_group" 
 )
-data class GroupEntity(
+data class BookGroupEntity(
     /** 主键ID，自动生成 */
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
@@ -24,6 +24,14 @@ data class GroupEntity(
     /** 分组排序 */
     @ColumnInfo(name = "group_order")
     val groupOrder: Int,
+
+    /** 是否置顶 */
+    @ColumnInfo(name = "pinned")
+    val pinned: Int = 0,
+
+    /** 置顶排序 */
+    @ColumnInfo(name = "pin_order")
+    val pinOrder: Int = 0,
 
     /** 创建日期 */
     @ColumnInfo(name = "created_date")
@@ -39,10 +47,8 @@ data class GroupEntity(
 
     /** 是否已删除 */
     @ColumnInfo(name = "is_deleted")
-    val isDeleted: Boolean = false
+    val isDeleted: Int = 0
 ) {
-
-    
     /**
      * 获取显示名称
      */

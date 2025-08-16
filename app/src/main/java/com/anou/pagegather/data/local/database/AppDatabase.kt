@@ -7,7 +7,7 @@ import com.anou.pagegather.data.local.dao.BookDao
 import com.anou.pagegather.data.local.dao.BookCollectionDao
 import com.anou.pagegather.data.local.dao.BookGroupRefDao
 import com.anou.pagegather.data.local.dao.BookSourceDao
-import com.anou.pagegather.data.local.dao.GroupDao
+import com.anou.pagegather.data.local.dao.BookGroupDao
 import com.anou.pagegather.data.local.dao.NoteDao
 import com.anou.pagegather.data.local.dao.ReadingRecordDao
 import com.anou.pagegather.data.local.dao.BookTagRefDao
@@ -16,7 +16,7 @@ import com.anou.pagegather.data.local.entity.BookCollectionEntity
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookGroupRefEntity
 import com.anou.pagegather.data.local.entity.BookSourceEntity
-import com.anou.pagegather.data.local.entity.GroupEntity
+import com.anou.pagegather.data.local.entity.BookGroupEntity
 import com.anou.pagegather.data.local.entity.NoteEntity
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.BookTagRefEntity
@@ -34,13 +34,13 @@ import com.anou.pagegather.data.local.entity.NoteTagRefEntity
         TagEntity::class,
         BookTagRefEntity::class,
         NoteTagRefEntity::class,
-        GroupEntity::class,
+        BookGroupEntity::class,
         BookGroupRefEntity::class,
         ReadingRecordEntity::class,
         BookCollectionEntity::class,
         BookSourceEntity::class
     ],
-    version = 12,  
+    version = 13,  
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
@@ -60,8 +60,8 @@ abstract class AppDatabase : RoomDatabase() {
     /** 书籍来源数据访问对象 */
     abstract fun bookSourceDao(): BookSourceDao
     
-    /** 分组数据访问对象 */
-    abstract fun groupDao(): GroupDao
+    /** 书籍分组数据访问对象 */
+    abstract fun bookGroupDao(): BookGroupDao
     
     /** 标签数据访问对象 */
     abstract fun tagDao(): TagDao

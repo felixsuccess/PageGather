@@ -18,7 +18,7 @@ class BookRepository @Inject constructor(
     private val bookDao = database.bookDao()
     private val bookCollectionDao = database.bookCollectionDao()
     private val bookSourceDao = database.bookSourceDao()
-    private val groupDao = database.groupDao()
+    private val bookGroupDao = database.bookGroupDao()
     private val tagDao = database.tagDao()
     private val bookGroupRefDao = database.bookGroupRefDao()
     private val bookTagRefDao = database.bookTagRefDao()
@@ -119,32 +119,32 @@ class BookRepository @Inject constructor(
 
     // ========== 分组管理 ==========
 
-    fun getAllGroups(): Flow<List<GroupEntity>> {
-        return groupDao.getAllGroups()
+    fun getAllGroups(): Flow<List<BookGroupEntity>> {
+        return bookGroupDao.getAllGroups()
     }
 
-    suspend fun insertGroup(group: GroupEntity): Long {
-        return groupDao.insertGroup(group)
+    suspend fun insertGroup(group: BookGroupEntity): Long {
+        return bookGroupDao.insertGroup(group)
     }
 
-    suspend fun updateGroup(group: GroupEntity) {
-        groupDao.updateGroup(group)
+    suspend fun updateGroup(group: BookGroupEntity) {
+        bookGroupDao.updateGroup(group)
     }
 
     suspend fun deleteGroup(id: Long) {
-        groupDao.deleteGroup(id)
+        bookGroupDao.deleteGroup(id)
     }
 
-    suspend fun getGroupById(id: Long): GroupEntity? {
-        return groupDao.getGroupById(id)
+    suspend fun getGroupById(id: Long): BookGroupEntity? {
+        return bookGroupDao.getGroupById(id)
     }
 
-    fun searchGroups(name: String): Flow<List<GroupEntity>> {
-        return groupDao.searchGroupsByName(name)
+    fun searchGroups(name: String): Flow<List<BookGroupEntity>> {
+        return bookGroupDao.searchGroupsByName(name)
     }
 
     suspend fun isGroupNameExists(name: String, excludeId: Long = -1): Boolean {
-        return groupDao.isGroupNameExists(name, excludeId) > 0
+        return bookGroupDao.isGroupNameExists(name, excludeId) > 0
     }
 
     // ========== 标签管理 ==========

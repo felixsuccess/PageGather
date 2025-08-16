@@ -21,7 +21,7 @@ import androidx.room.PrimaryKey
             onUpdate = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = GroupEntity::class,
+            entity = BookGroupEntity::class,
             parentColumns = ["id"],
             childColumns = ["group_id"],
             onDelete = ForeignKey.CASCADE,

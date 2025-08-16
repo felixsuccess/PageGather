@@ -6,7 +6,7 @@ import com.anou.pagegather.data.local.dao.BookCollectionDao
 import com.anou.pagegather.data.local.dao.BookDao
 import com.anou.pagegather.data.local.dao.BookGroupRefDao
 import com.anou.pagegather.data.local.dao.BookSourceDao
-import com.anou.pagegather.data.local.dao.GroupDao
+import com.anou.pagegather.data.local.dao.BookGroupDao
 import com.anou.pagegather.data.local.dao.NoteDao
 import com.anou.pagegather.data.local.dao.ReadingRecordDao
 import com.anou.pagegather.data.local.dao.BookTagRefDao
@@ -81,10 +81,10 @@ object DatabaseModule {
         return database.bookSourceDao()
     }
 
-    /** 提供分组数据访问对象 */
+    /** 提供书籍分组数据访问对象 */
     @Provides
-    fun provideGroupDao(database: AppDatabase): GroupDao {
-        return database.groupDao()
+    fun provideBookGroupDao(database: AppDatabase): BookGroupDao {
+        return database.bookGroupDao()
     }
 
     /** 提供标签数据访问对象 */
