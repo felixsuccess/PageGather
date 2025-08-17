@@ -72,7 +72,7 @@ import com.anou.pagegather.data.local.entity.BookSource
 import com.anou.pagegather.data.local.entity.BookType
 import com.anou.pagegather.data.local.entity.ReadPositionUnit
 import com.anou.pagegather.data.local.entity.ReadStatus
-import com.anou.pagegather.ui.theme.AccentOrange
+import com.anou.pagegather.ui.theme.Accent
 import com.anou.pagegather.utils.BlurTransformation
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -357,7 +357,7 @@ private fun TopBackImgLayout(
                                 topStart = 0.dp, topEnd = 8.dp, bottomStart = 8.dp, bottomEnd = 0.dp
                             )
                         )
-                        .background(AccentOrange)
+                        .background(Accent)
                         .padding(horizontal = 8.dp, vertical = 5.dp)
                 )
             }
@@ -448,7 +448,7 @@ private fun DisplayBookInfo(book: BookEntity) {
                             topStart = 0.dp, topEnd = 8.dp, bottomStart = 8.dp, bottomEnd = 0.dp
                         )
                     )
-                    .background(AccentOrange)
+                    .background(Accent)
                     .padding(horizontal = 8.dp, vertical = 5.dp)
             )
         }

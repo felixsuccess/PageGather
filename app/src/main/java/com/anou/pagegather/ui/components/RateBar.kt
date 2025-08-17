@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.anou.pagegather.ui.theme.AccentOrange
+import com.anou.pagegather.ui.theme.Accent
 import com.anou.pagegather.ui.theme.TextGray 
 
 @Composable
@@ -49,7 +49,7 @@ fun RateBar(
     modifier: Modifier = Modifier,
     stars: Int = 5,
     starSize: Dp = 24.dp,
-    activeColor: Color = AccentOrange,
+    activeColor: Color = Accent,
     inactiveColor: Color = TextGray,
 ) {
     Row(modifier = modifier) {

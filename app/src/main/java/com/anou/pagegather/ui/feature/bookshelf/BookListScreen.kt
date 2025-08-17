@@ -51,7 +51,7 @@ import coil.request.ImageRequest
 import com.anou.pagegather.R
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.ReadStatus
-import com.anou.pagegather.ui.theme.AccentOrange
+import com.anou.pagegather.ui.theme.Accent
 import com.anou.pagegather.ui.theme.TextGray
 
 // 常量定义
@@ -285,7 +285,7 @@ fun BookItem(book: BookEntity, onItemClick: () -> Unit) {
                                 topStart = 0.dp, topEnd = 8.dp, bottomStart = 8.dp, bottomEnd = 0.dp
                             )
                         )
-                        .background(AccentOrange)
+                        .background(Accent)
                     // .border(
                     //     width = 1.dp,
                     //     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
