@@ -102,7 +102,7 @@ app/
 1. 克隆项目到本地
 ```bash
 git clone [项目地址]
-cd reading-tracker-app
+cd PageGather
 ```
 
 2. 使用 Android Studio 打开项目
