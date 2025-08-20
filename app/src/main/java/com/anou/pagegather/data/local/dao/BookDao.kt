@@ -14,6 +14,48 @@ interface BookDao {
     @Query("SELECT * FROM book WHERE is_deleted = 0 ORDER BY updated_date DESC")
     fun getAllBooks(): Flow<List<BookEntity>>
 
+    /**
+     * 根据排序类型获取书籍
+     * @param sortType 排序类型: 0-更新日期(默认), 1-创建日期, 2-书名, 3-作者, 4-阅读进度
+     * @param ascending 是否升序排列
+     */
+    @Query("""
+        SELECT * FROM book 
+        WHERE is_deleted = 0 
+        ORDER BY 
+            CASE WHEN :sortType = 0 AND :ascending = 0 THEN updated_date END DESC,
+            CASE WHEN :sortType = 0 AND :ascending = 1 THEN updated_date END ASC,
+            CASE WHEN :sortType = 1 AND :ascending = 0 THEN created_date END DESC,
+            CASE WHEN :sortType = 1 AND :ascending = 1 THEN created_date END ASC,
+            CASE WHEN :sortType = 2 AND :ascending = 0 THEN name END COLLATE NOCASE DESC,
+            CASE WHEN :sortType = 2 AND :ascending = 1 THEN name END COLLATE NOCASE ASC,
+            CASE WHEN :sortType = 3 AND :ascending = 0 THEN author END COLLATE NOCASE DESC,
+            CASE WHEN :sortType = 3 AND :ascending = 1 THEN author END COLLATE NOCASE ASC,
+            CASE WHEN :sortType = 4 AND :ascending = 0 THEN read_position END DESC,
+            CASE WHEN :sortType = 4 AND :ascending = 1 THEN read_position END ASC
+    """)
+    fun getBooksSorted(sortType: Int, ascending: Boolean = false): Flow<List<BookEntity>>
+
+    /**
+     * 根据排序类型和状态获取书籍
+     */
+    @Query("""
+        SELECT * FROM book 
+        WHERE read_status = :status AND is_deleted = 0 
+        ORDER BY 
+            CASE WHEN :sortType = 0 AND :ascending = 0 THEN updated_date END DESC,
+            CASE WHEN :sortType = 0 AND :ascending = 1 THEN updated_date END ASC,
+            CASE WHEN :sortType = 1 AND :ascending = 0 THEN created_date END DESC,
+            CASE WHEN :sortType = 1 AND :ascending = 1 THEN created_date END ASC,
+            CASE WHEN :sortType = 2 AND :ascending = 0 THEN name END COLLATE NOCASE DESC,
+            CASE WHEN :sortType = 2 AND :ascending = 1 THEN name END COLLATE NOCASE ASC,
+            CASE WHEN :sortType = 3 AND :ascending = 0 THEN author END COLLATE NOCASE DESC,
+            CASE WHEN :sortType = 3 AND :ascending = 1 THEN author END COLLATE NOCASE ASC,
+            CASE WHEN :sortType = 4 AND :ascending = 0 THEN read_position END DESC,
+            CASE WHEN :sortType = 4 AND :ascending = 1 THEN read_position END ASC
+    """)
+    fun getBooksByStatusSorted(status: Int, sortType: Int, ascending: Boolean = false): Flow<List<BookEntity>>
+
     @Insert
     suspend fun insert(bookEntity: BookEntity): Long
 

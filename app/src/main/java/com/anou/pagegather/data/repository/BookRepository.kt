@@ -61,6 +61,25 @@ class BookRepository @Inject constructor(
         return bookDao.getBooksByStatus(status)
     }
 
+    /**
+     * 根据排序类型获取书籍
+     * @param sortType 排序类型: 0-更新日期(默认), 1-创建日期, 2-书名, 3-作者, 4-阅读进度
+     * @param ascending 是否升序排列
+     */
+    fun getBooksSorted(sortType: Int, ascending: Boolean = false): Flow<List<BookEntity>> {
+        return bookDao.getBooksSorted(sortType, ascending)
+    }
+
+    /**
+     * 根据排序类型和状态获取书籍
+     * @param status 阅读状态
+     * @param sortType 排序类型
+     * @param ascending 是否升序排列
+     */
+    fun getBooksByStatusSorted(status: Int, sortType: Int, ascending: Boolean = false): Flow<List<BookEntity>> {
+        return bookDao.getBooksByStatusSorted(status, sortType, ascending)
+    }
+
     // ========== 书籍收藏管理 ==========
 
     suspend fun insertBookCollection(collection: BookCollectionEntity): Long {
