@@ -29,9 +29,9 @@ class BookSourceRepository @Inject constructor(
     }
 
     /** 根据ID获取来源 */
-    suspend fun getSourceById(id: Long): BookSourceEntity? {
-        return bookSourceDao.getSourceById(id)
-    }
+    suspend fun getBookSourceById(id: Long): BookSourceEntity? {
+    return bookSourceDao.getSourceById(id)
+}
 
     /** 获取用户自定义来源 */
     fun getCustomSources(): Flow<List<BookSourceEntity>> {
@@ -46,49 +46,49 @@ class BookSourceRepository @Inject constructor(
     // ========== 增删改操作 ==========
 
     /** 添加自定义来源 */
-    suspend fun addCustomSource(name: String, iconName: String? = null): Long {
-        // 检查名称是否已存在
-        if (bookSourceDao.isNameExists(name) > 0) {
-            throw IllegalArgumentException("来源名称已存在")
-        }
-
-        val source = BookSourceEntity(
-            name = name,
-            iconName = iconName,
-            isBuiltIn = false,
-            isEnabled = true,
-            sortOrder = 999 // 自定义来源排在后面
-        )
-
-        return bookSourceDao.insert(source)
+    suspend fun addCustomBookSource(name: String, iconName: String? = null): Long {
+    // 检查名称是否已存在
+    if (bookSourceDao.isNameExists(name) > 0) {
+        throw IllegalArgumentException("来源名称已存在")
     }
+
+    val bookSource = BookSourceEntity(
+        name = name,
+        iconName = iconName,
+        isBuiltIn = false,
+        isEnabled = true,
+        sortOrder = 999 // 自定义来源排在后面
+    )
+
+    return bookSourceDao.insert(bookSource)
+}
 
     /** 更新来源 */
-    suspend fun updateSource(source: BookSourceEntity) {
-        // 检查名称是否与其他来源冲突
-        if (bookSourceDao.isNameExists(source.name, source.id) > 0) {
-            throw IllegalArgumentException("来源名称已存在")
-        }
-
-        val updatedSource = source.copy(updatedDate = System.currentTimeMillis())
-        bookSourceDao.update(updatedSource)
+    suspend fun updateBookSource(source: BookSourceEntity) {
+    // 检查名称是否已存在（排除当前ID）
+    if (bookSourceDao.isNameExists(source.name, source.id) > 0) {
+        throw IllegalArgumentException("来源名称已存在")
     }
+
+    val updatedSource = source.copy(updatedDate = System.currentTimeMillis())
+    bookSourceDao.update(updatedSource)
+}
 
     /** 删除自定义来源 */
-    suspend fun deleteCustomSource(id: Long) {
-        val source = getSourceById(id)
-        if (source?.isBuiltIn == true) {
-            throw IllegalArgumentException("不能删除内置来源")
-        }
-        bookSourceDao.deleteById(id)
+    suspend fun deleteCustomBookSource(id: Long) {
+    val bookSource = getBookSourceById(id)
+    if (bookSource?.isBuiltIn == true) {
+        throw IllegalArgumentException("不能删除内置来源")
     }
+    bookSourceDao.deleteById(id)
+}
 
     /** 启用/禁用来源 */
-    suspend fun toggleSourceEnabled(id: Long) {
-        val source = getSourceById(id) ?: return
-        val newEnabled = !source.isEnabled
-        bookSourceDao.updateEnabled(id, if (newEnabled) 1 else 0)
-    }
+    suspend fun toggleBookSourceEnabled(id: Long) {
+    val bookSource = getBookSourceById(id) ?: return
+    val newEnabled = !bookSource.isEnabled
+    bookSourceDao.updateEnabled(id, if (newEnabled) 1 else 0)
+}
 
     /** 更新排序 */
     suspend fun updateSortOrders(sourceIds: List<Long>) {
