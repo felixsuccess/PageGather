@@ -37,6 +37,15 @@ class BookRepository @Inject constructor(
         return bookDao.getAllBooks()
     }
 
+    /**
+     * 分页获取所有书籍
+     * @param page 页码 (从0开始)
+     * @param pageSize 每页大小
+     */
+    fun getBooksPaged(page: Int, pageSize: Int): Flow<List<BookEntity>> {
+        return bookDao.getBooksPaged(page * pageSize, pageSize, 0) // sortType = 0 (updated_date)
+    }
+
     suspend fun insertBook(book: BookEntity): Long {
         return bookDao.insert(book)
     }

@@ -18,8 +18,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,17 +33,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,6 +81,9 @@ fun BookListScreen(
         "书库"//, "预购书单"
     )
     var selectedTab by remember { mutableIntStateOf(0) }
+    var searchQuery by remember { mutableStateOf("") }
+    val focusRequester = remember { FocusRequester() }
+    var isSearching by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -84,38 +95,98 @@ fun BookListScreen(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             modifier = modifier.fillMaxWidth(),
             title = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp, 15.dp, 5.dp, 5.dp)
-                        .background(MaterialTheme.colorScheme.surface),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(Modifier.weight(1f)) {
-                        tabTitles.forEachIndexed { index, title ->
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp),
-                                color = if (selectedTab == index) MaterialTheme.colorScheme.onSurface
-                                else TextGray,
+                if (isSearching) {
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { newValue ->
+                            searchQuery = newValue
+                            viewModel.searchBooks(newValue)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester)
+                            .padding(8.dp),
+                        textStyle = TextStyle(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 16.sp
+                        ),
+                        singleLine = true,
+                        decorationBox = { innerTextField ->
+                            Box(
                                 modifier = Modifier
-                                    .padding(end = 16.dp)
-                                    .clickable { selectedTab = index })
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                if (searchQuery.isEmpty()) {
+                                    Text(
+                                        text = "搜索书籍...",
+                                        color = TextGray,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(5.dp, 15.dp, 5.dp, 5.dp)
+                            .background(MaterialTheme.colorScheme.surface),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(Modifier.weight(1f)) {
+                            tabTitles.forEachIndexed { index, title ->
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp),
+                                    color = if (selectedTab == index) MaterialTheme.colorScheme.onSurface
+                                    else TextGray,
+                                    modifier = Modifier
+                                        .padding(end = 16.dp)
+                                        .clickable { selectedTab = index }
+                                )
+                            }
                         }
                     }
+                }
+            },
+            actions = {
+                if (isSearching) {
+                    IconButton(onClick = {
+                        searchQuery = ""
+                        isSearching = false
+                        viewModel.clearSearch()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "取消搜索",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                } else {
                     Row(
                         horizontalArrangement = Arrangement.End
                     ) {
                         IconButton(onClick = {
-                            /* TODO: 添加搜索功能 */
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "搜索",
-                                tint = TextGray
-                            )
+                        isSearching = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "搜索",
+                            tint = TextGray
+                        )
+                    }
+                    
+                    // 在搜索状态改变时请求焦点
+                    LaunchedEffect(isSearching) {
+                        if (isSearching) {
+                            focusRequester.requestFocus()
                         }
+                    }
                         IconButton(onClick = { onAddBookClick() }) {
                             Icon(
                                 imageVector = Icons.Default.Add,
@@ -134,9 +205,7 @@ fun BookListScreen(
                         }
                     }
                 }
-
-            },
-
+            }
             )
 
         Box(Modifier.weight(1f)) {
@@ -165,6 +234,25 @@ private fun BookListContent(
     onAddBookClick: () -> Unit,
     viewModel: BookListViewModel,
 ) {
+    val gridState = rememberLazyGridState()
+    val context = LocalContext.current
+
+    // 监听滚动位置，实现分页加载
+    LaunchedEffect(gridState) {
+        snapshotFlow {
+            gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
+        }.collect {
+            if (it != null && bookListUIState is BookListUIState.Success) {
+                // 当滚动到列表底部附近时，加载更多
+                if (it >= bookListUIState.books.size - 6) {
+                    // Check if we're in a Success state and not already loading more
+                    if (!bookListUIState.isLoadingMore) {
+                        viewModel.loadMoreBooks()
+                    }
+                }
+            }
+        }
+    }
     Column(
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -216,12 +304,11 @@ private fun BookListContent(
 
 
             is BookListUIState.Success -> {
-                //TODO: 分页加载
                 LazyVerticalGrid(
                     modifier = Modifier.fillMaxWidth(),
                     columns = GRID_COLUMNS,
                     contentPadding = GRID_PADDING,
-                    state = rememberLazyGridState(),
+                    state = gridState,
                     verticalArrangement = Arrangement.spacedBy(GRID_SPACING),
                     horizontalArrangement = Arrangement.spacedBy(GRID_SPACING)
                 ) {
@@ -229,7 +316,20 @@ private fun BookListContent(
                         val book = bookListUIState.books[index]
                         BookItem(
                             book = book, onItemClick = { onBookClick(book.id) })
+                    }
 
+                    // 加载更多指示器
+                    if (bookListUIState is BookListUIState.Success && bookListUIState.isLoadingMore) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
                     }
                 }
             }
