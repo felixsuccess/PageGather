@@ -18,9 +18,12 @@ class BookListViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     private val _state = MutableStateFlow<BookListUIState>(BookListUIState.Loading)
     val state: StateFlow<BookListUIState> = _state
+    
+    // 分页相关状态
     private var currentPage = 0
     private val pageSize = 20
-    private var isLastPage = false
+    private var isLoadingMore = false
+    private var hasMoreData = true
 
     init {
         viewModelScope.launch {
@@ -32,13 +35,15 @@ class BookListViewModel @Inject constructor(
         _state.value = BookListUIState.Loading
         _isLoading.value = true
         currentPage = 0
-        isLastPage = false
+        hasMoreData = true
+        
         try {
-            bookRepository.getAllBooks().collect { books ->
+            bookRepository.getBooksPaged(currentPage, pageSize).collect { books ->
                 _bookList.value = books
+                hasMoreData = books.size >= pageSize
                 _state.value = when {
                     books.isEmpty() -> BookListUIState.Empty
-                    else -> BookListUIState.Success(books)
+                    else -> BookListUIState.Success(books, isLoadingMore = false)
                 }
             }
         } catch (e: Exception) {
@@ -48,6 +53,43 @@ class BookListViewModel @Inject constructor(
             _isLoading.value = false
         }
     }
+    
+    fun loadMoreBooks() {
+        if (isLoadingMore || !hasMoreData) return
+        
+        viewModelScope.launch {
+            isLoadingMore = true
+            val currentState = _state.value
+            if (currentState is BookListUIState.Success) {
+                _state.value = currentState.copy(isLoadingMore = true)
+            }
+            
+            try {
+                currentPage++
+                bookRepository.getBooksPaged(currentPage, pageSize).collect { newBooks ->
+                    if (newBooks.isNotEmpty()) {
+                        val allBooks = _bookList.value + newBooks
+                        _bookList.value = allBooks
+                        hasMoreData = newBooks.size >= pageSize
+                        _state.value = BookListUIState.Success(allBooks, isLoadingMore = false)
+                    } else {
+                        hasMoreData = false
+                        if (currentState is BookListUIState.Success) {
+                            _state.value = currentState.copy(isLoadingMore = false)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // 加载更多失败时，恢复到之前的状态
+                currentPage--
+                if (currentState is BookListUIState.Success) {
+                    _state.value = currentState.copy(isLoadingMore = false)
+                }
+            } finally {
+                isLoadingMore = false
+            }
+        }
+    }
 
     fun searchBooks(query: String) {
         viewModelScope.launch {
@@ -55,9 +97,11 @@ class BookListViewModel @Inject constructor(
             try {
                 bookRepository.searchBooks(query).collect { books ->
                     _bookList.value = books
+                    // 搜索结果不支持分页加载
+                    hasMoreData = false
                     _state.value = when {
                         books.isEmpty() -> BookListUIState.Empty
-                        else -> BookListUIState.Success(books)
+                        else -> BookListUIState.Success(books, isLoadingMore = false)
                     }
                 }
             } catch (e: Exception) {
@@ -69,51 +113,6 @@ class BookListViewModel @Inject constructor(
     fun clearSearch() {
         viewModelScope.launch {
             loadBooks()
-        }
-    }
-
-    fun loadMoreBooks() {
-        if (_isLoading.value || isLastPage) return
-        
-        viewModelScope.launch {
-            // Update state to show loading indicator
-            val currentState = _state.value
-            if (currentState is BookListUIState.Success) {
-                _state.value = currentState.copy(isLoadingMore = true)
-            }
-            
-            try {
-                // Load more books using pagination
-                bookRepository.getBooksPaged(currentPage + 1, pageSize).collect { moreBooks ->
-                    // Update book list with new data
-                    val currentBooks = _bookList.value
-                    val updatedBooks = currentBooks + moreBooks
-                    
-                    // Update state with new books
-                    _bookList.value = updatedBooks
-                    
-                    // Check if this is the last page
-                    isLastPage = moreBooks.size < pageSize
-                    
-                    // Update current page
-                    currentPage++
-                    
-                    // Update state to hide loading indicator
-                    val updatedState = _state.value
-                    if (updatedState is BookListUIState.Success) {
-                        _state.value = updatedState.copy(
-                            books = updatedBooks,
-                            isLoadingMore = false
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                // Handle error
-                val updatedState = _state.value
-                if (updatedState is BookListUIState.Success) {
-                    _state.value = updatedState.copy(isLoadingMore = false)
-                }
-            }
         }
     }
 }

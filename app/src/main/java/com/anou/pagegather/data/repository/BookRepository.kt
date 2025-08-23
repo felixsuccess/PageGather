@@ -43,7 +43,7 @@ class BookRepository @Inject constructor(
      * @param pageSize 每页大小
      */
     fun getBooksPaged(page: Int, pageSize: Int): Flow<List<BookEntity>> {
-        return bookDao.getBooksPaged(page * pageSize, pageSize, 0) // sortType = 0 (updated_date)
+        return bookDao.getBooksPaged(page * pageSize, pageSize, 0, false) // sortType = 0 (updated_date), ascending = false
     }
 
     suspend fun insertBook(book: BookEntity): Long {
