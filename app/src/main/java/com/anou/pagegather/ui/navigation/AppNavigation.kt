@@ -12,6 +12,8 @@ import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
+import com.anou.pagegather.ui.feature.bookshelf.GroupManagementScreen
+import com.anou.pagegather.ui.feature.my.ProfileScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
 import com.anou.pagegather.ui.feature.notes.NotesScreen
@@ -114,7 +116,9 @@ fun AppNavigation(
 
         // 我的子页面
         composable(Routes.ProfileRoutes.TAG_SETTINGS) { TagSettingsScreen() }
-        composable(Routes.ProfileRoutes.GROUP_SETTINGS) { GroupSettingsScreen() }
+        composable(Routes.ProfileRoutes.GROUP_SETTINGS) { 
+            GroupManagementScreen(navController = navController)
+        }
 
 
         // 随记页面

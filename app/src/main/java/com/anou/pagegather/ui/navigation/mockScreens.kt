@@ -1,23 +1,8 @@
 package com.anou.pagegather.ui.navigation
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextOverflow
-
-
-// 我的页面
-@Composable
-fun ProfileScreen(
-    onNavigateToTagSettings: () -> Unit,
-    onNavigateToGroupSettings: () -> Unit,
-) {
-    Text(text = "我的页面：用户个人信息和设置页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
-
 
 // 统计页面
 @Composable
@@ -39,13 +24,7 @@ fun TagSettingsScreen() {
         color = MaterialTheme.colorScheme.primary)
 }
 
-// 我的子页面 -书籍分组
-@Composable
-fun GroupSettingsScreen() {
-    Text(text = "书籍分组", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
+// 注意: GroupSettingsScreen 已移动到 GroupManagementScreen文件中
 
 
 
