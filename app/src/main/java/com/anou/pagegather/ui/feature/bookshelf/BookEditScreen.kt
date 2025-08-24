@@ -607,6 +607,14 @@ fun BookEditScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
+                // 标签选择器
+                BookTagSelector(
+                    availableTags = uiState.availableTags,
+                    selectedTagIds = uiState.selectedTagIds,
+                    onTagSelectionChange = viewModel::toggleTagSelection,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
 
                 if (formState.value.type == BookType.PAPER_BOOK.code) {
 

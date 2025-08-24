@@ -15,43 +15,43 @@ interface TagDao {
     // ========== 查询操作 ==========
     
     /** 获取所有标签（按排序顺序） */
-    @Query("SELECT * FROM tag WHERE is_deleted = false ORDER BY tag_order ASC")
+    @Query("SELECT * FROM tag WHERE is_deleted = 0 ORDER BY tag_order ASC")
     fun getAllTags(): Flow<List<TagEntity>>
     
     /** 根据类型获取标签 */
-    @Query("SELECT * FROM tag WHERE tag_type = :type AND is_deleted = false ORDER BY tag_order ASC")
+    @Query("SELECT * FROM tag WHERE tag_type = :type AND is_deleted = 0 ORDER BY tag_order ASC")
     fun getTagsByType(type: Int): Flow<List<TagEntity>>
     
     /** 获取书籍标签 */
-    @Query("SELECT * FROM tag WHERE tag_type = 0 AND is_deleted = false ORDER BY tag_order ASC")
+    @Query("SELECT * FROM tag WHERE tag_type = 0 AND is_deleted = 0 ORDER BY tag_order ASC")
     fun getBookTags(): Flow<List<TagEntity>>
     
     /** 获取笔记标签 */
-    @Query("SELECT * FROM tag WHERE tag_type = 1 AND is_deleted = false ORDER BY tag_order ASC")
+    @Query("SELECT * FROM tag WHERE tag_type = 1 AND is_deleted = 0 ORDER BY tag_order ASC")
     fun getNoteTags(): Flow<List<TagEntity>>
     
     /** 根据ID获取标签 */
-    @Query("SELECT * FROM tag WHERE id = :id AND is_deleted = false")
+    @Query("SELECT * FROM tag WHERE id = :id AND is_deleted = 0")
     suspend fun getTagById(id: Long): TagEntity?
     
     /** 根据名称搜索标签 */
-    @Query("SELECT * FROM tag WHERE name LIKE '%' || :name || '%' AND is_deleted = false ORDER BY tag_order ASC")
+    @Query("SELECT * FROM tag WHERE name LIKE '%' || :name || '%' AND is_deleted = 0 ORDER BY tag_order ASC")
     fun searchTagsByName(name: String): Flow<List<TagEntity>>
     
     /** 根据名称和类型搜索标签 */
-    @Query("SELECT * FROM tag WHERE name LIKE '%' || :name || '%' AND tag_type = :type AND is_deleted = false ORDER BY tag_order ASC")
+    @Query("SELECT * FROM tag WHERE name LIKE '%' || :name || '%' AND tag_type = :type AND is_deleted = 0 ORDER BY tag_order ASC")
     fun searchTagsByNameAndType(name: String, type: Int): Flow<List<TagEntity>>
     
     /** 获取标签数量 */
-    @Query("SELECT COUNT(*) FROM tag WHERE is_deleted = false")
+    @Query("SELECT COUNT(*) FROM tag WHERE is_deleted = 0")
     suspend fun getTagCount(): Int
     
     /** 根据类型获取标签数量 */
-    @Query("SELECT COUNT(*) FROM tag WHERE tag_type = :type AND is_deleted = false")
+    @Query("SELECT COUNT(*) FROM tag WHERE tag_type = :type AND is_deleted = 0")
     suspend fun getTagCountByType(type: Int): Int
     
     /** 检查标签名称是否存在 */
-    @Query("SELECT COUNT(*) FROM tag WHERE name = :name AND tag_type = :type AND is_deleted = false AND id != :excludeId")
+    @Query("SELECT COUNT(*) FROM tag WHERE name = :name AND tag_type = :type AND is_deleted = 0 AND id != :excludeId")
     suspend fun isTagNameExists(name: String, type: Int, excludeId: Long = -1): Int
     
     // ========== 增删改操作 ==========
@@ -69,7 +69,7 @@ interface TagDao {
     suspend fun updateTag(tag: TagEntity)
     
     /** 删除标签（软删除） */
-    @Query("UPDATE tag SET is_deleted = true, updated_date = :updateTime WHERE id = :id")
+    @Query("UPDATE tag SET is_deleted = 1, updated_date = :updateTime WHERE id = :id")
     suspend fun deleteTag(id: Long, updateTime: Long = System.currentTimeMillis())
     
     /** 物理删除标签 */
@@ -83,7 +83,7 @@ interface TagDao {
     suspend fun updateTagOrder(id: Long, order: Int, updateTime: Long = System.currentTimeMillis())
     
     /** 根据类型获取最大排序值 */
-    @Query("SELECT MAX(tag_order) FROM tag WHERE tag_type = :type AND is_deleted = false")
+    @Query("SELECT MAX(tag_order) FROM tag WHERE tag_type = :type AND is_deleted = 0")
     suspend fun getMaxOrderByType(type: Int): Int?
     
     // ========== 关联查询 ==========
@@ -92,7 +92,7 @@ interface TagDao {
     @Query("""
         SELECT t.* FROM tag t 
         INNER JOIN book_tag_ref btr ON t.id = btr.tag_id 
-        WHERE btr.book_id = :bookId AND t.is_deleted = false AND btr.is_deleted = false
+        WHERE btr.book_id = :bookId AND t.is_deleted = 0 AND btr.is_deleted = 0
         ORDER BY t.tag_order ASC
     """)
     fun getTagsByBookId(bookId: Long): Flow<List<TagEntity>>
@@ -101,7 +101,7 @@ interface TagDao {
     @Query("""
         SELECT t.* FROM tag t 
         INNER JOIN note_tag_ref ntr ON t.id = ntr.tag_id 
-        WHERE ntr.note_id = :noteId AND t.is_deleted = false AND ntr.is_deleted = false
+        WHERE ntr.note_id = :noteId AND t.is_deleted = 0 AND ntr.is_deleted = 0
         ORDER BY t.tag_order ASC
     """)
     fun getTagsByNoteId(noteId: Long): Flow<List<TagEntity>>
@@ -118,6 +118,6 @@ interface TagDao {
     }
     
     /** 清理已删除的标签 */
-    @Query("DELETE FROM tag WHERE is_deleted = true AND updated_date < :beforeTime")
+    @Query("DELETE FROM tag WHERE is_deleted = 1 AND updated_date < :beforeTime")
     suspend fun cleanupDeletedTags(beforeTime: Long)
 }

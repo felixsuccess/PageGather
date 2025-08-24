@@ -83,6 +83,13 @@ class TagRepository @Inject constructor(
         return tagDao.isTagNameExists(name, type, excludeId) > 0
     }
 
+    /**
+     * 获取指定类型的最大排序值
+     */
+    suspend fun getMaxOrderByType(type: Int): Int? {
+        return tagDao.getMaxOrderByType(type)
+    }
+
     // ========== 标签与书籍关联操作 ==========
 
     /**

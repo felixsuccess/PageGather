@@ -42,6 +42,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -57,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -99,61 +104,70 @@ fun NotesScreen(
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             modifier = Modifier.fillMaxWidth(),
             title = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp, 15.dp, 5.dp, 5.dp)
-                        .background(MaterialTheme.colorScheme.surface),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(Modifier.weight(1f)) {
-                        tabTitles.forEachIndexed { index, title ->
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp),
-                                color = if (selectedTab == index) MaterialTheme.colorScheme.primary
-                                else TextGray,
-                                modifier = Modifier
-                                    .padding(end = 16.dp)
-                                    .clickable { selectedTab = index })
+                Column {
+                    // 标题
+                    Text(
+                        text = "书摘漫步",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    // 选项卡
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = MaterialTheme.colorScheme.background,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.Indicator(
+                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.End
                     ) {
-
-                        IconButton(onClick = {
-                            /* TODO: 添加搜索功能 */
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "搜索",
-                                tint = TextGray
-                            )
-                        }
-                        IconButton(onClick = {
-                            onNavigateToNoteEdit(0)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "add",
-                                tint = TextGray
-                            )
-                        }
-                        IconButton(onClick = {
-                            /* TODO: 添加更多选项     如列表显示  排序 等 */
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "更多选项",
-                                tint = MaterialTheme.colorScheme.onSurface
+                        tabTitles.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                text = {
+                                    Text(
+                                        text = title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (selectedTab == index) FontWeight.Medium else FontWeight.Normal
+                                    )
+                                }
                             )
                         }
                     }
                 }
-
+            },
+            actions = {
+                IconButton(onClick = {
+                    /* TODO: 添加搜索功能 */
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "搜索",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                IconButton(onClick = {
+                    onNavigateToNoteEdit(0)
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "添加笔记",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                IconButton(onClick = {
+                    /* TODO: 添加更多选项     如列表显示  排序 等 */
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "更多选项",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             },
 
             )

@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookGroupEntity
 import com.anou.pagegather.data.local.entity.BookSourceEntity
+import com.anou.pagegather.data.local.entity.TagEntity
 import com.anou.pagegather.data.repository.BookRepository
 import com.anou.pagegather.data.repository.BookGroupRepository
 import com.anou.pagegather.data.repository.BookSourceRepository
+import com.anou.pagegather.data.repository.TagRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +29,8 @@ data class BookEditUiState(
     val selectedGroupId: Long? = null,
     val availableBookSources: List<BookSourceEntity> = emptyList(),
     val selectedBookSourceId: Long? = null,
+    val availableTags: List<TagEntity> = emptyList(),
+    val selectedTagIds: List<Long> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -35,7 +39,8 @@ data class BookEditUiState(
 class BookEditViewModel @Inject constructor(
     private val bookRepository: BookRepository,
     private val groupRepository: BookGroupRepository,
-    private val bookSourceRepository: BookSourceRepository
+    private val bookSourceRepository: BookSourceRepository,
+    private val tagRepository: TagRepository
 ) : ViewModel() {
     private val _book = MutableStateFlow<BookEntity?>(null)
     val book: StateFlow<BookEntity?> = _book
@@ -46,6 +51,7 @@ class BookEditViewModel @Inject constructor(
     init {
         loadAvailableGroups()
         loadAvailableBookSources()
+        loadAvailableTags()
     }
 
     /**
@@ -88,6 +94,26 @@ class BookEditViewModel @Inject constructor(
         }
     }
     
+    /**
+     * 加载可用标签（仅书籍标签）
+     */
+    private fun loadAvailableTags() {
+        viewModelScope.launch {
+            try {
+                tagRepository.getBookTags().collect { tags ->
+                    _uiState.value = _uiState.value.copy(
+                        availableTags = tags
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("BookEditViewModel", "加载标签失败: ${e.message}", e)
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "加载标签失败: ${e.message}"
+                )
+            }
+        }
+    }
+    
     fun loadBook(bookId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -97,21 +123,26 @@ class BookEditViewModel @Inject constructor(
                 
                 // 加载书籍关联的分组
                 val groupRefs = bookRepository.getGroupsByBookId(bookId)
+                // 加载书籍关联的标签
+                val tagRefs = bookRepository.getTagsByBookId(bookId)
                 
                 combine(
                     groupRefs,
+                    tagRefs,
                     groupRepository.getAllGroups()
-                ) { refs, allGroups ->
-                    val selectedId = refs.map { it.groupId }.firstOrNull()
-                    Triple(fetchedBook, allGroups, selectedId)
-                }.collect { (book, groups, selectedId) ->
+                ) { refs, tags, allGroups ->
+                    val selectedGroupId = refs.map { it.groupId }.firstOrNull()
+                    val selectedTagIds = tags.map { it.id }
+                    Triple(selectedGroupId, selectedTagIds, allGroups)
+                }.collect { (selectedGroupId, selectedTagIds, groups) ->
                     withContext(Dispatchers.Main) {
-                        _book.value = book
+                        _book.value = fetchedBook
                         _uiState.value = _uiState.value.copy(
-                            book = book,
+                            book = fetchedBook,
                             availableGroups = groups,
-                            selectedGroupId = selectedId,
-                            selectedBookSourceId = book?.bookSourceId?.toLong(),
+                            selectedGroupId = selectedGroupId,
+                            selectedTagIds = selectedTagIds,
+                            selectedBookSourceId = fetchedBook?.bookSourceId?.toLong(),
                             isLoading = false
                         )
                     }
@@ -143,6 +174,26 @@ class BookEditViewModel @Inject constructor(
     }
     
     /**
+     * 更新选中的标签（多选）
+     */
+    fun updateSelectedTags(tagIds: List<Long>) {
+        _uiState.value = _uiState.value.copy(selectedTagIds = tagIds)
+    }
+    
+    /**
+     * 切换标签选中状态
+     */
+    fun toggleTagSelection(tagId: Long) {
+        val currentSelectedIds = _uiState.value.selectedTagIds.toMutableList()
+        if (currentSelectedIds.contains(tagId)) {
+            currentSelectedIds.remove(tagId)
+        } else {
+            currentSelectedIds.add(tagId)
+        }
+        _uiState.value = _uiState.value.copy(selectedTagIds = currentSelectedIds)
+    }
+    
+    /**
      * 保存书籍及其分组关联
      */
     fun saveBook(book: BookEntity, onSuccess: () -> Unit) {
@@ -164,6 +215,11 @@ class BookEditViewModel @Inject constructor(
                     val groupIds = selectedGroupId?.let { listOf(it) } ?: emptyList()
                     bookRepository.updateBookGroups(bookId, groupIds)
                     Log.d("BookEdit", "Updated book group: $selectedGroupId")
+                    
+                    // 保存标签关联（多选标签）
+                    val selectedTagIds = _uiState.value.selectedTagIds
+                    bookRepository.updateBookTags(bookId, selectedTagIds)
+                    Log.d("BookEdit", "Updated book tags: $selectedTagIds")
                     
                     withContext(Dispatchers.Main) {
                         onSuccess()
