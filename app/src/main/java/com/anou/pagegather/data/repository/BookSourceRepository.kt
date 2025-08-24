@@ -33,31 +33,22 @@ class BookSourceRepository @Inject constructor(
     return bookSourceDao.getSourceById(id)
 }
 
-    /** 获取用户自定义来源 */
-    fun getCustomSources(): Flow<List<BookSourceEntity>> {
-        return bookSourceDao.getCustomSources()
-    }
-
-    /** 搜索来源 */
-    fun searchSources(name: String): Flow<List<BookSourceEntity>> {
-        return bookSourceDao.searchSourcesByName(name)
-    }
-
     // ========== 增删改操作 ==========
 
     /** 添加自定义来源 */
-    suspend fun addCustomBookSource(name: String, iconName: String? = null): Long {
+    suspend fun addCustomBookSource(name: String): Long {
     // 检查名称是否已存在
     if (bookSourceDao.isNameExists(name) > 0) {
         throw IllegalArgumentException("来源名称已存在")
     }
 
+    // 获取最大排序值+1，确保新来源显示在最前面
+    val maxSortOrder = getMaxSortOrder() ?: 0
     val bookSource = BookSourceEntity(
         name = name,
-        iconName = iconName,
         isBuiltIn = false,
         isEnabled = true,
-        sortOrder = 999 // 自定义来源排在后面
+        sortOrder = maxSortOrder + 1
     )
 
     return bookSourceDao.insert(bookSource)
@@ -95,6 +86,11 @@ class BookSourceRepository @Inject constructor(
         bookSourceDao.updateSortOrders(sourceIds)
     }
 
+    /** 获取最大排序值 */
+    suspend fun getMaxSortOrder(): Int? {
+        return bookSourceDao.getMaxSortOrder()
+    }
+
     // ========== 初始化操作 ==========
 
     /** 检查并初始化预定义来源 */
@@ -109,24 +105,19 @@ class BookSourceRepository @Inject constructor(
     /** 初始化预定义来源 */
     private suspend fun initializeBuiltInSources() {
         val builtInSources = listOf(
-            BookSourceEntity(name = "实体书", iconName = "book", isBuiltIn = true, sortOrder = 1),
-            BookSourceEntity(name = "微信读书", iconName = "weread", isBuiltIn = true, sortOrder = 2),
-            BookSourceEntity(name = "Kindle", iconName = "kindle", isBuiltIn = true, sortOrder = 3),
-            BookSourceEntity(name = "Apple Books", iconName = "apple", isBuiltIn = true, sortOrder = 4),
-            BookSourceEntity(name = "豆瓣阅读", iconName = "douban", isBuiltIn = true, sortOrder = 5),
-            BookSourceEntity(name = "京东读书", iconName = "jd", isBuiltIn = true, sortOrder = 6),
-            BookSourceEntity(name = "掌阅", iconName = "zhangyue", isBuiltIn = true, sortOrder = 7),
-            BookSourceEntity(name = "多看阅读", iconName = "duokan", isBuiltIn = true, sortOrder = 8),
+            BookSourceEntity(name = "未知", iconName = "default", isBuiltIn = true, sortOrder = 1),
+            BookSourceEntity(name = "实体书", iconName = "book", isBuiltIn = true, sortOrder = 11),
+            BookSourceEntity(name = "微信读书", iconName = "weread", isBuiltIn = true, sortOrder = 12),
+            BookSourceEntity(name = "Kindle", iconName = "kindle", isBuiltIn = true, sortOrder = 13),
+            BookSourceEntity(name = "Apple Books", iconName = "apple", isBuiltIn = true, sortOrder = 14),
+            BookSourceEntity(name = "网易蜗牛", iconName = "NETEASESNAIL", isBuiltIn = true, sortOrder =15),
+            BookSourceEntity(name = "京东读书", iconName = "jd", isBuiltIn = true, sortOrder = 16),
+            BookSourceEntity(name = "掌阅", iconName = "zhangyue", isBuiltIn = true, sortOrder = 17),
+            BookSourceEntity(name = "多看阅读", iconName = "duokan", isBuiltIn = true, sortOrder = 18),
+            BookSourceEntity(name = "豆瓣阅读", iconName = "douban", isBuiltIn = true, sortOrder = 19),
             BookSourceEntity(name = "其他", iconName = "other", isBuiltIn = true, sortOrder = 99)
         )
 
         bookSourceDao.insertAll(builtInSources)
-    }
-
-    /** 强制重新初始化内置来源（开发/测试用） */
-    suspend fun forceReinitializeBuiltInSources() {
-        // 删除所有内置来源
-        // 注意：这里需要添加相应的DAO方法
-        initializeBuiltInSources()
     }
 }

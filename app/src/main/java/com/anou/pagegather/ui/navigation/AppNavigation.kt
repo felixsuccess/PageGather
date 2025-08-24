@@ -13,6 +13,7 @@ import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
 import com.anou.pagegather.ui.feature.management.BookGroupManagementScreen
+import com.anou.pagegather.ui.feature.management.BookSourceManagementScreen
 import com.anou.pagegather.ui.feature.my.ProfileScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
@@ -52,7 +53,9 @@ fun AppNavigation(
         composable(Routes.ProfileRoutes.PROFILE) {
             ProfileScreen(
                 onNavigateToTagSettings = { navController.navigate(Routes.ProfileRoutes.TAG_SETTINGS) },
-                onNavigateToGroupSettings = { navController.navigate(Routes.ProfileRoutes.GROUP_SETTINGS) })
+                onNavigateToGroupSettings = { navController.navigate(Routes.ProfileRoutes.GROUP_SETTINGS) },
+                onNavigateToBookSourceSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) }
+            )
         }
 
         // 书架页面
@@ -118,6 +121,9 @@ fun AppNavigation(
         composable(Routes.ProfileRoutes.TAG_SETTINGS) { TagSettingsScreen() }
         composable(Routes.ProfileRoutes.GROUP_SETTINGS) { 
             BookGroupManagementScreen(navController = navController)
+        }
+        composable(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) {
+            BookSourceManagementScreen(navController = navController)
         }
 
 

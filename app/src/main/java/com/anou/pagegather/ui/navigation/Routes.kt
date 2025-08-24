@@ -51,6 +51,7 @@ object Routes {
         const val PROFILE = "profile"
         const val TAG_SETTINGS = "tag_settings"
         const val GROUP_SETTINGS = "group_settings"
+        const val BOOK_SOURCE_SETTINGS = "book_source_settings"
     }
 
     // 时间管理相关路由

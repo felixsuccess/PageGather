@@ -85,7 +85,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.anou.pagegather.R
 import com.anou.pagegather.data.local.entity.BookEntity
-import com.anou.pagegather.data.local.entity.BookSource
 import com.anou.pagegather.data.local.entity.BookType
 import com.anou.pagegather.data.local.entity.ReadPositionUnit
 import com.anou.pagegather.data.local.entity.ReadStatus
@@ -174,7 +173,7 @@ fun BookEditScreen(
             totalPagination = book.totalPagination,
             type = book.type,
             positionUnit = book.positionUnit,
-            bookSourceId = book.bookSourceId,
+            bookSourceId = book.bookSourceId.toLong(),
             purchaseDate = book.purchaseDate.toString(),
             bookOrder = book.bookOrder,
             rating = book.rating,
@@ -343,7 +342,10 @@ fun BookEditScreen(
                     }
 
                     if (validateForm(formState.value)) {
-                        val newBook = createBookEntity(bookId, formState.value)
+                        val selectedBookSourceId = uiState.selectedBookSourceId
+                        val newBook = createBookEntity(bookId, formState.value).copy(
+                            bookSourceId = selectedBookSourceId?.toInt() ?: 0
+                        )
                         viewModel.saveBook(newBook) {
                             navController.popBackStack()
                         }
@@ -597,6 +599,14 @@ fun BookEditScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
+                // 书籍来源选择器
+                BookSourceSelector(
+                    availableBookSources = uiState.availableBookSources,
+                    selectedBookSourceId = uiState.selectedBookSourceId,
+                    onBookSourceSelectionChange = viewModel::updateSelectedBookSource,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
 
                 if (formState.value.type == BookType.PAPER_BOOK.code) {
 
@@ -689,41 +699,6 @@ fun BookEditScreen(
 
                 }
 
-
-                var bookSourceExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(
-                    expanded = bookSourceExpanded,
-                    onExpandedChange = { bookSourceExpanded = !bookSourceExpanded },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp)
-                ) {
-                    TextField(
-                        readOnly = true,
-                        value = BookSource.entries.firstOrNull { it.code == formState.value.bookSourceId }?.message
-                            ?: "",
-                        onValueChange = {},
-                        label = { Text("来源") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = bookSourceExpanded
-                            )
-                        },
-                        modifier = Modifier.menuAnchor(
-                            type = MenuAnchorType.PrimaryNotEditable, enabled = true
-                        ),
-                    )
-                    ExposedDropdownMenu(
-                        expanded = bookSourceExpanded,
-                        onDismissRequest = { bookSourceExpanded = false }) {
-                        BookSource.entries.forEach { source ->
-                            DropdownMenuItem(text = { Text(source.message) }, onClick = {
-                                formState.value.bookSourceId = source.code
-                                bookSourceExpanded = false
-                            })
-                        }
-                    }
-                }
                 //TODO：  日历控件
 
                 CommonTextField(
@@ -1123,7 +1098,7 @@ data class BookFormState(
     var totalPagination: Int = 0,
     var type: Int = 0,
     var positionUnit: Int = 0,
-    var bookSourceId: Int = 0,
+    var bookSourceId: Long = 0,
     var purchaseDate: String = "",
     var purchasePrice: String = "",
     var bookOrder: Int = 0,
@@ -1154,7 +1129,7 @@ data class BookFormState(
             totalPagination = totalPagination,
             type = type,
             positionUnit = positionUnit,
-            bookSourceId = bookSourceId,
+            bookSourceId = bookSourceId.toInt(),
             purchaseDate = purchaseDate.toLongOrNull() ?: 0,
             purchasePrice = purchasePrice.toDoubleOrNull() ?: 0.0,
             bookOrder = bookOrder,
@@ -1193,7 +1168,7 @@ fun createBookEntity(bookId: String?, formState: BookFormState): BookEntity {
         totalPagination = formState.totalPagination,
         type = formState.type,
         positionUnit = formState.positionUnit,
-        bookSourceId = formState.bookSourceId,
+        bookSourceId = formState.bookSourceId.toInt(),
         purchaseDate = formState.purchaseDate.toLongOrNull() ?: 0,
         purchasePrice = priceValue,
         bookOrder = formState.bookOrder,

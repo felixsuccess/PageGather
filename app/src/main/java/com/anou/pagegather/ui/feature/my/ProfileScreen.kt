@@ -22,6 +22,7 @@ import com.anou.pagegather.ui.feature.my.components.UserProfileCard
 fun ProfileScreen(
     onNavigateToTagSettings: () -> Unit,
     onNavigateToGroupSettings: () -> Unit,
+    onNavigateToBookSourceSettings: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -57,7 +58,7 @@ fun ProfileScreen(
                         icon = Icons.Default.Source,
                         title = "书籍来源",
                         subtitle = "管理书籍信息来源",
-                        onClick = { /* TODO: 实现数据来源导航 */ }
+                        onClick = onNavigateToBookSourceSettings
                     )
                 )
             )

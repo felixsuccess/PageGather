@@ -31,7 +31,10 @@ data class BookSourceEntity(
     @ColumnInfo(name = "is_enabled")
     val isEnabled: Boolean = true,
     
-    /** 排序顺序 */
+    /** 
+     * 排序顺序
+     * 新建来源使用最大sort_order值+1，确保新来源显示在最前面
+     */
     @ColumnInfo(name = "sort_order")
     val sortOrder: Int = 0,
     

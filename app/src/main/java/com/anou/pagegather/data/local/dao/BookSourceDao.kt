@@ -25,21 +25,9 @@ interface BookSourceDao {
     @Query("SELECT * FROM book_source WHERE id = :id")
     suspend fun getSourceById(id: Long): BookSourceEntity?
     
-    /** 获取内置来源 */
-    @Query("SELECT * FROM book_source WHERE is_builtin = :trueValue ORDER BY sort_order ASC")
-    fun getBuiltInSources(trueValue: Boolean = true): Flow<List<BookSourceEntity>>
-    
     /** 获取内置来源（同步方法，用于初始化检查） */
     @Query("SELECT * FROM book_source WHERE is_builtin = :trueValue LIMIT 1")
     suspend fun getBuiltInSourcesSync(trueValue: Boolean = true): List<BookSourceEntity>
-    
-    /** 获取用户自定义来源 */
-    @Query("SELECT * FROM book_source WHERE is_builtin = :falseValue ORDER BY sort_order ASC, name ASC")
-    fun getCustomSources(falseValue: Boolean = false): Flow<List<BookSourceEntity>>
-    
-    /** 根据名称搜索来源 */
-    @Query("SELECT * FROM book_source WHERE name LIKE '%' || :name || '%' AND is_enabled = 1")
-    fun searchSourcesByName(name: String): Flow<List<BookSourceEntity>>
     
     // ========== 增删改操作 ==========
     
@@ -68,6 +56,10 @@ interface BookSourceDao {
     /** 启用/禁用来源 */
     @Query("UPDATE book_source SET is_enabled = :enabled, updated_date = :updateTime WHERE id = :id")
     suspend fun updateEnabled(id: Long, enabled: Int, updateTime: Long = System.currentTimeMillis())
+    
+    /** 获取最大排序值 */
+    @Query("SELECT MAX(sort_order) FROM book_source")
+    suspend fun getMaxSortOrder(): Int?
     
     /** 更新排序顺序 */
     @Query("UPDATE book_source SET sort_order = :sortOrder, updated_date = :updateTime WHERE id = :id")

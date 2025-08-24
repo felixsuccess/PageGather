@@ -68,7 +68,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.anou.pagegather.R
 import com.anou.pagegather.data.local.entity.BookEntity
-import com.anou.pagegather.data.local.entity.BookSource
+import com.anou.pagegather.data.local.entity.BookSourceEntity
+import com.anou.pagegather.data.repository.BookSourceRepository
 import com.anou.pagegather.data.local.entity.BookType
 import com.anou.pagegather.data.local.entity.ReadPositionUnit
 import com.anou.pagegather.data.local.entity.ReadStatus
@@ -91,7 +92,7 @@ fun BookDetailScreen(
     onNavigateToNewNote: () -> Unit,
     onBackClick: () -> Unit
 
-    ) {
+) {
     val context = LocalActivity.current
     val view = LocalView.current
     //val isLightTheme = MaterialTheme.colorScheme.background.luminance() > 0.5f
@@ -136,6 +137,7 @@ fun BookDetailScreen(
 
 
     val book by viewModel.book.collectAsState()
+    val bookSource by viewModel.bookSource.collectAsState()
 
     // 简化 LaunchedEffect 中的逻辑
     LaunchedEffect(bookId) {
@@ -168,7 +170,7 @@ fun BookDetailScreen(
         ) {
 
             // book?.let { TopImgLayout(it, imageHeight) }
-            book?.let { TopBackImgLayout(it, imageHeight) }
+            book?.let { TopBackImgLayout(it, imageHeight, bookSource) }
         }
 
         // 固定在顶部的按钮组
@@ -237,7 +239,7 @@ fun BookDetailScreen(
                     )
                 }
                 IconButton(onClick = {
-                   // onShareClick
+                    // onShareClick
                 }
 
                 ) {
@@ -266,7 +268,7 @@ fun BookDetailScreen(
 
 @Composable
 private fun TopBackImgLayout(
-    book: BookEntity, imageHeight: Dp,
+    book: BookEntity, imageHeight: Dp, bookSource: BookSourceEntity?
 ) {
     // ==================== 顶部复合图片区域 ====================
 
@@ -412,7 +414,7 @@ private fun TopBackImgLayout(
             .background(MaterialTheme.colorScheme.surface)
             .padding(24.dp)
     ) {
-        DisplayBookInfo(book)
+        DisplayBookInfo(book, bookSource)
 
     }
 
@@ -420,7 +422,7 @@ private fun TopBackImgLayout(
 }
 
 @Composable
-private fun DisplayBookInfo(book: BookEntity) {
+private fun DisplayBookInfo(book: BookEntity, bookSource: BookSourceEntity?) {
 
     Column(
         modifier = Modifier
@@ -529,10 +531,7 @@ private fun DisplayBookInfo(book: BookEntity) {
             )
             DetailItem(label = "评分", value = "${book.rating} ★")
             DetailItem(
-                label = "来源",
-                value = (BookSource.entries.firstOrNull { it.code == book.bookSourceId }?.message
-                    ?: "")
-
+                label = "来源", value = bookSource?.getDisplayName() ?: "未知来源"
             )
         }
 

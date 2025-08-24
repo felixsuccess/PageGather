@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookGroupEntity
+import com.anou.pagegather.data.local.entity.BookSourceEntity
 import com.anou.pagegather.data.repository.BookRepository
 import com.anou.pagegather.data.repository.BookGroupRepository
+import com.anou.pagegather.data.repository.BookSourceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +25,8 @@ data class BookEditUiState(
     val book: BookEntity? = null,
     val availableGroups: List<BookGroupEntity> = emptyList(),
     val selectedGroupId: Long? = null,
+    val availableBookSources: List<BookSourceEntity> = emptyList(),
+    val selectedBookSourceId: Long? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -30,7 +34,8 @@ data class BookEditUiState(
 @HiltViewModel
 class BookEditViewModel @Inject constructor(
     private val bookRepository: BookRepository,
-    private val groupRepository: BookGroupRepository
+    private val groupRepository: BookGroupRepository,
+    private val bookSourceRepository: BookSourceRepository
 ) : ViewModel() {
     private val _book = MutableStateFlow<BookEntity?>(null)
     val book: StateFlow<BookEntity?> = _book
@@ -40,6 +45,7 @@ class BookEditViewModel @Inject constructor(
     
     init {
         loadAvailableGroups()
+        loadAvailableBookSources()
     }
 
     /**
@@ -57,6 +63,26 @@ class BookEditViewModel @Inject constructor(
                 Log.e("BookEditViewModel", "加载分组失败: ${e.message}", e)
                 _uiState.value = _uiState.value.copy(
                     errorMessage = "加载分组失败: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * 加载可用书籍来源
+     */
+    private fun loadAvailableBookSources() {
+        viewModelScope.launch {
+            try {
+                bookSourceRepository.getAllEnabledSources().collect { bookSources ->
+                    _uiState.value = _uiState.value.copy(
+                        availableBookSources = bookSources
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("BookEditViewModel", "加载书籍来源失败: ${e.message}", e)
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "加载书籍来源失败: ${e.message}"
                 )
             }
         }
@@ -85,6 +111,7 @@ class BookEditViewModel @Inject constructor(
                             book = book,
                             availableGroups = groups,
                             selectedGroupId = selectedId,
+                            selectedBookSourceId = book?.bookSourceId?.toLong(),
                             isLoading = false
                         )
                     }
@@ -106,6 +133,13 @@ class BookEditViewModel @Inject constructor(
      */
     fun updateSelectedGroup(groupId: Long?) {
         _uiState.value = _uiState.value.copy(selectedGroupId = groupId)
+    }
+    
+    /**
+     * 更新选中的书籍来源
+     */
+    fun updateSelectedBookSource(bookSourceId: Long?) {
+        _uiState.value = _uiState.value.copy(selectedBookSourceId = bookSourceId)
     }
     
     /**
