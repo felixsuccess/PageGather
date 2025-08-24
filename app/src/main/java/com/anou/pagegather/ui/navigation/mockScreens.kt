@@ -16,30 +16,13 @@ fun StatisticsScreen(
         color = MaterialTheme.colorScheme.primary)
 }
 
-// 我的子页面 - 页面设置
-@Composable
-fun TagSettingsScreen() {
-    Text(text = "标签", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
+// 注意: TagSettingsScreen 已移动到 TagManagementScreen文件中
 // 注意: GroupSettingsScreen 已移动到 BookGroupManagementScreen文件中
-
-
 
 // 随记子页面 - 随记分类
 @Composable
 fun NoteCategoriesScreen() {
     Text(text = "随记分类：管理随记分类的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
-// 随记子页面 - 随记标签
-@Composable
-fun NoteTagsScreen() {
-    Text(text = "随记标签：管理随记标签的页面", overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.primary)
 }
@@ -81,47 +64,7 @@ fun SearchResultsScreen(
         color = MaterialTheme.colorScheme.primary)
 }
 
-
-
-// 时间管理相关页面 - 正计时
-@Composable
-fun ForwardTimerScreen() {
-    Text(text = "正计时：开始正计时的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
-// 时间管理相关页面 - 倒计时
-@Composable
-fun ReverseTimerScreen() {
-    Text(text = "倒计时：开始倒计时的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
-// 时间管理相关页面 - 目标设置
-@Composable
-fun GoalSettingScreen() {
-    Text(text = "目标设置：设置时间管理目标的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
-// 时间管理相关页面 - 阅读计划
-@Composable
-fun ReadingPlanScreen() {
-    Text(text = "阅读计划：设置和管理阅读计划的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
-
-// 时间管理相关页面 - 定期提醒
-@Composable
-fun PeriodicReminderScreen() {
-    Text(text = "定期提醒：设置和管理定期提醒的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
+// 注意: 时间管理相关Screen已移动到TimerScreens.kt文件中
 
 // 勋章系统页面
 @Composable

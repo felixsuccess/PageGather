@@ -63,4 +63,12 @@ object Routes {
         const val PERIODIC_REMINDER = "periodic_reminder"
     }
 
+    // 快捷操作相关路由
+    object QuickActionsRoutes {
+        const val QUICK_ACTIONS = "quick_actions"
+        const val QUICK_NOTE = "quick_note"
+        const val QUICK_REVIEW = "quick_review"
+        const val QUICK_BOOKMARK = "quick_bookmark"
+    }
+
 }

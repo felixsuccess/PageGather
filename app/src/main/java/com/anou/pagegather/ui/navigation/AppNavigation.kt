@@ -19,6 +19,8 @@ import com.anou.pagegather.ui.feature.my.ProfileScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
 import com.anou.pagegather.ui.feature.notes.NotesScreen
+import com.anou.pagegather.ui.feature.timer.*
+import com.anou.pagegather.ui.feature.quickactions.*
 
 @Composable
 fun AppNavigation(
@@ -69,6 +71,8 @@ fun AppNavigation(
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
                 },
                 onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
+                onNavigateToTimer = { navController.navigate(Routes.TimeManagementRoutes.FORWARD_TIMER) },
+                onNavigateToQuickActions = { navController.navigate(Routes.QuickActionsRoutes.QUICK_ACTIONS) },
             )
 
         }
@@ -169,11 +173,25 @@ fun AppNavigation(
         composable(Routes.DashboardRoutes.CHARTS) { ChartsScreen() }
 
         // 时间管理相关页面
-        composable(Routes.TimeManagementRoutes.FORWARD_TIMER) { ForwardTimerScreen() }
-        composable(Routes.TimeManagementRoutes.REVERSE_TIMER) { ReverseTimerScreen() }
+        composable(Routes.TimeManagementRoutes.FORWARD_TIMER) { 
+            ForwardTimerScreen(
+                onNavigateBack = { navController.popBackStack() }
+            ) 
+        }
+        composable(Routes.TimeManagementRoutes.REVERSE_TIMER) { 
+            ReverseTimerScreen(
+                onNavigateBack = { navController.popBackStack() }
+            ) 
+        }
         composable(Routes.TimeManagementRoutes.GOAL_SETTING) { GoalSettingScreen() }
         composable(Routes.TimeManagementRoutes.READING_PLAN) { ReadingPlanScreen() }
         composable(Routes.TimeManagementRoutes.PERIODIC_REMINDER) { PeriodicReminderScreen() }
+
+        // 快捷导航相关页面
+        composable(Routes.QuickActionsRoutes.QUICK_ACTIONS) { QuickActionsScreen() }
+        composable(Routes.QuickActionsRoutes.QUICK_NOTE) { QuickNoteScreen() }
+        composable(Routes.QuickActionsRoutes.QUICK_REVIEW) { QuickReviewScreen() }
+        composable(Routes.QuickActionsRoutes.QUICK_BOOKMARK) { QuickBookmarkScreen() }
 
     }
 }
