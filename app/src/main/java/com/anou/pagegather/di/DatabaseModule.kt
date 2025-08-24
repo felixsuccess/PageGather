@@ -11,6 +11,7 @@ import com.anou.pagegather.data.local.dao.NoteDao
 import com.anou.pagegather.data.local.dao.NoteAttachmentDao
 import com.anou.pagegather.data.local.dao.ReadingRecordDao
 import com.anou.pagegather.data.local.dao.BookTagRefDao
+import com.anou.pagegather.data.local.dao.NoteTagRefDao
 import com.anou.pagegather.data.local.dao.TagDao
 import com.anou.pagegather.data.local.database.AppDatabase
 import dagger.Module
@@ -110,5 +111,11 @@ object DatabaseModule {
     @Provides
     fun provideBookTagRefDao(database: AppDatabase): BookTagRefDao {
         return database.bookTagRefDao()
+    }
+    
+    /** 提供笔记标签关联数据访问对象 */
+    @Provides
+    fun provideNoteTagRefDao(database: AppDatabase): NoteTagRefDao {
+        return database.noteTagRefDao()
     }
 }

@@ -41,11 +41,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.anou.pagegather.data.local.entity.NoteEntity
+import com.anou.pagegather.ui.feature.bookshelf.NoteTagSelector
 import com.anou.pagegather.utils.FileOperator
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +58,8 @@ fun NoteEditScreen(
     navController: NavController,
 ) {
     val note by viewModel.note.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     var text by remember { mutableStateOf("") }
     var idea by remember { mutableStateOf("") }
@@ -73,6 +77,15 @@ fun NoteEditScreen(
 
     LaunchedEffect(note) {
         text = note?.quote ?: ""
+        idea = note?.idea ?: ""
+    }
+    
+    // 显示错误消息
+    uiState.errorMessage?.let { errorMessage ->
+        LaunchedEffect(errorMessage) {
+            android.widget.Toast.makeText(context, errorMessage, android.widget.Toast.LENGTH_LONG).show()
+            viewModel.clearError()
+        }
     }
 
     Scaffold(
@@ -182,6 +195,16 @@ fun NoteEditScreen(
                     label = { Text("心得感悟") },
                     placeholder =   { Text("心得感悟") },
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // 标签选择器
+                NoteTagSelector(
+                    availableTags = uiState.availableTags,
+                    selectedTagIds = uiState.selectedTagIds,
+                    onTagSelectionChange = viewModel::toggleTagSelection,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier

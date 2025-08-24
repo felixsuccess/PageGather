@@ -28,23 +28,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.anou.pagegather.data.local.entity.TagEntity
+import com.anou.pagegather.data.local.entity.TagType
 
 /**
- * 书籍标签选择器
- * 提供多选标签功能，采用下拉式设计与分组选择器保持一致
+ * 通用标签选择器
+ * 提供多选标签功能，采用下拉式设计，支持书籍标签和笔记标签
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookTagSelector(
+fun TagSelector(
     availableTags: List<TagEntity>,
     selectedTagIds: List<Long>,
     onTagSelectionChange: (Long) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    label: String = "书籍标签"
+    label: String = "标签",
+    tagType: TagType? = null // 可选的标签类型过滤
 ) {
+    // 根据标签类型过滤可用标签
+    val filteredTags = if (tagType != null) {
+        availableTags.filter { it.tagType == tagType.code }
+    } else {
+        availableTags
+    }
+    
     var isExpanded by remember { mutableStateOf(false) }
-    val selectedTags = availableTags.filter { selectedTagIds.contains(it.id) }
+    val selectedTags = filteredTags.filter { selectedTagIds.contains(it.id) }
     
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -66,7 +75,7 @@ fun BookTagSelector(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
                     .clickable(enabled = enabled) { 
-                        if (availableTags.isNotEmpty()) {
+                        if (filteredTags.isNotEmpty()) {
                             isExpanded = !isExpanded 
                         }
                     }
@@ -88,7 +97,7 @@ fun BookTagSelector(
                     when {
                         selectedTags.isEmpty() -> {
                             Text(
-                                text = if (availableTags.isEmpty()) "暂无可用标签" else "点击选择标签",
+                                text = if (filteredTags.isEmpty()) "暂无可用标签" else "点击选择标签",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
@@ -110,7 +119,7 @@ fun BookTagSelector(
                 }
                 
                 // 展开/收起图标
-                if (availableTags.isNotEmpty()) {
+                if (filteredTags.isNotEmpty()) {
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = if (isExpanded) "收起" else "展开",
@@ -134,7 +143,7 @@ fun BookTagSelector(
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     // 标签列表
-                    items(availableTags) { tag ->
+                    items(filteredTags) { tag ->
                         TagItem(
                             tag = tag,
                             isSelected = selectedTagIds.contains(tag.id),
@@ -146,6 +155,52 @@ fun BookTagSelector(
             }
         }
     }
+}
+
+/**
+ * 书籍标签选择器（向后兼容的包装器）
+ */
+@Composable
+fun BookTagSelector(
+    availableTags: List<TagEntity>,
+    selectedTagIds: List<Long>,
+    onTagSelectionChange: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    label: String = "书籍标签"
+) {
+    TagSelector(
+        availableTags = availableTags,
+        selectedTagIds = selectedTagIds,
+        onTagSelectionChange = onTagSelectionChange,
+        modifier = modifier,
+        enabled = enabled,
+        label = label,
+        tagType = TagType.BOOK
+    )
+}
+
+/**
+ * 笔记标签选择器
+ */
+@Composable
+fun NoteTagSelector(
+    availableTags: List<TagEntity>,
+    selectedTagIds: List<Long>,
+    onTagSelectionChange: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    label: String = "笔记标签"
+) {
+    TagSelector(
+        availableTags = availableTags,
+        selectedTagIds = selectedTagIds,
+        onTagSelectionChange = onTagSelectionChange,
+        modifier = modifier,
+        enabled = enabled,
+        label = label,
+        tagType = TagType.NOTE
+    )
 }
 
 /**

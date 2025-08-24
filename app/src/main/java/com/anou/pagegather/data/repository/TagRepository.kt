@@ -2,6 +2,7 @@ package com.anou.pagegather.data.repository
 
 import com.anou.pagegather.data.local.database.AppDatabase
 import com.anou.pagegather.data.local.entity.BookTagRefEntity
+import com.anou.pagegather.data.local.entity.NoteTagRefEntity
 import com.anou.pagegather.data.local.entity.TagEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -17,6 +18,7 @@ class TagRepository @Inject constructor(
 ) {
     private val tagDao = database.tagDao()
     private val bookTagRefDao = database.bookTagRefDao()
+    private val noteTagRefDao = database.noteTagRefDao()
 
     // ========== 标签基础操作 ==========
 
@@ -141,5 +143,58 @@ class TagRepository @Inject constructor(
      */
     suspend fun isBookHasTag(bookId: Long, tagId: Long): Boolean {
         return bookTagRefDao.isBookHasTag(bookId, tagId) > 0
+    }
+    
+    // ========== 标签与笔记关联操作 ==========
+
+    /**
+     * 获取笔记的标签
+     */
+    fun getTagsByNoteId(noteId: Long): Flow<List<TagEntity>> {
+        return tagDao.getTagsByNoteId(noteId)
+    }
+
+    /**
+     * 获取标签下的笔记
+     */
+    fun getNotesByTagId(tagId: Long): Flow<List<NoteTagRefEntity>> {
+        return noteTagRefDao.getNoteRefsByTagId(tagId)
+    }
+
+    /**
+     * 添加标签到笔记
+     */
+    suspend fun addTagToNote(noteId: Long, tagId: Long): Long {
+        val currentTime = System.currentTimeMillis()
+        return noteTagRefDao.addTagToNote(
+            NoteTagRefEntity(
+                noteId = noteId,
+                tagId = tagId,
+                createdDate = currentTime,
+                updatedDate = currentTime,
+                lastSyncDate = currentTime
+            )
+        )
+    }
+
+    /**
+     * 从笔记中移除标签
+     */
+    suspend fun removeTagFromNote(noteId: Long, tagId: Long) {
+        noteTagRefDao.removeTagFromNote(noteId, tagId)
+    }
+
+    /**
+     * 更新笔记的标签
+     */
+    suspend fun updateNoteTags(noteId: Long, tagIds: List<Long>) {
+        noteTagRefDao.updateNoteTags(noteId, tagIds)
+    }
+
+    /**
+     * 检查笔记是否有标签
+     */
+    suspend fun isNoteHasTag(noteId: Long, tagId: Long): Boolean {
+        return noteTagRefDao.isNoteHasTag(noteId, tagId) > 0
     }
 }

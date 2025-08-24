@@ -10,6 +10,7 @@ import com.anou.pagegather.data.local.dao.BookSourceDao
 import com.anou.pagegather.data.local.dao.BookGroupDao
 import com.anou.pagegather.data.local.dao.NoteDao
 import com.anou.pagegather.data.local.dao.NoteAttachmentDao
+import com.anou.pagegather.data.local.dao.NoteTagRefDao
 import com.anou.pagegather.data.local.dao.ReadingRecordDao
 import com.anou.pagegather.data.local.dao.BookTagRefDao
 import com.anou.pagegather.data.local.dao.TagDao
@@ -24,6 +25,7 @@ import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.BookTagRefEntity
 import com.anou.pagegather.data.local.entity.TagEntity
 import com.anou.pagegather.data.local.entity.NoteTagRefEntity
+import com.anou.pagegather.data.local.database.DateConverter
 
 /**
  * 应用数据库
@@ -77,4 +79,7 @@ abstract class AppDatabase : RoomDatabase() {
     
     /** 书籍标签关联数据访问对象 */
     abstract fun bookTagRefDao(): BookTagRefDao
+    
+    /** 笔记标签关联数据访问对象 */
+    abstract fun noteTagRefDao(): NoteTagRefDao
 }
