@@ -54,7 +54,7 @@ fun AppNavigation(
         composable(Routes.ProfileRoutes.PROFILE) {
             ProfileScreen(
                 onNavigateToTagSettings = { navController.navigate(Routes.ProfileRoutes.TAG_SETTINGS) },
-                onNavigateToGroupSettings = { navController.navigate(Routes.ProfileRoutes.GROUP_SETTINGS) },
+                onNavigateToGroupSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
                 onNavigateToBookSourceSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) }
             )
         }
@@ -68,7 +68,7 @@ fun AppNavigation(
                 onToBookAddClick = {
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
                 },
-                onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.GROUP_SETTINGS) },
+                onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
             )
 
         }
@@ -122,7 +122,7 @@ fun AppNavigation(
         composable(Routes.ProfileRoutes.TAG_SETTINGS) { 
             TagManagementScreen(navController = navController)
         }
-        composable(Routes.ProfileRoutes.GROUP_SETTINGS) { 
+        composable(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) { 
             BookGroupManagementScreen(navController = navController)
         }
         composable(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) {

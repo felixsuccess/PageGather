@@ -50,7 +50,7 @@ object Routes {
     object ProfileRoutes {
         const val PROFILE = "profile"
         const val TAG_SETTINGS = "tag_settings"
-        const val GROUP_SETTINGS = "group_settings"
+        const val BOOK_GROUP_SETTINGS = "book_group_settings"
         const val BOOK_SOURCE_SETTINGS = "book_source_settings"
     }
 
