@@ -17,7 +17,6 @@ class BookGroupRepository @Inject constructor(
 ) {
     private val bookGroupDao = database.bookGroupDao()
     private val bookGroupRefDao = database.bookGroupRefDao()
-    private val bookDao = database.bookDao()
 
     // ========== 分组基础操作 ==========
 
@@ -68,6 +67,22 @@ class BookGroupRepository @Inject constructor(
      */
     suspend fun isGroupNameExists(name: String, excludeId: Long = -1): Boolean {
         return bookGroupDao.isGroupNameExists(name, excludeId) > 0
+    }
+
+    /**
+     * 获取最大排序值
+     * 用于新建分组时分配 group_order 值，确保新分组显示在列表最后
+     */
+    suspend fun getMaxOrder(): Int? {
+        return bookGroupDao.getMaxOrder()
+    }
+    
+    /**
+     * 批量更新分组排序
+     * 用于拖拽排序功能
+     */
+    suspend fun updateGroupOrders(orderUpdates: Map<Long, Int>) {
+        bookGroupDao.updateGroupOrders(orderUpdates)
     }
 
     // ========== 分组与书籍关联操作 ==========

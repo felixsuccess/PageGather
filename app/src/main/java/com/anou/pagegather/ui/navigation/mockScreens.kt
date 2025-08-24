@@ -24,7 +24,7 @@ fun TagSettingsScreen() {
         color = MaterialTheme.colorScheme.primary)
 }
 
-// 注意: GroupSettingsScreen 已移动到 GroupManagementScreen文件中
+// 注意: GroupSettingsScreen 已移动到 BookGroupManagementScreen文件中
 
 
 

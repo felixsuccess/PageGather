@@ -43,7 +43,7 @@ import com.anou.pagegather.data.local.entity.NoteTagRefEntity
         BookCollectionEntity::class,
         BookSourceEntity::class
     ],
-    version = 14,  
+    version = 16,  // BookGroupEntity.name字段改为非空  
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)
