@@ -20,10 +20,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -31,8 +33,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -63,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -147,6 +152,7 @@ fun BookEditScreen(
     viewModel: BookEditViewModel = hiltViewModel(),
 ) {
     val book by viewModel.book.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val formState = remember { mutableStateOf(BookFormState()) }
     var localCoverPath by remember { mutableStateOf("") }
     var photoImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -207,12 +213,22 @@ fun BookEditScreen(
             Log.e("BookEditScreen", "更新表单状态失败: ${e.message}", e)
         }
     }
+    
+    // 获取 context
+    val context = LocalContext.current
+    
+    // 显示错误消息
+    uiState.errorMessage?.let { errorMessage ->
+        LaunchedEffect(errorMessage) {
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+            viewModel.clearError()
+        }
+    }
     var showModal by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
     var showPickNetImgModal by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     val pickImageLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -284,19 +300,12 @@ fun BookEditScreen(
                 }
             },
             title = {
-                AnimatedVisibility(
-                    (scrollState.value > 64),
-                    enter = slideInVertically(initialOffsetY = { it / 4 }),
-                    exit = slideOutVertically(targetOffsetY = { it / 4 })
-                ) {
-                    Text(
-                        text = if (bookId != null && bookId.toLongOrNull() != 0L) "编辑书籍" else "新建书籍",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(end = 16.dp)
-                    )
-                }
+                Text(
+                    text = if (bookId != null && bookId.toLongOrNull() != 0L) "编辑书籍" else "新建书籍",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             },
             actions = {
                 val showToast = rememberToast()
@@ -341,12 +350,13 @@ fun BookEditScreen(
                     }
 
                 }
-                Text(
-                    text = if (bookId != null && bookId.toLongOrNull() != 0L) "保存" else "添加",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+              
+                Icon(
+                    imageVector =   Icons.Default.Save  ,
+                    contentDescription = if (bookId != null && bookId.toLongOrNull() != 0L) "保存" else "添加",
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
-                        .padding(horizontal = 5.dp)
+                        .padding(horizontal = 12.dp)
                         .clickable(onClick = saveBookLogic)
                 )
             })
@@ -364,28 +374,68 @@ fun BookEditScreen(
                     .verticalScroll(scrollState)
                     .padding(10.dp)
             ) {
-                Column(
-                    Modifier
+                // 封面选择区域
+                androidx.compose.material3.Card(
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .height(160.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current).data(localCoverPath)
-                            .crossfade(true).build(),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(5.dp)
-                            .height(120.dp)
-                            .aspectRatio(7f / 10f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { // 点击封面触发选择模态
-                                showModal = true
-                            },
-                        error = painterResource(id = R.mipmap.default_cover)
+                        .padding(vertical = 8.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    elevation = androidx.compose.material3.CardDefaults.cardElevation(
+                        defaultElevation = 2.dp
                     )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "书籍封面",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        
+                        Box(
+                            modifier = Modifier
+                                .size(width = 120.dp, height = 160.dp)
+                                .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .clickable { showModal = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current).data(localCoverPath)
+                                    .crossfade(true).build(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                error = painterResource(id = R.mipmap.default_cover),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                            
+                            // 添加点击提示
+                            if (localCoverPath.isEmpty()) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                    Text(
+                                        text = "点击添加封面",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // 更新封面URL到表单状态
@@ -534,6 +584,18 @@ fun BookEditScreen(
                     },
                     label = "书籍类型",
                     itemToString = { it.message })
+
+                // 书籍分组选择器
+                BookGroupSelector(
+                    availableGroups = uiState.availableGroups,
+                    selectedGroupId = uiState.selectedGroupId,
+                    onGroupSelectionChange = viewModel::updateSelectedGroup,
+                    onAddNewGroup = {
+                        // 可以在这里添加快速创建分组的逻辑，或者导航到分组管理页面
+                        // 这里暂时不实现，留给后续优化
+                    },
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
 
 
                 if (formState.value.type == BookType.PAPER_BOOK.code) {
@@ -941,53 +1003,37 @@ fun CommonTextField(
 ) {
     var isInputValid by remember { mutableStateOf(true) }
 
-    TextField(
-        value = value,
-        onValueChange = { newValue ->
-            isInputValid = validator(newValue)
-            onValueChange(newValue)
-        },
-        label = { Text(label) },
-        isError = !isInputValid || isError,
-        modifier = modifier,
-        keyboardOptions = keyboardOptions,
-        maxLines = maxLines,
-        placeholder = if (placeholder != null) {
-            { Text(placeholder) }
-        } else null,
-        textStyle = LocalTextStyle.current,
-        visualTransformation = visualTransformation,
-        keyboardActions = keyboardActions,
-        singleLine = maxLines == 1,
-        trailingIcon = trailingIcon,
-        readOnly = readOnly,
-        colors = TextFieldDefaults.colors(
-            errorLabelColor = Color.Red,
-            errorSupportingTextColor = Color.Red,
-            errorTrailingIconColor = Color.Red,
-            focusedContainerColor = Color.Transparent,
+    Column {
+        androidx.compose.material3.OutlinedTextField(
+            value = value,
+            onValueChange = { newValue ->
+                isInputValid = validator(newValue)
+                onValueChange(newValue)
+            },
+            label = { Text(label) },
+            isError = !isInputValid || isError,
+            modifier = modifier,
+            keyboardOptions = keyboardOptions,
+            maxLines = maxLines,
+            placeholder = if (placeholder != null) {
+                { Text(placeholder) }
+            } else null,
+            visualTransformation = visualTransformation,
+            keyboardActions = keyboardActions,
+            singleLine = maxLines == 1,
+            trailingIcon = trailingIcon,
+            readOnly = readOnly,
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
         )
-//                colors = TextFieldDefaults.colors(
-//                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//        unfocusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//        focusedContainerColor = Color.Transparent,
-//        unfocusedContainerColor = Color.Transparent,
-//        cursorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//        errorCursorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//        focusedIndicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//        unfocusedIndicatorColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//        focusedPlaceholderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onPrimaryContainer,
-//    ),
-    )
 
-    if (!isInputValid) {
-        Text(
-            text = errorMessage,
-            color = Color.Red,
-            style = TextStyle(fontSize = 12.sp),
-            modifier = Modifier.padding(start = 16.dp)
-        )
+        if (!isInputValid || (isError && errorMessage.isNotEmpty())) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
     }
 }
 
