@@ -14,23 +14,23 @@ interface BookTagRefDao {
     // ========== 查询操作 ==========
     
     /** 获取书籍的所有标签关联 */
-    @Query("SELECT * FROM book_tag_ref WHERE book_id = :bookId AND is_deleted = false")
+    @Query("SELECT * FROM book_tag_ref WHERE book_id = :bookId AND is_deleted = 0")
     fun getTagRefsByBookId(bookId: Long): Flow<List<BookTagRefEntity>>
     
     /** 获取标签的所有书籍关联 */
-    @Query("SELECT * FROM book_tag_ref WHERE tag_id = :tagId AND is_deleted = false")
+    @Query("SELECT * FROM book_tag_ref WHERE tag_id = :tagId AND is_deleted = 0")
     fun getBookRefsByTagId(tagId: Long): Flow<List<BookTagRefEntity>>
     
     /** 检查书籍是否有指定标签 */
-    @Query("SELECT COUNT(*) FROM book_tag_ref WHERE book_id = :bookId AND tag_id = :tagId AND is_deleted = false")
+    @Query("SELECT COUNT(*) FROM book_tag_ref WHERE book_id = :bookId AND tag_id = :tagId AND is_deleted = 0")
     suspend fun isBookHasTag(bookId: Long, tagId: Long): Int
     
     /** 获取标签下的书籍数量 */
-    @Query("SELECT COUNT(*) FROM book_tag_ref WHERE tag_id = :tagId AND is_deleted = false")
+    @Query("SELECT COUNT(*) FROM book_tag_ref WHERE tag_id = :tagId AND is_deleted = 0")
     suspend fun getBookCountByTag(tagId: Long): Int
     
     /** 获取书籍的标签数量 */
-    @Query("SELECT COUNT(*) FROM book_tag_ref WHERE book_id = :bookId AND is_deleted = false")
+    @Query("SELECT COUNT(*) FROM book_tag_ref WHERE book_id = :bookId AND is_deleted = 0")
     suspend fun getTagCountForBook(bookId: Long): Int
     
     // ========== 增删改操作 ==========
@@ -44,15 +44,15 @@ interface BookTagRefDao {
     suspend fun addTagsToBook(refs: List<BookTagRefEntity>): List<Long>
     
     /** 从书籍移除标签（软删除） */
-    @Query("UPDATE book_tag_ref SET is_deleted = true, updated_date = :updateTime WHERE book_id = :bookId AND tag_id = :tagId")
+    @Query("UPDATE book_tag_ref SET is_deleted = 1, updated_date = :updateTime WHERE book_id = :bookId AND tag_id = :tagId")
     suspend fun removeTagFromBook(bookId: Long, tagId: Long, updateTime: Long = System.currentTimeMillis())
     
     /** 移除书籍的所有标签（软删除） */
-    @Query("UPDATE book_tag_ref SET is_deleted = true, updated_date = :updateTime WHERE book_id = :bookId")
+    @Query("UPDATE book_tag_ref SET is_deleted = 1, updated_date = :updateTime WHERE book_id = :bookId")
     suspend fun removeAllTagsFromBook(bookId: Long, updateTime: Long = System.currentTimeMillis())
     
     /** 移除标签的所有书籍关联（软删除） */
-    @Query("UPDATE book_tag_ref SET is_deleted = true, updated_date = :updateTime WHERE tag_id = :tagId")
+    @Query("UPDATE book_tag_ref SET is_deleted = 1, updated_date = :updateTime WHERE tag_id = :tagId")
     suspend fun removeAllBooksFromTag(tagId: Long, updateTime: Long = System.currentTimeMillis())
     
     /** 物理删除书籍标签关联 */

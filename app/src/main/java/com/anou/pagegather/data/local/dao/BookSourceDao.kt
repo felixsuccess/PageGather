@@ -26,8 +26,8 @@ interface BookSourceDao {
     suspend fun getSourceById(id: Long): BookSourceEntity?
     
     /** 获取内置来源（同步方法，用于初始化检查） */
-    @Query("SELECT * FROM book_source WHERE is_builtin = :trueValue LIMIT 1")
-    suspend fun getBuiltInSourcesSync(trueValue: Boolean = true): List<BookSourceEntity>
+    @Query("SELECT * FROM book_source WHERE is_builtin = 1 LIMIT 1")
+    suspend fun getBuiltInSourcesSync(): List<BookSourceEntity>
     
     // ========== 增删改操作 ==========
     
