@@ -1,8 +1,10 @@
 package com.anou.pagegather.ui.navigation
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -19,8 +21,12 @@ import com.anou.pagegather.ui.feature.my.ProfileScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
 import com.anou.pagegather.ui.feature.notes.NotesScreen
-import com.anou.pagegather.ui.feature.timer.*
+import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
+import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
 import com.anou.pagegather.ui.feature.quickactions.*
+import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
+import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
+import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
 
 @Composable
 fun AppNavigation(
@@ -83,6 +89,23 @@ fun AppNavigation(
         ) { backStackEntry ->
             val bookId = backStackEntry.arguments?.getString(Routes.BookRoutes.BOOK_ID)
             BookEditScreen(bookId = bookId, navController = navController)
+        }
+
+        // 添加支持回调参数的书籍编辑路由
+        composable(
+            route = "${Routes.BookRoutes.BOOK_EDIT}/{${Routes.BookRoutes.BOOK_ID}}?callback={callback}",
+            arguments = listOf(
+                navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.StringType },
+                navArgument("callback") { type = NavType.StringType; nullable = true }
+            )
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getString(Routes.BookRoutes.BOOK_ID)
+            val callback = backStackEntry.arguments?.getString("callback")
+            BookEditScreen(
+                bookId = bookId, 
+                navController = navController,
+                callbackRoute = callback
+            )
         }
 
         composable(
@@ -175,9 +198,32 @@ fun AppNavigation(
         // 时间管理相关页面
         composable(Routes.TimeManagementRoutes.FORWARD_TIMER) { 
             ForwardTimerScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAddBook = { 
+                    // 导航到添加书籍页面，bookId为0表示添加新书籍
+                    // 添加回调参数，指向当前页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=${Routes.TimeManagementRoutes.FORWARD_TIMER}")
+                }
             ) 
         }
+        
+        // 添加带newlyAddedBookId参数的ForwardTimer路由，用于书籍添加后的回调
+        composable(
+            route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId={newlyAddedBookId}",
+            arguments = listOf(navArgument("newlyAddedBookId") { type = NavType.StringType; nullable = true })
+        ) { backStackEntry ->
+            val newlyAddedBookId = backStackEntry.arguments?.getString("newlyAddedBookId")?.toLongOrNull()
+            ForwardTimerScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAddBook = { 
+                    // 导航到添加书籍页面，bookId为0表示添加新书籍
+                    // 添加回调参数，指向当前页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=${Routes.TimeManagementRoutes.FORWARD_TIMER}")
+                },
+                newlyAddedBookId = newlyAddedBookId
+            ) 
+        }
+        
         composable(Routes.TimeManagementRoutes.REVERSE_TIMER) { 
             ReverseTimerScreen(
                 onNavigateBack = { navController.popBackStack() }
@@ -191,7 +237,5 @@ fun AppNavigation(
         composable(Routes.QuickActionsRoutes.QUICK_ACTIONS) { QuickActionsScreen() }
         composable(Routes.QuickActionsRoutes.QUICK_NOTE) { QuickNoteScreen() }
         composable(Routes.QuickActionsRoutes.QUICK_REVIEW) { QuickReviewScreen() }
-        composable(Routes.QuickActionsRoutes.QUICK_BOOKMARK) { QuickBookmarkScreen() }
-
     }
 }

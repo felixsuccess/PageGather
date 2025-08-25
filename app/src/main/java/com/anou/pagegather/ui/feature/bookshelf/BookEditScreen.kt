@@ -148,6 +148,7 @@ private suspend fun saveImageToLocal(context: Context, uri: Uri): ImageResult {
 fun BookEditScreen(
     navController: NavController,
     bookId: String? = null,
+    callbackRoute: String? = null, // 添加回调路由参数
     viewModel: BookEditViewModel = hiltViewModel(),
 ) {
     val book by viewModel.book.collectAsState()
@@ -242,11 +243,9 @@ fun BookEditScreen(
                         formState.value = formState.value.copy(coverUrl = result.filePath)
                         localCoverPath = result.filePath
                     }
-
-                    else -> {}
-                }
-                withContext(Dispatchers.Main) {
-                    handleImageResult(context, result)
+                    is ImageResult.Error -> {
+                        handleImageResult(context, result)
+                    }
                 }
             }
         }
@@ -347,7 +346,20 @@ fun BookEditScreen(
                             bookSourceId = selectedBookSourceId?.toInt() ?: 0
                         )
                         viewModel.saveBook(newBook) {
-                            navController.popBackStack()
+                            // 根据是否有回调路由决定返回方式
+                            if (callbackRoute != null) {
+                                // 如果有回调路由，导航到指定路由并传递书籍ID
+                                // 使用特殊的参数名表明这是从书籍添加页面返回的
+                                navController.navigate("${callbackRoute}?newlyAddedBookId=${newBook.id}") {
+                                    // 修复导航逻辑，确保正确返回到保存记录对话框
+                                    popUpTo(callbackRoute) { inclusive = false }
+                                    // 保持在栈顶，不要添加新的实例
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                // 否则使用默认的返回方式
+                                navController.popBackStack()
+                            }
                         }
                     }
 
@@ -1196,3 +1208,16 @@ fun createBookEntity(bookId: String?, formState: BookFormState): BookEntity {
         coverUrl = formState.coverUrl
     )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

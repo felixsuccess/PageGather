@@ -1,18 +1,52 @@
 package com.anou.pagegather.ui.feature.timer
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,73 +63,10 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForwardTimerScreen(
-    onNavigateBack: () -> Unit = {},
-    viewModel: TimerViewModel = hiltViewModel()
-) {
-    LaunchedEffect(Unit) {
-        viewModel.setTimerType(TimerType.FORWARD)
-    }
-    
-    val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    
-    // 显示错误信息
-    uiState.errorMessage?.let { error ->
-        LaunchedEffect(error) {
-            // 可以使用 SnackBar 或其他方式显示错误
-            viewModel.clearError()
-        }
-    }
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "正向计时器",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        TimerContent(
-            modifier = Modifier.padding(paddingValues),
-            uiState = uiState,
-            viewModel = viewModel
-        )
-        
-        // 显示保存记录对话框（在PAUSED或STOPPED状态时显示）
-        if (uiState.showSaveDialog && (uiState.status == TimerStatus.PAUSED )) {
-            SaveRecordDialog(
-                uiState = uiState,
-                viewModel = viewModel,
-                onDismiss = { viewModel.cancelSaveRecord() }
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 fun ReverseTimerScreen(
     onNavigateBack: () -> Unit = {},
-    viewModel: TimerViewModel = hiltViewModel()
+    viewModel: ReverseTimerViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.setTimerType(TimerType.REVERSE)
-    }
-    
     val uiState by viewModel.uiState.collectAsState()
     
     // 显示错误信息
@@ -139,179 +110,51 @@ fun ReverseTimerScreen(
                 )
             }
             
-            TimerContent(
-                modifier = Modifier.weight(1f),
-                uiState = uiState,
-                viewModel = viewModel
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                // 书籍选择卡片（仅在IDLE状态显示）
+                if (uiState.status == TimerStatus.IDLE) {
+                    ReverseBookSelectionCard(
+                        selectedBook = uiState.selectedBook,
+                        onBookSelect = { book -> viewModel.selectBook(book) },
+                        viewModel = viewModel
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 时间显示
+                ReverseTimerDisplay(
+                    uiState = uiState,
+                    viewModel = viewModel
+                )
+                
+                // 控制按钮
+                ReverseTimerControls(
+                    status = uiState.status,
+                    onStart = { viewModel.startTimer() },
+                    onPause = { viewModel.pauseTimer() },
+                    onStop = { viewModel.stopTimer() },
+                    onReset = { viewModel.fullReset() }
+                )
+            }
         }
         
-        // 显示保存记录对话框（在PAUSED或STOPPED状态时显示）
-        if (uiState.showSaveDialog && (uiState.status == TimerStatus.PAUSED  )) {
-            SaveRecordDialog(
+        // 显示保存记录对话框（在PAUSED状态时显示）
+        if (uiState.showSaveDialog && uiState.status == TimerStatus.PAUSED) {
+            ReverseSaveRecordDialog(
                 uiState = uiState,
                 viewModel = viewModel,
                 onDismiss = { viewModel.cancelSaveRecord() }
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun GoalSettingScreen() {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "阅读目标设置",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = { /* 暂未实现返回功能 */ }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "🎯",
-                    style = MaterialTheme.typography.displayLarge
-                )
-                Text(
-                    text = "阅读目标设置",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "此功能正在开发中...",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ReadingPlanScreen() {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "阅读计划",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = { /* 暂未实现返回功能 */ }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "📅",
-                    style = MaterialTheme.typography.displayLarge
-                )
-                Text(
-                    text = "阅读计划",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "此功能正在开发中...",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PeriodicReminderScreen() {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        text = "定期提醒",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Medium
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = { /* 暂未实现返回功能 */ }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "🔔",
-                    style = MaterialTheme.typography.displayLarge
-                )
-                Text(
-                    text = "定期提醒",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "此功能正在开发中...",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
@@ -321,7 +164,7 @@ fun PeriodicReminderScreen() {
  */
 @Composable
 fun ReverseTimerSetup(
-    viewModel: TimerViewModel,
+    viewModel: ReverseTimerViewModel,
     modifier: Modifier = Modifier
 ) {
     var targetMinutes by remember { mutableStateOf("25") }
@@ -388,279 +231,12 @@ fun ReverseTimerSetup(
 }
 
 /**
- * 计时器主要内容组件
- */
-@Composable
-fun TimerContent(
-    modifier: Modifier = Modifier,
-    uiState: TimerUIState,
-    viewModel: TimerViewModel
-) {
-    if (uiState.type == TimerType.FORWARD) {
-        // 正向计时器使用特殊布局
-        ForwardTimerLayout(
-            modifier = modifier,
-            uiState = uiState,
-            viewModel = viewModel
-        )
-    } else {
-        // 反向计时器使用原有布局
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // 时间显示
-            TimerDisplay(
-                uiState = uiState,
-                viewModel = viewModel
-            )
-            
-            // 控制按钮
-            TimerControls(
-                status = uiState.status,
-                onStart = { viewModel.startTimer() },
-                onPause = { viewModel.pauseTimer() },
-                onStop = { viewModel.stopTimer() },
-                onReset = { viewModel.fullReset() }
-            )
-        }
-    }
-}
-
-/**
- * 正向计时器特殊布局
- */
-@Composable
-fun ForwardTimerLayout(
-    modifier: Modifier = Modifier,
-    uiState: TimerUIState,
-    viewModel: TimerViewModel
-) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // 居中放大显示计时器，沾满中间区域
-        LargeTimerDisplay(
-            uiState = uiState,
-            viewModel = viewModel,
-            modifier = modifier.then(
-                Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth()
-            )
-        )
-        
-        // 底部控制按钮
-        TimerControls(
-            status = uiState.status,
-            onStart = { viewModel.startTimer() },
-            onPause = { viewModel.pauseTimer() },
-            onStop = { viewModel.stopTimer() },
-            onReset = { viewModel.fullReset() },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-        )
-    }
-}
-
-/**
- * 放大的时间显示组件
- */
-@Composable
-fun LargeTimerDisplay(
-    uiState: TimerUIState,
-    viewModel: TimerViewModel,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = when (uiState.status) {
-                TimerStatus.RUNNING -> MaterialTheme.colorScheme.primaryContainer
-                TimerStatus.PAUSED -> MaterialTheme.colorScheme.secondaryContainer
-                else -> MaterialTheme.colorScheme.surface
-            }
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp), // 增加内边距
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // 垂直居中
-        ) {
-            // 主要时间显示 - 使用更大的字体
-            Text(
-                text = when (uiState.type) {
-                    TimerType.FORWARD -> viewModel.formatTime(uiState.elapsedTime)
-                    TimerType.REVERSE -> viewModel.formatTime(uiState.remainingTime)
-                },
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontSize = 48.sp, // 增大字体大小
-                    fontWeight = FontWeight.Bold
-                ),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = false) // 允许文本根据内容调整大小
-            )
-            
-            // 状态指示
-            Text(
-                text = when (uiState.status) {
-                    TimerStatus.IDLE -> "准备开始"
-                    TimerStatus.RUNNING -> "计时中"
-                    TimerStatus.PAUSED -> "已暂停"
-                },
-                style = MaterialTheme.typography.titleMedium, // 使用更大的字体
-                color = when (uiState.status) {
-                    TimerStatus.RUNNING -> MaterialTheme.colorScheme.primary
-                    TimerStatus.PAUSED -> MaterialTheme.colorScheme.secondary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                modifier = Modifier.padding(top = 16.dp)
-            )
-        }
-    }
-}
-
-/**
- * 书籍选择卡片
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BookSelectionCard(
-    selectedBook: BookEntity?,
-    onBookSelect: (BookEntity) -> Unit,
-    viewModel: TimerViewModel
-) {
-    var showBookSelector by remember { mutableStateOf(false) }
-    val books by viewModel.getAllBooks().collectAsState(initial = emptyList())
-    
-    Card(
-        onClick = { showBookSelector = true },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Book,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (selectedBook != null) "当前书籍" else "选择书籍",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = selectedBook?.name ?: "点击选择要阅读的书籍",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (selectedBook != null) FontWeight.Medium else FontWeight.Normal
-                )
-            }
-            
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = null
-            )
-        }
-    }
-    
-    // 书籍选择对话框
-    if (showBookSelector) {
-        BookSelectorDialog(
-            books = books,
-            onBookSelect = { book ->
-                onBookSelect(book)
-                showBookSelector = false
-            },
-            onDismiss = { showBookSelector = false }
-        )
-    }
-}
-
-/**
- * 书籍选择对话框
- */
-@Composable
-fun BookSelectorDialog(
-    books: List<BookEntity>,
-    onBookSelect: (BookEntity) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("选择书籍") },
-        text = {
-            LazyColumn {
-                items(books) { book ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp)
-                            .selectable(
-                                selected = false,
-                                onClick = { onBookSelect(book) }
-                            )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp)
-                        ) {
-                            Text(
-                                text = book.name ?: "",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Medium
-                            )
-                            book.author?.let { author ->
-                                Text(
-                                    text = author,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Text(
-                                text = "进度: ${book.getProgressPercentage().toInt()}%",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
-        }
-    )
-}
-
-/**
  * 时间显示组件
  */
 @Composable
-fun TimerDisplay(
-    uiState: TimerUIState,
-    viewModel: TimerViewModel
+fun ReverseTimerDisplay(
+    uiState: ReverseTimerUIState,
+    viewModel: ReverseTimerViewModel
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -680,10 +256,7 @@ fun TimerDisplay(
         ) {
             // 主要时间显示
             Text(
-                text = when (uiState.type) {
-                    TimerType.FORWARD -> viewModel.formatTime(uiState.elapsedTime)
-                    TimerType.REVERSE -> viewModel.formatTime(uiState.remainingTime)
-                },
+                text = viewModel.formatTime(uiState.remainingTime),
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -704,8 +277,8 @@ fun TimerDisplay(
                 }
             )
             
-            // 反向计时器显示已用时间
-            if (uiState.type == TimerType.REVERSE && uiState.elapsedTime > 0) {
+            // 显示已用时间
+            if (uiState.elapsedTime > 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "已用时间: ${viewModel.formatTime(uiState.elapsedTime)}",
@@ -717,12 +290,11 @@ fun TimerDisplay(
     }
 }
 
-
 /**
  * 计时器控制按钮
  */
 @Composable
-fun TimerControls(
+fun ReverseTimerControls(
     status: TimerStatus,
     onStart: () -> Unit,
     onPause: () -> Unit,
@@ -808,23 +380,129 @@ fun TimerControls(
                     Text("停止")
                 }
             }
-            
-//            TimerStatus.STOPPED -> {
-//                Button(
-//                    onClick = onReset,
-//                    modifier = Modifier.weight(1f)
-//                ) {
-//                    Icon(
-//                        imageVector = Icons.Default.Refresh,
-//                        contentDescription = null,
-//                        modifier = Modifier.size(18.dp)
-//                    )
-//                    Spacer(modifier = Modifier.width(8.dp))
-//                    Text("重新开始")
-//                }
-//            }
         }
     }
+}
+
+/**
+ * 书籍选择卡片
+ */
+@Composable
+fun ReverseBookSelectionCard(
+    selectedBook: BookEntity?,
+    onBookSelect: (BookEntity) -> Unit,
+    viewModel: ReverseTimerViewModel
+) {
+    var showBookSelector by remember { mutableStateOf(false) }
+    val books by viewModel.getAllBooks().collectAsState(initial = emptyList())
+    
+    Card(
+        onClick = { showBookSelector = true },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Book,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (selectedBook != null) "当前书籍" else "选择书籍",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = selectedBook?.name ?: "点击选择要阅读的书籍",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (selectedBook != null) FontWeight.Medium else FontWeight.Normal
+                )
+            }
+            
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null
+            )
+        }
+    }
+    
+    // 书籍选择对话框
+    if (showBookSelector) {
+        ReverseBookSelectorDialog(
+            books = books,
+            onBookSelect = { book ->
+                onBookSelect(book)
+                showBookSelector = false
+            },
+            onDismiss = { showBookSelector = false }
+        )
+    }
+}
+
+/**
+ * 书籍选择对话框
+ */
+@Composable
+fun ReverseBookSelectorDialog(
+    books: List<BookEntity>,
+    onBookSelect: (BookEntity) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("选择书籍") },
+        text = {
+            LazyColumn {
+                items(books) { book ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .selectable(
+                                selected = false,
+                                onClick = { onBookSelect(book) }
+                            )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Text(
+                                text = book.name ?: "",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                            book.author?.let { author ->
+                                Text(
+                                    text = author,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "进度: ${book.getProgressPercentage().toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }
 
 /**
@@ -832,9 +510,9 @@ fun TimerControls(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SaveRecordDialog(
-    uiState: TimerUIState,
-    viewModel: TimerViewModel,
+fun ReverseSaveRecordDialog(
+    uiState: ReverseTimerUIState,
+    viewModel: ReverseTimerViewModel,
     onDismiss: () -> Unit
 ) {
     var selectedBook by remember { mutableStateOf<BookEntity?>(uiState.selectedBook) }
@@ -882,20 +560,20 @@ fun SaveRecordDialog(
                 Text("结束时间: $endTimeText")
                 
                 // 书籍选择
-                BookSelector(
+                ReverseBookSelector(
                     books = books,
                     selectedBook = selectedBook,
-                    onBookSelect = { selectedBook = it }
+                    onBookSelect = { book -> selectedBook = book }
                 )
                 
                 // 进度设置（使用与书籍编辑页面相同的逻辑）
-                BookProgressInput(
+                ReverseBookProgressInput(
                     bookType = selectedBook?.type ?: BookType.PAPER_BOOK.code,
                     positionUnit = selectedBook?.positionUnit ?: ReadPositionUnit.PAGE.code,
                     startProgress = startProgress,
                     endProgress = endProgress,
-                    onStartPositionChange = { startProgress = it },
-                    onEndPositionChange = { endProgress = it }
+                    onStartPositionChange = { progress -> startProgress = progress },
+                    onEndPositionChange = { progress -> endProgress = progress }
                 )
                 
                 // 标记完成复选框
@@ -905,31 +583,29 @@ fun SaveRecordDialog(
                 ) {
                     Checkbox(
                         checked = markAsFinished,
-                        onCheckedChange = { markAsFinished = it }
+                        onCheckedChange = { checked -> markAsFinished = checked }
                     )
                     Text("标记为已完成")
                 }
             }
         },
         confirmButton = {
-
-                
-                // 保存按钮
-                Button(
-                    onClick = {
-                        viewModel.saveTimerRecord(
-                            bookId = selectedBook?.id,
-                            startProgress = startProgress,
-                            endProgress = endProgress,
-                            notes = if (markAsFinished) "标记为已完成" else null,
-                            markAsFinished = markAsFinished // 传递标记完成状态
-                        )
-                    },
-                    enabled = selectedBook != null
-                ) {
-                    Text("保存")
-                }
-
+            // 保存按钮
+            Button(
+                onClick = {
+                    viewModel.saveTimerRecord(
+                        bookId = selectedBook?.id,
+                        startProgress = startProgress,
+                        endProgress = endProgress,
+                        notes = if (markAsFinished) "标记为已完成" else null,
+                        markAsFinished = markAsFinished // 传递标记完成状态
+                    )
+                    onDismiss() // 关闭对话框
+                },
+                enabled = selectedBook != null
+            ) {
+                Text("保存")
+            }
         },
         dismissButton = {
             Row(
@@ -959,7 +635,7 @@ fun SaveRecordDialog(
  * 书籍进度输入组件（与书籍编辑页面相同的逻辑）
  */
 @Composable
-fun BookProgressInput(
+fun ReverseBookProgressInput(
     bookType: Int,
     positionUnit: Int,
     startProgress: Double,
@@ -989,8 +665,8 @@ fun BookProgressInput(
                     onValueChange = { value ->
                         if (value.isEmpty() || value.all { it.isDigit() }) {
                             startProgressText = value
-                            value.toIntOrNull()?.let { 
-                                onStartPositionChange(it.toDouble())
+                            value.toIntOrNull()?.let { number -> 
+                                onStartPositionChange(number.toDouble())
                             }
                         }
                     },
@@ -1009,8 +685,8 @@ fun BookProgressInput(
                     onValueChange = { value ->
                         if (value.isEmpty() || value.all { it.isDigit() }) {
                             endProgressText = value
-                            value.toIntOrNull()?.let { 
-                                onEndPositionChange(it.toDouble())
+                            value.toIntOrNull()?.let { number -> 
+                                onEndPositionChange(number.toDouble())
                             }
                         }
                     },
@@ -1033,8 +709,8 @@ fun BookProgressInput(
                             onValueChange = { value ->
                                 if (value.isEmpty() || value.all { it.isDigit() }) {
                                     startProgressText = value
-                                    value.toIntOrNull()?.let { 
-                                        onStartPositionChange(it.toDouble())
+                                    value.toIntOrNull()?.let { number -> 
+                                        onStartPositionChange(number.toDouble())
                                     }
                                 }
                             },
@@ -1053,8 +729,8 @@ fun BookProgressInput(
                             onValueChange = { value ->
                                 if (value.isEmpty() || value.all { it.isDigit() }) {
                                     endProgressText = value
-                                    value.toIntOrNull()?.let { 
-                                        onEndPositionChange(it.toDouble())
+                                    value.toIntOrNull()?.let { number -> 
+                                        onEndPositionChange(number.toDouble())
                                     }
                                 }
                             },
@@ -1076,8 +752,8 @@ fun BookProgressInput(
                                 if (value.isEmpty() || (value.all { it.isDigit() || it == '.' } && 
                                         value.toDoubleOrNull()?.let { it >= 0 && it <= 100 } == true)) {
                                     startProgressText = value
-                                    value.toDoubleOrNull()?.let { 
-                                        onStartPositionChange(it)
+                                    value.toDoubleOrNull()?.let { number -> 
+                                        onStartPositionChange(number)
                                     }
                                 }
                             },
@@ -1097,8 +773,8 @@ fun BookProgressInput(
                                 if (value.isEmpty() || (value.all { it.isDigit() || it == '.' } && 
                                         value.toDoubleOrNull()?.let { it >= 0 && it <= 100 } == true)) {
                                     endProgressText = value
-                                    value.toDoubleOrNull()?.let { 
-                                        onEndPositionChange(it)
+                                    value.toDoubleOrNull()?.let { number -> 
+                                        onEndPositionChange(number)
                                     }
                                 }
                             },
@@ -1119,8 +795,8 @@ fun BookProgressInput(
                             onValueChange = { value ->
                                 if (value.isEmpty() || value.all { it.isDigit() }) {
                                     startProgressText = value
-                                    value.toIntOrNull()?.let { 
-                                        onStartPositionChange(it.toDouble())
+                                    value.toIntOrNull()?.let { number -> 
+                                        onStartPositionChange(number.toDouble())
                                     }
                                 }
                             },
@@ -1139,8 +815,8 @@ fun BookProgressInput(
                             onValueChange = { value ->
                                 if (value.isEmpty() || value.all { it.isDigit() }) {
                                     endProgressText = value
-                                    value.toIntOrNull()?.let { 
-                                        onEndPositionChange(it.toDouble())
+                                    value.toIntOrNull()?.let { number -> 
+                                        onEndPositionChange(number.toDouble())
                                     }
                                 }
                             },
@@ -1162,8 +838,8 @@ fun BookProgressInput(
                                 if (value.isEmpty() || (value.all { it.isDigit() || it == '.' } && 
                                         value.toDoubleOrNull()?.let { it >= 0 && it <= 100 } == true)) {
                                     startProgressText = value
-                                    value.toDoubleOrNull()?.let { 
-                                        onStartPositionChange(it)
+                                    value.toDoubleOrNull()?.let { number -> 
+                                        onStartPositionChange(number)
                                     }
                                 }
                             },
@@ -1183,8 +859,8 @@ fun BookProgressInput(
                                 if (value.isEmpty() || (value.all { it.isDigit() || it == '.' } && 
                                         value.toDoubleOrNull()?.let { it >= 0 && it <= 100 } == true)) {
                                     endProgressText = value
-                                    value.toDoubleOrNull()?.let { 
-                                        onEndPositionChange(it)
+                                    value.toDoubleOrNull()?.let { number -> 
+                                        onEndPositionChange(number)
                                     }
                                 }
                             },
@@ -1203,7 +879,7 @@ fun BookProgressInput(
  * 书籍选择器
  */
 @Composable
-fun BookSelector(
+fun ReverseBookSelector(
     books: List<BookEntity>,
     selectedBook: BookEntity?,
     onBookSelect: (BookEntity) -> Unit
@@ -1254,7 +930,7 @@ fun BookSelector(
     
     // 书籍选择对话框
     if (showBookSelector) {
-        BookSelectorDialog(
+        ReverseBookSelectorDialog(
             books = books,
             onBookSelect = { book ->
                 onBookSelect(book)

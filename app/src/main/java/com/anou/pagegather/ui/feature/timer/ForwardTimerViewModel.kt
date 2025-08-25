@@ -19,31 +19,11 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
- * 计时器状态
+ * 正向计时器UI状态
  */
-enum class TimerStatus {
-    IDLE,       // 空闲状态
-    RUNNING,    // 计时中
-    PAUSED   // 暂停
-}
-
-/**
- * 计时器类型
- */
-enum class TimerType {
-    FORWARD,    // 正向计时
-    REVERSE     // 反向计时
-}
-
-/**
- * 计时器UI状态
- */
-data class TimerUIState(
+data class ForwardTimerUIState(
     val status: TimerStatus = TimerStatus.IDLE,
-    val type: TimerType = TimerType.FORWARD,
     val elapsedTime: Long = 0L,           // 已用时间（毫秒）
-    val targetTime: Long = 0L,            // 目标时间（毫秒，仅反向计时）
-    val remainingTime: Long = 0L,         // 剩余时间（毫秒，仅反向计时）
     val selectedBook: BookEntity? = null,  // 选中的书籍
     val currentProgress: Double = 0.0,    // 当前阅读进度
     val startProgress: Double = 0.0,      // 开始阅读进度
@@ -57,39 +37,17 @@ data class TimerUIState(
 )
 
 @HiltViewModel
-class TimerViewModel @Inject constructor(
+class ForwardTimerViewModel @Inject constructor(
     private val readingRecordRepository: ReadingRecordRepository,
     private val bookRepository: BookRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TimerUIState())
-    val uiState: StateFlow<TimerUIState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ForwardTimerUIState())
+    val uiState: StateFlow<ForwardTimerUIState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
     private var startTime: Long = 0L
     private var pausedDuration: Long = 0L // 累计暂停时间
-
-    /**
-     * 设置计时器类型
-     */
-    fun setTimerType(type: TimerType) {
-        if (_uiState.value.status == TimerStatus.IDLE) {
-            _uiState.value = _uiState.value.copy(type = type)
-        }
-    }
-
-    /**
-     * 设置目标时间（仅反向计时）
-     */
-    fun setTargetTime(minutes: Int) {
-        if (_uiState.value.type == TimerType.REVERSE && _uiState.value.status == TimerStatus.IDLE) {
-            val targetTimeMs = minutes * 60 * 1000L
-            _uiState.value = _uiState.value.copy(
-                targetTime = targetTimeMs,
-                remainingTime = targetTimeMs
-            )
-        }
-    }
 
     /**
      * 选择书籍
@@ -100,6 +58,24 @@ class TimerViewModel @Inject constructor(
             currentProgress = book.readPosition,
             startProgress = book.readPosition
         )
+    }
+
+    /**
+     * 选择新添加的书籍
+     */
+    fun selectNewlyAddedBook(bookId: Long) {
+        viewModelScope.launch {
+            try {
+                val book = bookRepository.getBookById(bookId)
+                if (book != null) {
+                    selectBook(book)
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "选择新添加书籍失败: ${e.message}"
+                )
+            }
+        }
     }
 
     /**
@@ -114,12 +90,6 @@ class TimerViewModel @Inject constructor(
      */
     fun startTimer() {
         val currentState = _uiState.value
-
-        // 检查反向计时是否设置了目标时间
-        if (currentState.type == TimerType.REVERSE && currentState.targetTime <= 0) {
-            _uiState.value = currentState.copy(errorMessage = "请设置目标阅读时间")
-            return
-        }
 
         when (currentState.status) {
             TimerStatus.IDLE -> {
@@ -156,9 +126,17 @@ class TimerViewModel @Inject constructor(
     fun pauseTimer() {
         if (_uiState.value.status == TimerStatus.RUNNING) {
             timerJob?.cancel()
+            // 计算当前已用时间（在累加暂停时间之前）
+            val currentTime = System.currentTimeMillis()
+            val totalElapsed = currentTime - startTime - pausedDuration
+            
             // 记录暂停时间
-            pausedDuration += System.currentTimeMillis() - startTime
-            _uiState.value = _uiState.value.copy(status = TimerStatus.PAUSED)
+            pausedDuration += currentTime - startTime
+            
+            _uiState.value = _uiState.value.copy(
+                status = TimerStatus.PAUSED,
+                elapsedTime = totalElapsed
+            )
         }
     }
 
@@ -171,12 +149,12 @@ class TimerViewModel @Inject constructor(
         // 如果计时器正在运行，先暂停计时器，执行保存逻辑
         if (currentState.status == TimerStatus.RUNNING) {
             timerJob?.cancel()
-            // 记录暂停时间
-            pausedDuration += System.currentTimeMillis() - startTime
-            
-            // 计算总时长
+            // 计算总时长（在累加暂停时间之前）
             val currentTime = System.currentTimeMillis()
             val totalElapsed = currentTime - startTime - pausedDuration
+            
+            // 记录暂停时间
+            pausedDuration += currentTime - startTime
             
             // 设置为PAUSED状态并显示保存对话框
             _uiState.value = currentState.copy(
@@ -285,14 +263,7 @@ class TimerViewModel @Inject constructor(
         startTime = 0L
         pausedDuration = 0L
         
-        val type = _uiState.value.type
-        val targetTime = _uiState.value.targetTime
-        
-        _uiState.value = TimerUIState(
-            type = type,
-            targetTime = if (type == TimerType.REVERSE) targetTime else 0L,
-            remainingTime = if (type == TimerType.REVERSE) targetTime else 0L
-        )
+        _uiState.value = ForwardTimerUIState()
     }
 
     /**
@@ -302,47 +273,7 @@ class TimerViewModel @Inject constructor(
         timerJob?.cancel()
         startTime = 0L
         pausedDuration = 0L
-        _uiState.value = TimerUIState()
-    }
-
-    /**
-     * 开始新的阅读会话
-     */
-    private fun startNewSession() {
-        viewModelScope.launch {
-            try {
-                val currentState = _uiState.value
-                val book = currentState.selectedBook ?: return@launch
-                
-                _uiState.value = currentState.copy(isLoading = true)
-                
-                // 创建新的阅读记录
-                val recordId = readingRecordRepository.startReadingSession(
-                    bookId = book.id,
-                    startProgress = currentState.startProgress
-                )
-                
-                // 获取创建的记录
-                val record = readingRecordRepository.getReadingRecordById(recordId)
-                
-                _uiState.value = currentState.copy(
-                    status = TimerStatus.RUNNING,
-                    isLoading = false,
-                    currentReadingRecord = record,
-                    errorMessage = null
-                )
-                
-                startTime = System.currentTimeMillis()
-                pausedDuration = 0L
-                startTimerJob()
-                
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "启动计时失败: ${e.message}"
-                )
-            }
-        }
+        _uiState.value = ForwardTimerUIState()
     }
 
     /**
@@ -370,29 +301,7 @@ class TimerViewModel @Inject constructor(
                 
                 val currentState = _uiState.value
                 
-                when (currentState.type) {
-                    TimerType.FORWARD -> {
-                        _uiState.value = currentState.copy(elapsedTime = totalElapsed)
-                    }
-                    TimerType.REVERSE -> {
-                        val remaining = currentState.targetTime - totalElapsed
-                        if (remaining <= 0) {
-                            // 倒计时结束
-                            _uiState.value = currentState.copy(
-                                elapsedTime = currentState.targetTime,
-                                remainingTime = 0,
-                                status = TimerStatus.PAUSED
-                            )
-                            onTimerFinished()
-                            break
-                        } else {
-                            _uiState.value = currentState.copy(
-                                elapsedTime = totalElapsed,
-                                remainingTime = remaining
-                            )
-                        }
-                    }
-                }
+                _uiState.value = currentState.copy(elapsedTime = totalElapsed)
             }
         }
     }
