@@ -10,6 +10,8 @@ fun BookShelfScreen(
     onNavigateToBookGroups: () -> Unit,
     onToBookViewClick: (Long) -> Unit,
     onToBookAddClick: () -> Unit,
+    onNavigateToTimer: () -> Unit = {},
+    onNavigateToQuickActions: () -> Unit = {},
 ) {
     Text(
         text = "书架页面：管理和查看书籍的页面", style = MaterialTheme.typography.titleLarge,
@@ -19,7 +21,9 @@ fun BookShelfScreen(
     BookListScreen(
         //viewModel: BookListViewModel = hiltViewModel(),
         onBookClick = onToBookViewClick,
-        onAddBookClick = onToBookAddClick
+        onAddBookClick = onToBookAddClick,
+        onTimerClick = onNavigateToTimer,
+        onQuickActionsClick = onNavigateToQuickActions
     )
 }
 

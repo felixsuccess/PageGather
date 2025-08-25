@@ -30,13 +30,17 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -89,6 +93,8 @@ fun BookListScreen(
     viewModel: BookListViewModel = hiltViewModel(),
     onBookClick: (Long) -> Unit,
     onAddBookClick: () -> Unit,
+    onTimerClick: () -> Unit = {},
+    onQuickActionsClick: () -> Unit = {},
 ) {
     val uiState by viewModel.state.collectAsState()
     val bookListState by viewModel.bookListState.collectAsState()
@@ -100,6 +106,7 @@ fun BookListScreen(
     val focusRequester = remember { FocusRequester() }
     var isSearching by remember { mutableStateOf(false) }
     var showGroupFilter by remember { mutableStateOf(false) }
+    var showMoreMenu by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -144,6 +151,15 @@ fun BookListScreen(
                         )
                     }
                 } else {
+                    // 阅读计时按钮
+                    IconButton(onClick = onTimerClick) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = "阅读计时",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
                     // 分组筛选按钮
                     IconButton(onClick = {
                         showGroupFilter = !showGroupFilter
@@ -173,14 +189,36 @@ fun BookListScreen(
                         )
                     }
                     
-                    IconButton(onClick = {
-                        /* TODO: 添加更多选项，如列表显示、排序等 */
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "更多选项",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    // 更多选项按钮和下拉菜单
+                    Box {
+                        IconButton(onClick = {
+                            showMoreMenu = !showMoreMenu
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = "更多选项",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("快捷导航") },
+                                onClick = {
+                                    showMoreMenu = false
+                                    onQuickActionsClick()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Bolt,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }

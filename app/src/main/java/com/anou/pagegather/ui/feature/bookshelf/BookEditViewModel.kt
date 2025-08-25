@@ -198,8 +198,8 @@ class BookEditViewModel @Inject constructor(
      */
     fun saveBook(book: BookEntity, onSuccess: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            bookRepository.runInTransaction {
-                try {
+            try {
+                bookRepository.runInTransaction {
                     val bookId = if (book.id == 0L) {
                         val insertedId = bookRepository.insertBook(book)
                         Log.d("BookEdit", "Inserted book with id: $insertedId")
@@ -220,17 +220,18 @@ class BookEditViewModel @Inject constructor(
                     val selectedTagIds = _uiState.value.selectedTagIds
                     bookRepository.updateBookTags(bookId, selectedTagIds)
                     Log.d("BookEdit", "Updated book tags: $selectedTagIds")
-                    
-                    withContext(Dispatchers.Main) {
-                        onSuccess()
-                    }
-                } catch (e: Exception) {
-                    Log.e("BookEdit", "Save failed: ${e.stackTraceToString()}")
-                    withContext(Dispatchers.Main) {
-                        _uiState.value = _uiState.value.copy(
-                            errorMessage = "保存失败: ${e.message}"
-                        )
-                    }
+                }
+                
+                // 只有在事务成功完成后才调用 onSuccess
+                withContext(Dispatchers.Main) {
+                    onSuccess()
+                }
+            } catch (e: Exception) {
+                Log.e("BookEdit", "Save failed: ${e.stackTraceToString()}")
+                withContext(Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "保存失败: ${e.message}"
+                    )
                 }
             }
         }
