@@ -2,6 +2,7 @@ package com.anou.pagegather.data.repository
 
 import androidx.room.withTransaction
 import com.anou.pagegather.data.local.database.AppDatabase
+import kotlinx.coroutines.flow.flowOf
 import com.anou.pagegather.data.local.entity.*
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -63,6 +64,35 @@ class BookRepository @Inject constructor(
     }
 
     fun searchBooks(query: String): Flow<List<BookEntity>> {
+        return bookDao.searchBooks(query)
+    }
+
+    /**
+     * 模糊搜索书籍 - 支持多个关键词搜索
+     */
+    fun fuzzySearchBooks(query: String): Flow<List<BookEntity>> {
+        // 将查询字符串按空格分割成多个关键词
+        val keywords = query.trim().split("\\s+".toRegex()).filter { it.isNotEmpty() }
+        
+        // 如果没有关键词，返回空结果
+        if (keywords.isEmpty()) {
+            return flowOf(emptyList())
+        }
+        
+        // 构建查询条件
+        val conditions = keywords.joinToString(" AND ") { keyword ->
+            "(name LIKE '%' || '$keyword' || '%' OR author LIKE '%' || '$keyword' || '%' OR summary LIKE '%' || '$keyword' || '%' OR isbn LIKE '%' || '$keyword' || '%')"
+        }
+        
+        // 构建完整的SQL查询
+        val sql = """
+            SELECT * FROM book 
+            WHERE is_deleted = 0 
+            AND ($conditions)
+            ORDER BY updated_date DESC
+        """.trimIndent()
+        
+        // 使用标准的searchBooks方法进行搜索
         return bookDao.searchBooks(query)
     }
 

@@ -26,8 +26,26 @@ data class BookListState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val hasMoreData: Boolean = true,
-    val errorMessage: String? = null
-)
+    val errorMessage: String? = null,
+    // 批量操作相关状态
+    val isBatchMode: Boolean = false,
+    val selectedBooks: Set<Long> = emptySet(),
+    // 排序相关状态
+    val sortField: SortField = SortField.ADD_TIME,
+    val isAscending: Boolean = false,
+    // 显示模式状态
+    val isGridMode: Boolean = true
+) {
+    /**
+     * 排序字段枚举
+     */
+    enum class SortField {
+        NAME,        // 书名
+        AUTHOR,      // 作者
+        ADD_TIME,    // 添加时间
+        READ_STATUS  // 阅读状态
+    }
+}
 
 @HiltViewModel
 class BookListViewModel @Inject constructor(
@@ -87,6 +105,8 @@ class BookListViewModel @Inject constructor(
             val currentState = _bookListState.value
             val selectedGroupId = currentState.selectedGroupId
             val searchQuery = currentState.searchQuery
+            val sortField = currentState.sortField
+            val isAscending = currentState.isAscending
             
             // 根据是否有分组筛选来选择不同的加载方式
             val flow = when {
@@ -105,8 +125,14 @@ class BookListViewModel @Inject constructor(
                     bookRepository.searchBooks(searchQuery)
                 }
                 else -> {
-                    // 正常分页加载
-                    bookRepository.getBooksPaged(currentPage, pageSize)
+                    // 正常分页加载，根据排序字段和方向加载
+                    val sortType = when (sortField) {
+                        BookListState.SortField.NAME -> 2 // 书名
+                        BookListState.SortField.AUTHOR -> 3 // 作者
+                        BookListState.SortField.ADD_TIME -> 0 // 添加时间(默认)
+                        BookListState.SortField.READ_STATUS -> 4 // 阅读进度
+                    }
+                    bookRepository.getBooksSorted(sortType, isAscending)
                 }
             }
             
@@ -216,14 +242,7 @@ class BookListViewModel @Inject constructor(
             loadBooks()
         }
     }
-    
-    /**
-     * 清除分组筛选
-     */
-    fun clearGroupFilter() {
-        selectGroup(null)
-    }
-    
+
     /**
      * 清除错误消息
      */
@@ -306,4 +325,167 @@ class BookListViewModel @Inject constructor(
             }
         }
     }
+    
+    /**
+     * 切换批量操作模式
+     */
+    fun toggleBatchMode() {
+        val currentState = _bookListState.value
+        _bookListState.value = currentState.copy(
+            isBatchMode = !currentState.isBatchMode,
+            selectedBooks = if (currentState.isBatchMode) emptySet() else currentState.selectedBooks
+        )
+    }
+    
+    /**
+     * 选择/取消选择单个书籍
+     */
+    fun toggleBookSelection(bookId: Long) {
+        val currentState = _bookListState.value
+        if (!currentState.isBatchMode) return
+        
+        val newSelectedBooks = if (bookId in currentState.selectedBooks) {
+            currentState.selectedBooks - bookId
+        } else {
+            currentState.selectedBooks + bookId
+        }
+        
+        _bookListState.value = currentState.copy(
+            selectedBooks = newSelectedBooks
+        )
+    }
+    
+    /**
+     * 全选当前列表中的所有书籍
+     */
+    fun selectAllBooks() {
+        val currentState = _bookListState.value
+        if (!currentState.isBatchMode) return
+        
+        val allBookIds = currentState.books.map { it.id }.toSet()
+        _bookListState.value = currentState.copy(
+            selectedBooks = allBookIds
+        )
+    }
+    
+    /**
+     * 清空选择
+     */
+    fun clearBookSelection() {
+        val currentState = _bookListState.value
+        if (!currentState.isBatchMode) return
+        
+        _bookListState.value = currentState.copy(
+            selectedBooks = emptySet()
+        )
+    }
+    
+    /**
+     * 设置排序字段
+     */
+    fun setSortField(sortField: BookListState.SortField) {
+        val currentState = _bookListState.value
+        if (currentState.sortField != sortField) {
+            _bookListState.value = currentState.copy(
+                sortField = sortField
+            )
+            // 重新加载书籍列表以应用新的排序
+            viewModelScope.launch {
+                loadBooks()
+            }
+        }
+    }
+    
+    /**
+     * 设置排序方向
+     */
+    fun setSortDirection(isAscending: Boolean) {
+        val currentState = _bookListState.value
+        if (currentState.isAscending != isAscending) {
+            _bookListState.value = currentState.copy(
+                isAscending = isAscending
+            )
+            // 重新加载书籍列表以应用新的排序方向
+            viewModelScope.launch {
+                loadBooks()
+            }
+        }
+    }
+    
+    /**
+     * 切换显示模式
+     */
+    fun toggleDisplayMode() {
+        val currentState = _bookListState.value
+        _bookListState.value = currentState.copy(
+            isGridMode = !currentState.isGridMode
+        )
+    }
+    
+    /**
+     * 标记书籍为已完成
+     */
+    fun markBookAsFinished(bookId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val book = bookRepository.getBookById(bookId)
+                book?.let {
+                    val updatedBook = it.copy(readStatus = 2) // 2 表示已完成
+                    bookRepository.updateBook(updatedBook)
+                    
+                    // 更新UI状态
+                    withContext(Dispatchers.Main) {
+                        val currentBooks = _bookList.value.toMutableList()
+                        val index = currentBooks.indexOfFirst { b -> b.id == bookId }
+                        if (index != -1) {
+                            currentBooks[index] = updatedBook
+                            _bookList.value = currentBooks
+                            _bookListState.value = _bookListState.value.copy(books = currentBooks)
+                            _state.value = BookListUIState.Success(currentBooks, isLoadingMore = false)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _bookListState.value = _bookListState.value.copy(
+                        errorMessage = "标记为已完成失败: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    /**
+     * 切换书籍置顶状态
+     */
+    fun toggleBookPin(bookId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val book = bookRepository.getBookById(bookId)
+                book?.let {
+                    val updatedBook = it.copy(pinned = !it.pinned)
+                    bookRepository.updateBook(updatedBook)
+                    
+                    // 更新UI状态
+                    withContext(Dispatchers.Main) {
+                        val currentBooks = _bookList.value.toMutableList()
+                        val index = currentBooks.indexOfFirst { b -> b.id == bookId }
+                        if (index != -1) {
+                        currentBooks[index] = updatedBook
+                            _bookList.value = currentBooks
+                            _bookListState.value = _bookListState.value.copy(books = currentBooks)
+                            _state.value = BookListUIState.Success(currentBooks, isLoadingMore = false)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _bookListState.value = _bookListState.value.copy(
+                        errorMessage = "置顶操作失败: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+    
 }
