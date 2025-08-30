@@ -27,6 +27,8 @@ import com.anou.pagegather.ui.feature.quickactions.*
 import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
+import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
+import com.anou.pagegather.ui.feature.reading.RecordSource
 
 @Composable
 fun AppNavigation(
@@ -196,29 +198,22 @@ fun AppNavigation(
         composable(Routes.DashboardRoutes.CHARTS) { ChartsScreen() }
 
         // 时间管理相关页面
-        composable(Routes.TimeManagementRoutes.FORWARD_TIMER) { 
-            ForwardTimerScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToAddBook = { 
-                    // 导航到添加书籍页面，bookId为0表示添加新书籍
-                    // 添加回调参数，指向当前页面
-                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=${Routes.TimeManagementRoutes.FORWARD_TIMER}")
-                }
-            ) 
-        }
-        
-        // 添加带newlyAddedBookId参数的ForwardTimer路由，用于书籍添加后的回调
         composable(
             route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId={newlyAddedBookId}",
-            arguments = listOf(navArgument("newlyAddedBookId") { type = NavType.StringType; nullable = true })
+            arguments = listOf(
+                navArgument("newlyAddedBookId") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) { backStackEntry ->
             val newlyAddedBookId = backStackEntry.arguments?.getString("newlyAddedBookId")?.toLongOrNull()
+            
             ForwardTimerScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToAddBook = { 
-                    // 导航到添加书籍页面，bookId为0表示添加新书籍
-                    // 添加回调参数，指向当前页面
-                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=${Routes.TimeManagementRoutes.FORWARD_TIMER}")
+                onNavigateToSaveRecord = { elapsedTime, startTime ->
+                    navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?source=TIMER&elapsedTime=$elapsedTime&startTime=$startTime")
                 },
                 newlyAddedBookId = newlyAddedBookId
             ) 
@@ -232,6 +227,66 @@ fun AppNavigation(
         composable(Routes.TimeManagementRoutes.GOAL_SETTING) { GoalSettingScreen() }
         composable(Routes.TimeManagementRoutes.READING_PLAN) { ReadingPlanScreen() }
         composable(Routes.TimeManagementRoutes.PERIODIC_REMINDER) { PeriodicReminderScreen() }
+
+        // 阅读记录相关页面
+        composable(
+            route = "${Routes.ReadingRoutes.SAVE_RECORD}?source={source}&elapsedTime={elapsedTime}&startTime={startTime}&preSelectedBookId={preSelectedBookId}&newlyAddedBookId={newlyAddedBookId}",
+            arguments = listOf(
+                navArgument("source") { 
+                    type = NavType.StringType
+                    defaultValue = "MANUAL"
+                },
+                navArgument("elapsedTime") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("startTime") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("preSelectedBookId") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("newlyAddedBookId") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val sourceStr = backStackEntry.arguments?.getString("source") ?: "MANUAL"
+            val source = try {
+                RecordSource.valueOf(sourceStr)
+            } catch (e: IllegalArgumentException) {
+                RecordSource.MANUAL
+            }
+            val elapsedTime = backStackEntry.arguments?.getString("elapsedTime")?.toLongOrNull()
+            val startTime = backStackEntry.arguments?.getString("startTime")?.toLongOrNull()
+            val preSelectedBookId = backStackEntry.arguments?.getString("preSelectedBookId")?.toLongOrNull()
+            val newlyAddedBookId = backStackEntry.arguments?.getString("newlyAddedBookId")?.toLongOrNull()
+            
+            SaveRecordScreen(
+                source = source,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAddBook = {
+                    // 构建回调URL，包含当前页面的所有参数
+                    val currentRoute = "${Routes.ReadingRoutes.SAVE_RECORD}?source=$sourceStr" +
+                        (elapsedTime?.let { "&elapsedTime=$it" } ?: "") +
+                        (startTime?.let { "&startTime=$it" } ?: "") +
+                        (preSelectedBookId?.let { "&preSelectedBookId=$it" } ?: "")
+                    val encodedCallback = Uri.encode(currentRoute)
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=$encodedCallback")
+                },
+                elapsedTime = elapsedTime,
+                startTime = startTime,
+                preSelectedBookId = preSelectedBookId,
+                newlyAddedBookId = newlyAddedBookId
+            )
+        }
 
         // 快捷导航相关页面
         composable(Routes.QuickActionsRoutes.QUICK_ACTIONS) { QuickActionsScreen() }

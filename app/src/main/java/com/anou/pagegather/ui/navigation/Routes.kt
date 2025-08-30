@@ -63,6 +63,15 @@ object Routes {
         const val PERIODIC_REMINDER = "periodic_reminder"
     }
 
+    // 阅读记录相关路由
+    object ReadingRoutes {
+        const val SAVE_RECORD = "reading/save"
+        const val RECORD_HISTORY = "reading/history"
+        const val EDIT_RECORD = "reading/edit/{recordId}"
+        const val RECORD_ANALYTICS = "reading/analytics"
+        const val RECORD_TIMELINE = "reading/timeline"
+    }
+
     // 快捷操作相关路由
     object QuickActionsRoutes {
         const val QUICK_ACTIONS = "quick_actions"

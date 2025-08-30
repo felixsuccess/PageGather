@@ -344,6 +344,13 @@ class ForwardTimerViewModel @Inject constructor(
     }
 
     /**
+     * 清除保存对话框状态
+     */
+    fun clearSaveDialog() {
+        _uiState.value = _uiState.value.copy(showSaveDialog = false)
+    }
+
+    /**
      * 获取所有书籍（用于选择）
      */
     fun getAllBooks() = bookRepository.getAllBooks()
