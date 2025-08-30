@@ -1,9 +1,12 @@
 package com.anou.pagegather.ui.feature.bookshelf
 
 import android.util.Log
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,16 +24,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
@@ -39,10 +41,8 @@ import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.PushPin
@@ -61,6 +61,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.TabRowDefaults.Indicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -98,10 +100,19 @@ import com.anou.pagegather.ui.theme.Accent
 private val GRID_COLUMNS = GridCells.Fixed(3)
 private val GRID_PADDING = PaddingValues(vertical = 12.dp, horizontal = 12.dp)
 private val GRID_SPACING = 12.dp
+// 常量定义筛选选项
+val filterOptions = listOf(
+    FilterOption("default", "默认", "显示所有书籍"),
+    FilterOption("group", "分组", "按书籍分组筛选"),
+    FilterOption("tag", "标签", "按标签筛选书籍"),
+    FilterOption("status", "状态", "按阅读状态筛选"),
+    FilterOption("source", "来源", "按书籍来源筛选"),
+    FilterOption("rating", "评分", "按评分筛选书籍"),
+    FilterOption("name", "名称", "按书籍名称排序")
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-
 fun BookListScreen(
     modifier: Modifier = Modifier,
     viewModel: BookListViewModel = hiltViewModel(),
@@ -112,10 +123,8 @@ fun BookListScreen(
 ) {
     val uiState by viewModel.state.collectAsState()
     val bookListState by viewModel.bookListState.collectAsState()
-    val tabTitles = listOf(
-        "书库"//, "预购书单"
-    )
-    var selectedTab by remember { mutableIntStateOf(0) }
+
+    var selectedTab by remember { mutableStateOf(filterOptions[0]) }
     var searchQuery by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     var isSearching by remember { mutableStateOf(false) }
@@ -274,8 +283,8 @@ fun BookListScreen(
         )
 
         Box(Modifier.weight(1f)) {
-            when (selectedTab) {
-                0 -> {
+            when (selectedTab.code) {
+               "default" -> {
                     BookListContent(
                         bookListUIState = uiState,
                         onBookClick = onBookClick,
@@ -285,9 +294,35 @@ fun BookListScreen(
                         isGridMode = bookListState.isGridMode
                     )
                 }
-
-                1 -> {
+                "name" -> {
+                    BookListContent(
+                        bookListUIState = uiState,
+                        onBookClick = onBookClick,
+                        onAddBookClick = onAddBookClick,
+                        onTimerClick = onTimerClick,
+                        viewModel = viewModel,
+                        isGridMode = bookListState.isGridMode
+                    )
+                }
+               "group" -> {
                     PreOrderBookListContent()
+                }
+                "tag" -> {
+                    PreOrderBookListContent()
+                }
+                "status" -> {
+                    PreOrderBookListContent()
+                }
+                "source" -> {
+                    PreOrderBookListContent()
+                }
+                "rating" -> {
+                    PreOrderBookListContent()
+                }
+
+
+                else  ->{
+                    DemoGroupListContent()
                 }
             }
         }
@@ -309,8 +344,20 @@ fun BookListScreen(
                 }
             )
         } 
-        // 移除了else分支，不再显示底部操作按钮栏
-    }
+
+    }  //  TODO://显示底部操作按钮栏
+}
+
+@Composable
+fun DemoGroupListContent() {
+    TODO("Not yet implemented")
+
+    // 分组 ： 聚合排序   按照   分组的组顺序  和   没分组的 和  排序    ； 置顶的在上边， 分组中内部的 书籍排序  进行排序
+    //标签：  按照标签 聚合排序
+    //状态：  按照 状态 聚合排序
+
+
+
 }
 
 /**
@@ -401,74 +448,89 @@ private fun BatchOperationToolbar(
     }
 }
 
-
+// 定义筛选选项数据类
+data class FilterOption(
+    val code: String,           // 唯一标识
+    val title: String,         // 显示名称
+    val remark: String? = null  // 备注/描述（可选）
+)
 
 @Composable
 private fun BookFilterTabs(
-    selectedFilter: Int,
-    onFilterSelected: (Int) -> Unit,
+    selectedFilter: FilterOption,
+    onFilterSelected: (FilterOption) -> Unit,
     isGridMode: Boolean,
     onToggleDisplayMode: () -> Unit,
     onEnterBatchMode: () -> Unit
 ) {
-    val filterTitles = listOf("默认", "分组", "标签", "状态", "来源", "评分")
-    
     // 添加设置菜单状态
     var showSettingsMenu by remember { mutableStateOf(false) }
-    // 添加自动隐藏选项状态（实际应用中应该从SharedPreferences或DataStore中读取）
-    var autoHideEnabled by remember { mutableStateOf(false) }
     // 添加排序选项状态
     var showSortOptions by remember { mutableStateOf(false) }
     
     Column {
-        // 使用水平滚动的Row来容纳选项卡和设置按钮
+        // 使用水平滚动的Row来容纳分类选项和设置按钮
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.Start,
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 选项卡
-            androidx.compose.material3.TabRow(
-                selectedTabIndex = selectedFilter,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f, fill = false), // 不强制填充剩余空间
-                indicator = { tabPositions ->
-                    androidx.compose.material3.TabRowDefaults.Indicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedFilter]),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+            // 使用水平滚动的Row来容纳分类选项
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                filterTitles.forEachIndexed { index, title ->
-                    androidx.compose.material3.Tab(
-                        selected = selectedFilter == index,
-                        onClick = { onFilterSelected(index) },
-                        text = {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (selectedFilter == index) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        },
-                        selectedContentColor = MaterialTheme.colorScheme.primary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                // 分类选项按钮 - 使用基础的Box和Text实现
+                filterOptions.forEach { option ->
+                    val isSelected = selectedFilter.code == option.code
+                    // 添加选中状态的动画效果
+                    val backgroundColor by animateColorAsState(
+                        targetValue = if (isSelected) 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.surface,
+                        animationSpec = tween(durationMillis = 200)
                     )
+                    val textColor by animateColorAsState(
+                        targetValue = if (isSelected)
+                            MaterialTheme.colorScheme.onPrimary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        animationSpec = tween(durationMillis = 200)
+                    )
+                    
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(backgroundColor)
+                            .clickable(
+                                enabled = !isSelected // 已选中的选项卡不可点击
+                            ) { 
+                                 onFilterSelected(option)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp) // 增加垂直padding以扩大点击区域
+                    ) {
+                        Text(
+                            text = option.title,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = textColor
+                        )
+                    }
                 }
             }
             
-            // 设置按钮
+            // 设置按钮 - 固定在右侧
             IconButton(
                 onClick = { showSettingsMenu = true }
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "选项卡设置"
+                    contentDescription = "选项设置"
                 )
                 
                 // 设置菜单
@@ -476,28 +538,6 @@ private fun BookFilterTabs(
                     expanded = showSettingsMenu,
                     onDismissRequest = { showSettingsMenu = false }
                 ) {
-                    DropdownMenuItem(
-                        text = { 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("滚动时自动隐藏")
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Checkbox(
-                                    checked = autoHideEnabled,
-                                    onCheckedChange = { 
-                                        autoHideEnabled = it
-                                        showSettingsMenu = false
-                                    }
-                                )
-                            }
-                        },
-                        onClick = { 
-                            autoHideEnabled = !autoHideEnabled
-                            showSettingsMenu = false
-                        }
-                    )
-                    
                     // 添加排序选项菜单项
                     DropdownMenuItem(
                         text = { Text("排序选项") },
@@ -541,7 +581,7 @@ private fun BookFilterTabs(
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = if (isGridMode) Icons.Default.ViewList else Icons.Default.GridView,
+                                imageVector = if (isGridMode) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
                                 contentDescription = null
                             )
                         }
@@ -1257,14 +1297,14 @@ fun BookListItem(
                 }
                 
                 // 下拉菜单
-                androidx.compose.material3.DropdownMenu(
+                DropdownMenu(
                     expanded = showDropdownMenu,
                     onDismissRequest = { showDropdownMenu = false },
                     modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                  ) {
                     // 编辑选项
                     if (onEditClick != null) {
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -1670,8 +1710,8 @@ fun EnhancedEmptyBooksPlaceholder(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-                androidx.compose.material3.Switch(
+               Spacer(modifier = Modifier.width(8.dp))
+                Switch(
                     checked = isGridMode,
                     onCheckedChange = { isGridMode = it },
                     colors = androidx.compose.material3.SwitchDefaults.colors(
