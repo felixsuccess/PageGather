@@ -345,14 +345,18 @@ fun BookEditScreen(
                         val newBook = createBookEntity(bookId, formState.value).copy(
                             bookSourceId = selectedBookSourceId?.toInt() ?: 0
                         )
-                        viewModel.saveBook(newBook) {
+                        viewModel.saveBook(newBook) { actualBookId ->
                             // 根据是否有回调路由决定返回方式
                             if (callbackRoute != null) {
-                                // 如果有回调路由，导航到指定路由并传递书籍ID
-                                // 使用特殊的参数名表明这是从书籍添加页面返回的
-                                navController.navigate("${callbackRoute}?newlyAddedBookId=${newBook.id}") {
-                                    // 修复导航逻辑，确保正确返回到保存记录对话框
-                                    popUpTo(callbackRoute) { inclusive = false }
+                                // 解码回调路由
+                                val decodedCallback = Uri.decode(callbackRoute)
+                                // 构建带有新书籍ID的回调URL，使用实际的书籍ID
+                                val separator = if (decodedCallback.contains("?")) "&" else "?"
+                                val callbackWithBookId = "${decodedCallback}${separator}newlyAddedBookId=${actualBookId}"
+                                
+                                navController.navigate(callbackWithBookId) {
+                                    // 清除当前的书籍编辑页面
+                                    popUpTo(navController.currentDestination?.route ?: "") { inclusive = true }
                                     // 保持在栈顶，不要添加新的实例
                                     launchSingleTop = true
                                 }

@@ -196,11 +196,12 @@ class BookEditViewModel @Inject constructor(
     /**
      * 保存书籍及其分组关联
      */
-    fun saveBook(book: BookEntity, onSuccess: () -> Unit) {
+    fun saveBook(book: BookEntity, onSuccess: (Long) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                var finalBookId: Long = 0L
                 bookRepository.runInTransaction {
-                    val bookId = if (book.id == 0L) {
+                    finalBookId = if (book.id == 0L) {
                         val insertedId = bookRepository.insertBook(book)
                         Log.d("BookEdit", "Inserted book with id: $insertedId")
                         insertedId
@@ -213,18 +214,18 @@ class BookEditViewModel @Inject constructor(
                     // 保存分组关联（使用单选分组）
                     val selectedGroupId = _uiState.value.selectedGroupId
                     val groupIds = selectedGroupId?.let { listOf(it) } ?: emptyList()
-                    bookRepository.updateBookGroups(bookId, groupIds)
+                    bookRepository.updateBookGroups(finalBookId, groupIds)
                     Log.d("BookEdit", "Updated book group: $selectedGroupId")
                     
                     // 保存标签关联（多选标签）
                     val selectedTagIds = _uiState.value.selectedTagIds
-                    bookRepository.updateBookTags(bookId, selectedTagIds)
+                    bookRepository.updateBookTags(finalBookId, selectedTagIds)
                     Log.d("BookEdit", "Updated book tags: $selectedTagIds")
                 }
                 
-                // 只有在事务成功完成后才调用 onSuccess
+                // 只有在事务成功完成后才调用 onSuccess，并传递实际的书籍ID
                 withContext(Dispatchers.Main) {
-                    onSuccess()
+                    onSuccess(finalBookId)
                 }
             } catch (e: Exception) {
                 Log.e("BookEdit", "Save failed: ${e.stackTraceToString()}")
