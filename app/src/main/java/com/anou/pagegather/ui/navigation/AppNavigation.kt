@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -13,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookShelfGroupDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
 import com.anou.pagegather.ui.feature.management.BookGroupManagementScreen
 import com.anou.pagegather.ui.feature.management.BookSourceManagementScreen
@@ -79,6 +81,9 @@ fun AppNavigation(
                 onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
                 onNavigateToTimer = { navController.navigate(Routes.TimeManagementRoutes.FORWARD_TIMER) },
                 onNavigateToQuickActions = { navController.navigate(Routes.QuickActionsRoutes.QUICK_ACTIONS) },
+                onNavigateToGroupDetail = { groupId: Long, groupName: String ->
+                    navController.navigate(Routes.BookRoutes.bookGroupDetail(groupId, groupName))
+                }
             )
 
         }
@@ -133,6 +138,29 @@ fun AppNavigation(
                 )
         }
 
+        // 添加分组详情页面路由
+        composable(
+            route = Routes.BookRoutes.BOOK_GROUP_DETAIL,
+            arguments = listOf(
+                navArgument("group_id") { type = NavType.LongType },
+                navArgument("groupName") { type = NavType.StringType; nullable = true }
+            )
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getLong("group_id") ?: 0
+            val groupName = backStackEntry.arguments?.getString("groupName") ?: "未命名分组"
+
+            BookShelfGroupDetailScreen(
+                groupId = groupId,
+                groupName = groupName,
+                viewModel = hiltViewModel(),
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onBookClick = { bookId ->
+                    navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                }
+            )
+        }
 
         // 统计子页面
 

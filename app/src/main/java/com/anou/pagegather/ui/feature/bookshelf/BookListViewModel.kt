@@ -8,6 +8,7 @@ import com.anou.pagegather.data.repository.BookRepository
 import com.anou.pagegather.data.repository.BookGroupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -248,6 +249,19 @@ class BookListViewModel @Inject constructor(
      */
     fun clearError() {
         _bookListState.value = _bookListState.value.copy(errorMessage = null)
+    }
+    
+    /**
+     * 获取分组中的书籍
+     */
+    fun getBooksByGroupId(groupId: Long): kotlinx.coroutines.flow.Flow<List<BookEntity>> {
+        return combine(
+            groupRepository.getBooksByGroupId(groupId),
+            bookRepository.getAllBooks()
+        ) { groupRefs, allBooks ->
+            val bookIds = groupRefs.map { it.bookId }.toSet()
+            allBooks.filter { it.id in bookIds }
+        }
     }
     
     /**

@@ -32,6 +32,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
@@ -120,6 +122,7 @@ fun BookListScreen(
     onAddBookClick: () -> Unit,
     onTimerClick: () -> Unit = {},
     onQuickActionsClick: () -> Unit = {},
+    onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> }  // 添加导航回调参数
 ) {
     val uiState by viewModel.state.collectAsState()
     val bookListState by viewModel.bookListState.collectAsState()
@@ -305,7 +308,15 @@ fun BookListScreen(
                     )
                 }
                "group" -> {
-                    PreOrderBookListContent()
+                    // 按书籍分组筛选
+                    GroupedBookListContent(
+                        viewModel = viewModel,
+                        isGridMode = bookListState.isGridMode, // 传递显示模式参数
+                        onGroupClick = { groupId, groupName ->
+                            // 导航到分组详情页面
+                            onNavigateToGroupDetail(groupId, groupName)
+                        }
+                    )
                 }
                 "tag" -> {
                     PreOrderBookListContent()
@@ -453,6 +464,13 @@ data class FilterOption(
     val code: String,           // 唯一标识
     val title: String,         // 显示名称
     val remark: String? = null  // 备注/描述（可选）
+)
+
+// 定义分组信息数据类
+data class GroupInfo(
+    val id: Long,              // 分组唯一标识
+    val name: String,          // 分组名称
+    val remark: String? = null // 分组备注（可选）
 )
 
 @Composable
@@ -1501,6 +1519,158 @@ fun BookListItem(
 }
 
 @Composable
+private fun GroupedBookListContent(
+    viewModel: BookListViewModel,
+    isGridMode: Boolean, // 添加显示模式参数
+    onGroupClick: (groupId: Long, groupName: String) -> Unit
+) {
+    // 从ViewModel获取分组数据
+    val bookListState by viewModel.bookListState.collectAsState()
+    val groups = bookListState.availableGroups.map { group ->
+        GroupInfo(group.id, group.name, group.getDisplayName())
+    }
+    
+    if (groups.isEmpty()) {
+        // 空状态
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Folder,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "暂无分组",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 18.sp
+                )
+                
+                Text(
+                    text = "创建分组来管理你的书籍",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontSize = 14.sp
+                )
+            }
+        }
+    } else {
+        // 根据显示模式选择布局
+        if (isGridMode) {
+            // 网格模式
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(groups.size) { index ->
+                    val group = groups[index]
+                    GroupItem(
+                        group = group,
+                        onClick = { onGroupClick(group.id, group.name) }
+                    )
+                }
+            }
+        } else {
+            // 列表模式
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(groups.size) { index ->
+                    val group = groups[index]
+                    GroupItem(
+                        group = group,
+                        onClick = { onGroupClick(group.id, group.name) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GroupItem(
+    group: GroupInfo,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 分组图标
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Folder,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // 分组信息
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = group.name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 16.sp
+            )
+            
+            if (!group.remark.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = group.remark,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        
+        // 右侧箭头指示器
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
 private fun PreOrderBookListContent() {
     //TODO: 预购书单内容实现
     Column(Modifier.fillMaxSize()) {
@@ -1883,4 +2053,147 @@ private fun SortOptionsDialog(
         shape = RoundedCornerShape(16.dp),
         tonalElevation = 6.dp
     )
+}
+
+/**
+ * 分组详情页面
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookShelfGroupDetailScreen(
+    groupId: Long,
+    viewModel: BookListViewModel,
+    onBackClick: () -> Unit,
+    onBookClick: (Long) -> Unit
+) {
+    // 获取分组信息
+    val bookListState by viewModel.bookListState.collectAsState()
+    val group = bookListState.availableGroups.find { it.id == groupId }
+    val groupName = group?.name ?: "未知分组"
+    
+    // 获取分组内的书籍列表
+    val groupBooksState = remember { mutableStateOf<BookListUIState>(BookListUIState.Loading) }
+    
+    // 加载分组内的书籍
+    LaunchedEffect(groupId) {
+        viewModel.getBooksByGroupId(groupId).collect { books ->
+            groupBooksState.value = if (books.isEmpty()) {
+                BookListUIState.Empty
+            } else {
+                BookListUIState.Success(books, isLoadingMore = false)
+            }
+        }
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+    ) {
+        // 顶部导航栏
+        TopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+            title = {
+                Text(
+                    text = groupName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 20.sp
+                )
+            },
+            navigationIcon = {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "返回",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        )
+        
+        // 分组书籍列表
+        when (val state = groupBooksState.value) {
+            is BookListUIState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            
+            is BookListUIState.Empty -> {
+                // 空状态
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Folder,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text(
+                            text = "该分组暂无书籍",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 18.sp
+                        )
+                        
+                        Text(
+                            text = "添加书籍到此分组",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+            
+            is BookListUIState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = state.message)
+                }
+            }
+            
+            is BookListUIState.Success -> {
+                // 书籍列表
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(state.books.size) { index ->
+                        val book = state.books[index]
+                        BookListItem(
+                            book = book,
+                            onItemClick = { onBookClick(book.id) },
+                            onDeleteClick = { /* TODO: 实现删除功能 */ },
+                            onEditClick = { /* TODO: 实现编辑功能 */ },
+                            onMarkAsFinishedClick = { /* TODO: 实现标记完成功能 */ },
+                            onAddToGroupClick = { /* TODO: 实现添加到分组功能 */ },
+                            onPinClick = { /* TODO: 实现置顶功能 */ },
+                            onAddNoteClick = { /* TODO: 实现记笔记功能 */ },
+                            onTimerClick = { /* TODO: 实现计时功能 */ }
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
