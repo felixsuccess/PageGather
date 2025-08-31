@@ -1,10 +1,9 @@
-package com.anou.pagegather.ui.feature.bookshelf
+package com.anou.pagegather.ui.feature.bookshelf.group
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.data.local.entity.BookEntity
+import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +37,7 @@ fun BookShelfGroupDetailScreen(
     val books by viewModel.getBooksByGroupId(groupId).collectAsState(initial = emptyList())
     val bookListState by viewModel.bookListState.collectAsState() // 获取显示模式状态
     var showMenu by remember { mutableStateOf(false) }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,7 +66,7 @@ fun BookShelfGroupDetailScreen(
             },
             actions = {
                 // 分组编辑按钮 - 占位实现
-                IconButton(onClick = { 
+                IconButton(onClick = {
                     // TODO: 实现分组编辑功能
                 }) {
                     Icon(
@@ -75,7 +75,7 @@ fun BookShelfGroupDetailScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 // 更多操作菜单 - 占位实现
                 Box {
                     IconButton(onClick = { showMenu = true }) {
@@ -85,7 +85,7 @@ fun BookShelfGroupDetailScreen(
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    
+
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
@@ -97,7 +97,7 @@ fun BookShelfGroupDetailScreen(
                                 // TODO: 实现分组管理功能
                             }
                         )
-                        
+
                         DropdownMenuItem(
                             text = { Text("书籍管理") },
                             onClick = {
@@ -112,7 +112,7 @@ fun BookShelfGroupDetailScreen(
                 containerColor = MaterialTheme.colorScheme.background
             )
         )
-        
+
         // 分组统计信息
         Card(
             modifier = Modifier
@@ -137,20 +137,20 @@ fun BookShelfGroupDetailScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = "书籍数量: ${books.size}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 // TODO: 添加更多统计信息，如阅读进度、评分等
             }
         }
-        
+
         // 书籍列表
         if (books.isEmpty()) {
             // 空状态
@@ -168,9 +168,9 @@ fun BookShelfGroupDetailScreen(
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text(
                         text = "该分组暂无书籍",
                         style = MaterialTheme.typography.titleMedium,
@@ -178,7 +178,7 @@ fun BookShelfGroupDetailScreen(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 18.sp
                     )
-                    
+
                     Text(
                         text = "添加书籍到此分组",
                         style = MaterialTheme.typography.bodyMedium,
@@ -200,7 +200,7 @@ fun BookShelfGroupDetailScreen(
                 ) {
                     items(books.size) { index ->
                         val book = books[index]
-                        BookItem(
+                        BookShelfDefaultBookGridItem(
                             book = book,
                             onClick = { onBookClick(book.id) }
                         )
@@ -215,7 +215,7 @@ fun BookShelfGroupDetailScreen(
                 ) {
                     items(books.size) { index ->
                         val book = books[index]
-                        BookItem(
+                        BookShelfDefaultBookGridItem(
                             book = book,
                             onClick = { onBookClick(book.id) }
                         )
@@ -227,7 +227,7 @@ fun BookShelfGroupDetailScreen(
 }
 
 @Composable
-private fun BookItem(
+private fun BookShelfDefaultBookGridItem(
     book: BookEntity,
     onClick: () -> Unit
 ) {
@@ -256,9 +256,9 @@ private fun BookItem(
             ) {
                 // TODO: 实现书籍封面显示
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             // 书籍信息
             Column(
                 modifier = Modifier.weight(1f)
@@ -284,9 +284,9 @@ private fun BookItem(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // TODO: 添加更多书籍信息，如阅读状态、评分等
             }
         }

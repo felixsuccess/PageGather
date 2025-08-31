@@ -1,10 +1,8 @@
 package com.anou.pagegather.ui.navigation
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -14,7 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
-import com.anou.pagegather.ui.feature.bookshelf.BookShelfGroupDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.group.BookShelfGroupDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
 import com.anou.pagegather.ui.feature.management.BookGroupManagementScreen
 import com.anou.pagegather.ui.feature.management.BookSourceManagementScreen
@@ -23,12 +21,14 @@ import com.anou.pagegather.ui.feature.my.ProfileScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
 import com.anou.pagegather.ui.feature.notes.NotesScreen
+import com.anou.pagegather.ui.feature.quickactions.QuickActionsScreen
+import com.anou.pagegather.ui.feature.quickactions.QuickNoteScreen
+import com.anou.pagegather.ui.feature.quickactions.QuickReviewScreen
 import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
-import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
-import com.anou.pagegather.ui.feature.quickactions.*
 import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
+import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
 
 @Composable
 fun AppNavigation(

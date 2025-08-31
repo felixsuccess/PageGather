@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.anou.pagegather.data.local.entity.TagEntity
 import com.anou.pagegather.data.local.entity.TagType
+import androidx.core.graphics.toColorInt
 
 /**
  * 通用标签选择器
@@ -221,7 +222,7 @@ private fun TagDisplayRow(
             imageVector = Icons.AutoMirrored.Filled.Label,
             contentDescription = null,
             tint = try {
-                Color(android.graphics.Color.parseColor(tag.color ?: "#2196F3"))
+                Color((tag.color ?: "#2196F3").toColorInt())
             } catch (e: Exception) {
                 MaterialTheme.colorScheme.primary
             },
