@@ -15,6 +15,7 @@ fun BookShelfScreen(
     onNavigateToTimer: () -> Unit = {},
     onNavigateToQuickActions: () -> Unit = {},
     onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航到分组详情的回调
+    onNavigateToSourceDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航到来源详情的回调
 ) {
     Column {
         Text(
@@ -29,7 +30,8 @@ fun BookShelfScreen(
             onAddBookClick = onToBookAddClick,
             onTimerClick = onNavigateToTimer,
             onQuickActionsClick = onNavigateToQuickActions,
-            onNavigateToGroupDetail = onNavigateToGroupDetail  // 传递导航回调
+            onNavigateToGroupDetail = onNavigateToGroupDetail,  // 传递分组导航回调
+            onNavigateToSourceDetail = onNavigateToSourceDetail  // 传递来源导航回调
         )
     }
 }

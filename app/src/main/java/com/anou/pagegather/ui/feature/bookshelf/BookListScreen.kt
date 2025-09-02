@@ -4,11 +4,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,7 +15,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,9 +40,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.ui.feature.bookshelf.booklist.BatchOperationToolbar
 import com.anou.pagegather.ui.feature.bookshelf.booklist.BookShelfDefaultBookListContent
+import com.anou.pagegather.ui.feature.bookshelf.booksource.BookSourcedBookListContent
 import com.anou.pagegather.ui.feature.bookshelf.filter.BookFilterTabs
 import com.anou.pagegather.ui.feature.bookshelf.filter.filterOptions
 import com.anou.pagegather.ui.feature.bookshelf.group.GroupedBookListContent
+import com.anou.pagegather.ui.feature.bookshelf.rating.RatingBookListContent
+import com.anou.pagegather.ui.feature.bookshelf.status.StatusBookListContent
+import com.anou.pagegather.ui.feature.bookshelf.tag.TagBookListContent
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -57,7 +58,8 @@ fun BookListScreen(
     onAddBookClick: () -> Unit,
     onTimerClick: () -> Unit = {},
     onQuickActionsClick: () -> Unit = {},
-    onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> }  // 添加导航回调参数
+    onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航回调参数
+    onNavigateToSourceDetail: (Long, String) -> Unit = { _, _ -> }  // 添加来源详情导航回调参数
 ) {
     val uiState by viewModel.state.collectAsState()
     val bookListState by viewModel.bookListState.collectAsState()
@@ -251,24 +253,57 @@ fun BookListScreen(
                 }
 
                 "tag" -> {
-                    PreOrderBookListContent()
+                    TagBookListContent(
+                        viewModel = viewModel,
+                        isGridMode = bookListState.isGridMode,
+                        onTagClick = { tag ->
+                            // TODO: 实现标签详情导航
+                        }
+                    )
                 }
 
                 "status" -> {
-                    PreOrderBookListContent()
+                    StatusBookListContent(
+                        viewModel = viewModel,
+                        isGridMode = bookListState.isGridMode,
+                        onStatusClick = { status ->
+                            // TODO: 实现状态详情导航
+                        }
+                    )
                 }
 
                 "source" -> {
-                    PreOrderBookListContent()
+                    BookSourcedBookListContent(
+                        viewModel = viewModel,
+                        isGridMode = bookListState.isGridMode,
+                        onSourceClick = { sourceId, sourceName ->
+                            // 导航到来源详情页面
+                            onNavigateToSourceDetail(sourceId, sourceName)
+                        }
+                    )
                 }
 
                 "rating" -> {
-                    PreOrderBookListContent()
+                    RatingBookListContent(
+                        viewModel = viewModel,
+                        isGridMode = bookListState.isGridMode,
+                        onRatingClick = { rating ->
+                            // TODO: 实现评分详情导航
+                        }
+                    )
                 }
 
 
                 else -> {
-                    DemoGroupListContent()
+                    // 使用默认的书籍列表内容作为后备选项
+                    BookShelfDefaultBookListContent(
+                        bookListUIState = uiState,
+                        onBookClick = onBookClick,
+                        onAddBookClick = onAddBookClick,
+                        onTimerClick = onTimerClick,
+                        viewModel = viewModel,
+                        isGridMode = bookListState.isGridMode
+                    )
                 }
             }
         }
@@ -294,18 +329,6 @@ fun BookListScreen(
 
     }  //  TODO://显示底部操作按钮栏
 }
-
-@Composable
-fun DemoGroupListContent() {
-    TODO("Not yet implemented")
-
-    // 分组 ： 聚合排序   按照   分组的组顺序  和   没分组的 和  排序    ； 置顶的在上边， 分组中内部的 书籍排序  进行排序
-    //标签：  按照标签 聚合排序
-    //状态：  按照 状态 聚合排序
-
-
-}
-
 
 @Composable
 private fun PreOrderBookListContent() {

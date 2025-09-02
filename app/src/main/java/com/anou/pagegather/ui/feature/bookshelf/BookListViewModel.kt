@@ -4,14 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookGroupEntity
+import com.anou.pagegather.data.local.entity.BookSourceEntity
 import com.anou.pagegather.data.repository.BookRepository
 import com.anou.pagegather.data.repository.BookGroupRepository
+import com.anou.pagegather.data.repository.BookSourceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -22,6 +25,8 @@ import javax.inject.Inject
 data class BookListState(
     val books: List<BookEntity> = emptyList(),
     val availableGroups: List<BookGroupEntity> = emptyList(),
+    val availableSources: List<BookSourceEntity> = emptyList(),
+    val availableTags: List<com.anou.pagegather.data.local.entity.TagEntity> = emptyList(),
     val selectedGroupId: Long? = null,
     val searchQuery: String = "",
     val isLoading: Boolean = false,
@@ -51,7 +56,8 @@ data class BookListState(
 @HiltViewModel
 class BookListViewModel @Inject constructor(
     private val bookRepository: BookRepository,
-    private val groupRepository: BookGroupRepository
+    private val groupRepository: BookGroupRepository,
+    private val bookSourceRepository: BookSourceRepository
 ) : ViewModel() {
     private var _bookList = MutableStateFlow<List<BookEntity>>(emptyList())
     private val _isLoading = MutableStateFlow(true)
@@ -71,6 +77,10 @@ class BookListViewModel @Inject constructor(
         viewModelScope.launch {
             // 加载分组列表
             loadAvailableGroups()
+            // 加载来源列表
+            loadAvailableSources()
+            // 加载标签列表
+            loadAvailableTags()
             // 加载书籍列表
             loadBooks()
         }
@@ -90,6 +100,44 @@ class BookListViewModel @Inject constructor(
             } catch (e: Exception) {
                 _bookListState.value = _bookListState.value.copy(
                     errorMessage = "加载分组失败: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * 加载可用来源
+     */
+    private fun loadAvailableSources() {
+        viewModelScope.launch {
+            try {
+                bookSourceRepository.getAllEnabledSources().collect { sources ->
+                    _bookListState.value = _bookListState.value.copy(
+                        availableSources = sources
+                    )
+                }
+            } catch (e: Exception) {
+                _bookListState.value = _bookListState.value.copy(
+                    errorMessage = "加载来源失败: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * 加载可用标签
+     */
+    private fun loadAvailableTags() {
+        viewModelScope.launch {
+            try {
+                bookRepository.getBookTags().collect { tags ->
+                    _bookListState.value = _bookListState.value.copy(
+                        availableTags = tags
+                    )
+                }
+            } catch (e: Exception) {
+                _bookListState.value = _bookListState.value.copy(
+                    errorMessage = "加载标签失败: ${e.message}"
                 )
             }
         }
@@ -254,7 +302,7 @@ class BookListViewModel @Inject constructor(
     /**
      * 获取分组中的书籍
      */
-    fun getBooksByGroupId(groupId: Long): kotlinx.coroutines.flow.Flow<List<BookEntity>> {
+    fun getBooksByGroupId(groupId: Long): Flow<List<BookEntity>> {
         return combine(
             groupRepository.getBooksByGroupId(groupId),
             bookRepository.getAllBooks()
@@ -264,6 +312,52 @@ class BookListViewModel @Inject constructor(
         }
     }
     
+    /**
+     * 获取来源中的书籍
+     */
+    fun getBooksBySourceId(sourceId: Long): Flow<List<BookEntity>> {
+        return bookRepository.getBooksBySourceId(sourceId.toInt())
+    }
+    
+    /**
+     * 获取来源中的前9本书籍
+     */
+    fun getSourceTopBooks(sourceId: Long, limit: Int = 9): Flow<List<BookEntity>> {
+        return bookRepository.getBooksBySourceId(sourceId.toInt()).map { books -> 
+            books.take(limit)
+        }
+    }
+
+    /**
+     * 获取来源中的书籍数量
+     */
+    fun getSourceBookCount(sourceId: Long): Flow<Int> {
+        return bookRepository.getBooksBySourceId(sourceId.toInt()).map { books -> books.size }
+    }
+    
+    /**
+     * 获取指定状态下的书籍数量
+     */
+    fun getStatusBookCount(status: com.anou.pagegather.data.local.entity.ReadStatus): Flow<Int> {
+        return bookRepository.getAllBooks().map { books -> 
+            books.count { it.readStatus == status.code }
+        }
+    }
+    
+    /**
+     * 获取指定标签下的书籍数量
+     */
+    fun getTagBookCount(tagId: Long): Flow<Int> {
+        return bookRepository.getBooksWithTag(tagId).map { books -> books.size }
+    }
+    
+    /**
+     * 获取指定评分下的书籍数量
+     */
+    fun getRatingBookCount(rating: Int): Flow<Int> {
+        return bookRepository.getBooksByRating(rating.toFloat()).map { books -> books.size }
+    }
+
     /**
      * 删除书籍
      */
@@ -452,7 +546,7 @@ class BookListViewModel @Inject constructor(
                         val currentBooks = _bookList.value.toMutableList()
                         val index = currentBooks.indexOfFirst { b -> b.id == bookId }
                         if (index != -1) {
-                            currentBooks[index] = updatedBook
+                        currentBooks[index] = updatedBook
                             _bookList.value = currentBooks
                             _bookListState.value = _bookListState.value.copy(books = currentBooks)
                             _state.value = BookListUIState.Success(currentBooks, isLoadingMore = false)

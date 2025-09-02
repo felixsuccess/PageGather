@@ -20,10 +20,12 @@ object Routes {
         const val BOOK_EDIT = "$PREFIX/edit/{$BOOK_ID}"
         const val BOOK_DETAIL = "$PREFIX/detail/{$BOOK_ID}"
         const val BOOK_GROUP_DETAIL = "$PREFIX/group/{group_id}?groupName={groupName}"  // 更新分组详情路由，添加groupName参数
+        const val BOOK_SOURCE_DETAIL = "$PREFIX/source/{source_id}?sourceName={sourceName}"  // 来源详情路由
 
         fun bookEdit(bookId: Long): String = "$PREFIX/edit/$bookId"
         fun bookDetail(bookId: Long): String = "$PREFIX/detail/$bookId"
         fun bookGroupDetail(groupId: Long, groupName: String = ""): String = "$PREFIX/group/$groupId?groupName=$groupName"  // 更新分组详情路由函数，添加groupName参数
+        fun bookSourceDetail(sourceId: Long, sourceName: String = ""): String = "$PREFIX/source/$sourceId?sourceName=$sourceName"  // 来源详情路由函数
     }
 
     // 随记页面

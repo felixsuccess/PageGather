@@ -1,6 +1,4 @@
-
 package com.anou.pagegather.data.local.dao
-
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -140,4 +138,12 @@ interface BookDao {
         LIMIT :pageSize OFFSET :offset
     """)
     fun getBooksByStatusPaged(status: Int, offset: Int, pageSize: Int, sortType: Int, ascending: Boolean = false): Flow<List<BookEntity>>
+
+    /** 根据来源ID获取书籍 */
+    @Query("SELECT * FROM book WHERE source_id = :sourceId AND is_deleted = 0 ORDER BY updated_date DESC")
+    fun getBooksBySourceId(sourceId: Int): Flow<List<BookEntity>>
+    
+    /** 根据评分获取书籍 */
+    @Query("SELECT * FROM book WHERE rating = :rating AND is_deleted = 0 ORDER BY updated_date DESC")
+    fun getBooksByRating(rating: Float): Flow<List<BookEntity>>
 }

@@ -5,6 +5,8 @@ import com.anou.pagegather.data.local.database.AppDatabase
 import kotlinx.coroutines.flow.flowOf
 import com.anou.pagegather.data.local.entity.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -151,31 +153,39 @@ class BookRepository @Inject constructor(
 
     // ========== 书籍来源管理 ==========
 
-    fun getAllBookSources(): Flow<List<BookSourceEntity>> {
+    fun getAllSources(): Flow<List<BookSourceEntity>> {
         return bookSourceDao.getAllSources()
     }
 
-    fun getEnabledBookSources(): Flow<List<BookSourceEntity>> {
+    fun getEnabledSources(): Flow<List<BookSourceEntity>> {
         return bookSourceDao.getAllEnabledSources()
     }
 
-    suspend fun insertBookSource(source: BookSourceEntity): Long {
+    suspend fun insertSource(source: BookSourceEntity): Long {
         return bookSourceDao.insert(source)
     }
 
-    suspend fun updateBookSource(source: BookSourceEntity) {
+    suspend fun updateSource(source: BookSourceEntity) {
         bookSourceDao.update(source)
     }
 
-    suspend fun deleteBookSource(id: Long) {
+    suspend fun deleteSource(id: Long) {
         bookSourceDao.deleteById(id)
     }
 
-    suspend fun getBookSourceById(id: Long): BookSourceEntity? {
+    suspend fun getSourceById(id: Long): BookSourceEntity? {
         return bookSourceDao.getSourceById(id)
     }
 
-    // ========== 分组管理 ==========
+    fun searchSources(name: String): Flow<List<BookSourceEntity>> {
+        return bookSourceDao.searchSourcesByName(name)
+    }
+
+    suspend fun isSourceNameExists(name: String, excludeId: Long = -1): Boolean {
+        return bookSourceDao.isNameExists(name, excludeId) > 0
+    }
+
+    // ========== 书籍分组管理 ==========
 
     fun getAllGroups(): Flow<List<BookGroupEntity>> {
         return bookGroupDao.getAllGroups()
@@ -271,6 +281,13 @@ class BookRepository @Inject constructor(
         return bookGroupRefDao.isBookInGroup(bookId, groupId) > 0
     }
 
+    /**
+     * 根据来源ID获取书籍
+     */
+    fun getBooksBySourceId(sourceId: Int): Flow<List<BookEntity>> {
+        return bookDao.getBooksBySourceId(sourceId)
+    }
+
     // ========== 书籍标签关联管理 ==========
 
     fun getTagsByBookId(bookId: Long): Flow<List<TagEntity>> {
@@ -279,6 +296,19 @@ class BookRepository @Inject constructor(
 
     fun getBooksByTagId(tagId: Long): Flow<List<BookTagRefEntity>> {
         return bookTagRefDao.getBookRefsByTagId(tagId)
+    }
+    
+    /**
+     * 获取标签下的书籍
+     */
+    fun getBooksWithTag(tagId: Long): Flow<List<BookEntity>> {
+        return combine(
+            bookTagRefDao.getBookRefsByTagId(tagId),
+            bookDao.getAllBooks()
+        ) { refs, allBooks ->
+            val bookIds = refs.map { it.bookId }.toSet()
+            allBooks.filter { it.id in bookIds }
+        }
     }
 
     suspend fun addTagToBook(bookId: Long, tagId: Long): Long {
@@ -304,6 +334,13 @@ class BookRepository @Inject constructor(
 
     suspend fun isBookHasTag(bookId: Long, tagId: Long): Boolean {
         return bookTagRefDao.isBookHasTag(bookId, tagId) > 0
+    }
+    
+    /**
+     * 根据评分获取书籍
+     */
+    fun getBooksByRating(rating: Float): Flow<List<BookEntity>> {
+        return bookDao.getBooksByRating(rating)
     }
 
     // ========== 复合操作 ==========

@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -14,6 +13,8 @@ import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
+import com.anou.pagegather.ui.feature.bookshelf.group.BookShelfGroupDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.booksource.BookShelfSourceDetailScreen
 import com.anou.pagegather.ui.feature.management.BookGroupManagementScreen
 import com.anou.pagegather.ui.feature.management.BookSourceManagementScreen
 import com.anou.pagegather.ui.feature.management.TagManagementScreen
@@ -81,6 +82,12 @@ fun AppNavigation(
                 onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
                 onNavigateToTimer = { navController.navigate(Routes.TimeManagementRoutes.FORWARD_TIMER) },
                 onNavigateToQuickActions = { navController.navigate(Routes.QuickActionsRoutes.QUICK_ACTIONS) },
+                onNavigateToGroupDetail = { groupId, groupName ->
+                    navController.navigate(Routes.BookRoutes.bookGroupDetail(groupId, groupName))
+                },
+                onNavigateToSourceDetail = { sourceId, sourceName ->
+                    navController.navigate(Routes.BookRoutes.bookSourceDetail(sourceId, sourceName))
+                }
             )
 
         }
@@ -292,5 +299,55 @@ fun AppNavigation(
         composable(Routes.QuickActionsRoutes.QUICK_ACTIONS) { QuickActionsScreen() }
         composable(Routes.QuickActionsRoutes.QUICK_NOTE) { QuickNoteScreen() }
         composable(Routes.QuickActionsRoutes.QUICK_REVIEW) { QuickReviewScreen() }
+        
+        // 分组详情页面
+        composable(
+            route = Routes.BookRoutes.BOOK_GROUP_DETAIL,
+            arguments = listOf(
+                navArgument("group_id") { type = NavType.StringType },
+                navArgument("groupName") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("group_id")?.toLongOrNull() ?: 0L
+            val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
+            
+            BookShelfGroupDetailScreen(
+                groupId = groupId,
+                groupName = groupName,
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { bookId ->
+                    navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                }
+            )
+        }
+        
+        // 来源详情页面
+        composable(
+            route = Routes.BookRoutes.BOOK_SOURCE_DETAIL,
+            arguments = listOf(
+                navArgument("source_id") { type = NavType.StringType },
+                navArgument("sourceName") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val sourceId = backStackEntry.arguments?.getString("source_id")?.toLongOrNull() ?: 0L
+            val sourceName = backStackEntry.arguments?.getString("sourceName") ?: ""
+            
+            BookShelfSourceDetailScreen(
+                sourceId = sourceId,
+                sourceName = sourceName,
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { bookId ->
+                    navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                }
+            )
+        }
     }
 }

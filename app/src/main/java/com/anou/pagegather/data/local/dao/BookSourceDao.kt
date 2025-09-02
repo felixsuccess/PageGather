@@ -25,6 +25,10 @@ interface BookSourceDao {
     @Query("SELECT * FROM book_source WHERE id = :id")
     suspend fun getSourceById(id: Long): BookSourceEntity?
     
+    /** 根据名称搜索来源 */
+    @Query("SELECT * FROM book_source WHERE name LIKE '%' || :name || '%' ORDER BY is_builtin DESC, sort_order ASC, name ASC")
+    fun searchSourcesByName(name: String): Flow<List<BookSourceEntity>>
+    
     /** 获取内置来源（同步方法，用于初始化检查） */
     @Query("SELECT * FROM book_source WHERE is_builtin = 1 LIMIT 1")
     suspend fun getBuiltInSourcesSync(): List<BookSourceEntity>
