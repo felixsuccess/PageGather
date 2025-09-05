@@ -222,6 +222,23 @@ fun BookCover(
                 contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
         }
+        else 
+        {
+                // 没有封面时显示默认占位符
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = book.name?.take(1) ?: "书",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
     }
 }
 

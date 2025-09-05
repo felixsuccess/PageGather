@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
+import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -215,7 +216,7 @@ fun BookShelfRatingDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(20.dp) // 垂直间距较大，为标题留出空间
                     ) {
                         items(books) { book ->
-                            RatingBookGridItem(
+                            BookGridItem(
                                 book = book,
                                 onClick = { onBookClick(book.id) }
                             )
@@ -453,143 +454,5 @@ fun RatingBookListItem(
                 textAlign = androidx.compose.ui.text.style.TextAlign.End
             )
         }
-    }
-}
-
-/**
- * 评分书籍网格项（用于网格布局）- 微信读书样式
- */
-@Composable
-fun RatingBookGridItem(
-    book: BookEntity,
-    onClick: () -> Unit
-) {
-    // 微信读书网格模式不使用卡片，直接使用Column布局
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.Start // 左对齐，与微信读书一致
-    ) {
-        // 书籍封面 - 微信读书风格
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.72f) // 标准书籍比例
-                .clip(RoundedCornerShape(1.dp)) // 微信读书封面几乎没有圆角
-        ) {
-            // 书籍封面
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = book.name?.take(1) ?: "书",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            // 阅读状态标签 - 微信读书在右上角显示标签
-            when (book.readStatus) {
-                2 -> { // 已读完
-                    // 右上角的读完标签
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .background(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(topEnd = 1.dp, bottomStart = 8.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "读完",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                0 -> { // 想读
-                    // 右上角的想读标签
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .background(
-                                color = MaterialTheme.colorScheme.tertiary,
-                                shape = RoundedCornerShape(topEnd = 1.dp, bottomStart = 8.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "想读",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onTertiary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            // 如果有进度，显示进度条
-            if (book.totalPosition > 0 && book.readPosition > 0) {
-                val progress = (book.readPosition.toFloat() / book.totalPosition.toFloat())
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .align(Alignment.BottomCenter)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(progress)
-                            .fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        // 书籍标题 - 微信读书样式
-        Text(
-            text = book.name ?: "未知书名",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1, // 与微信读书一致，只显示一行标题
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // 更新日期 - 微信读书显示日期而非作者
-        val displayDate = if (book.updatedDate > 0) {
-            val date = java.text.SimpleDateFormat("yyyy年MM月dd日", java.util.Locale.getDefault())
-                .format(java.util.Date(book.updatedDate))
-            date
-        } else {
-            // 模拟日期，参考图片中的格式
-            "${2024 + (book.id % 2).toInt()}年${1 + (book.id % 12).toInt()}月${1 + (book.id % 28).toInt()}日"
-        }
-
-        Text(
-            text = displayDate,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
