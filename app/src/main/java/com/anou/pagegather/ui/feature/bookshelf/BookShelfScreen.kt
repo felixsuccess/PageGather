@@ -16,6 +16,9 @@ fun BookShelfScreen(
     onNavigateToQuickActions: () -> Unit = {},
     onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航到分组详情的回调
     onNavigateToSourceDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航到来源详情的回调
+    onNavigateToTagDetail: (Long, String, String?) -> Unit = { _, _, _ -> },  // 添加导航到标签详情的回调
+    onNavigateToStatusDetail: (Int, String) -> Unit = { _, _ -> },  // 添加导航到状态详情的回调
+    onNavigateToRatingDetail: (Int, String) -> Unit = { _, _ -> }  // 添加导航到评分详情的回调
 ) {
     Column {
         Text(
@@ -31,7 +34,10 @@ fun BookShelfScreen(
             onTimerClick = onNavigateToTimer,
             onQuickActionsClick = onNavigateToQuickActions,
             onNavigateToGroupDetail = onNavigateToGroupDetail,  // 传递分组导航回调
-            onNavigateToSourceDetail = onNavigateToSourceDetail  // 传递来源导航回调
+            onNavigateToSourceDetail = onNavigateToSourceDetail,  // 传递来源导航回调
+            onNavigateToTagDetail = onNavigateToTagDetail,  // 传递标签导航回调
+            onNavigateToStatusDetail = onNavigateToStatusDetail,  // 传递状态导航回调
+            onNavigateToRatingDetail = onNavigateToRatingDetail  // 传递评分导航回调
         )
     }
 }

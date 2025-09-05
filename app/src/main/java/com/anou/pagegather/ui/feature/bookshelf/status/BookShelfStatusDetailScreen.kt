@@ -1,4 +1,4 @@
-package com.anou.pagegather.ui.feature.bookshelf.group
+package com.anou.pagegather.ui.feature.bookshelf.status
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -23,26 +24,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.data.local.entity.BookEntity
+import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookShelfGroupDetailScreen(
-    groupId: Long,
-    groupName: String, // 通过导航参数直接传递分组名称
+fun BookShelfStatusDetailScreen(
+    status: Int,
+    statusName: String,
     viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit
 ) {
-    val books by viewModel.getBooksByGroupId(groupId).collectAsState(initial = emptyList())
+    val books: List<BookEntity> by viewModel.getBooksByStatus(status).collectAsState(initial = emptyList())
     var isGridMode by remember { mutableStateOf(true) }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -50,10 +49,10 @@ fun BookShelfGroupDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    // 显示具体分组名称和书籍数量
+                    // 显示具体状态名称和书籍数量
                     Column {
                         Text(
-                            text = groupName,
+                            text = statusName,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -108,10 +107,10 @@ fun BookShelfGroupDetailScreen(
                             onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("分组管理") },
+                                text = { Text("状态管理") },
                                 onClick = {
                                     showMenu = false
-                                    // TODO: 实现分组管理功能
+                                    // TODO: 实现状态管理功能
                                 }
                             )
 
@@ -166,7 +165,7 @@ fun BookShelfGroupDetailScreen(
                         )
 
                         Text(
-                            text = "添加书籍到这个分组",
+                            text = "添加书籍到这个状态",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             fontSize = 14.sp
@@ -188,7 +187,7 @@ fun BookShelfGroupDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(20.dp) // 垂直间距较大，为标题留出空间
                     ) {
                         items(books) { book ->
-                            GroupBookGridItem(
+                            StatusBookGridItem(
                                 book = book,
                                 onClick = { onBookClick(book.id) }
                             )
@@ -202,7 +201,7 @@ fun BookShelfGroupDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         items(books) { book ->
-                            GroupBookListItem(
+                            StatusBookListItem(
                                 book = book,
                                 onClick = { onBookClick(book.id) }
                             )
@@ -215,10 +214,10 @@ fun BookShelfGroupDetailScreen(
 }
 
 /**
- * 分组书籍列表项
+ * 状态书籍列表项
  */
 @Composable
-fun GroupBookListItem(
+fun StatusBookListItem(
     book: BookEntity,
     onClick: () -> Unit
 ) {
@@ -408,8 +407,8 @@ fun GroupBookListItem(
 
             // 日期信息，单独放在底部右侧
             val displayDate = if (book.updatedDate > 0) {
-                val date = SimpleDateFormat("yyyy 年 MM 月 dd 日", Locale.getDefault())
-                    .format(Date(book.updatedDate))
+                val date = java.text.SimpleDateFormat("yyyy 年 MM 月 dd 日", java.util.Locale.getDefault())
+                    .format(java.util.Date(book.updatedDate))
                 date
             } else {
                 // 模拟日期，参考图片中的格式
@@ -423,17 +422,17 @@ fun GroupBookListItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
-                textAlign = TextAlign.End
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
             )
         }
     }
 }
 
 /**
- * 分组书籍网格项（用于网格布局）- 微信读书样式
+ * 状态书籍网格项（用于网格布局）- 微信读书样式
  */
 @Composable
-fun GroupBookGridItem(
+fun StatusBookGridItem(
     book: BookEntity,
     onClick: () -> Unit
 ) {
@@ -548,8 +547,8 @@ fun GroupBookGridItem(
 
         // 更新日期 - 微信读书显示日期而非作者
         val displayDate = if (book.updatedDate > 0) {
-            val date = SimpleDateFormat("yyyy年MM月dd日", Locale.getDefault())
-                .format(Date(book.updatedDate))
+            val date = java.text.SimpleDateFormat("yyyy年MM月dd日", java.util.Locale.getDefault())
+                .format(java.util.Date(book.updatedDate))
             date
         } else {
             // 模拟日期，参考图片中的格式

@@ -237,58 +237,42 @@ private fun BookSourceGridItem(
     // 获取该来源下的书籍数量
     val bookCount by viewModel.getSourceBookCount(source.id).collectAsState(initial = 0)
 
-    Card(
-        modifier = Modifier.Companion
-            .fillMaxWidth()
-            .aspectRatio(0.8f)
-            .clickable(onClick = onClick),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(onClick = onClick)
+            .padding(8.dp), // 添加一些内边距
+        horizontalAlignment = Alignment.Start // 左对齐，与微信读书一致
     ) {
-        Column(
-            modifier = Modifier.Companion.fillMaxSize(),
-            horizontalAlignment = Alignment.Companion.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            // 来源预览（使用该来源下的书籍封面拼贴）
-            SourcePreview(
-                source = source,
-                viewModel = viewModel,
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
+        // 来源预览（使用该来源下的书籍封面拼贴）
+        SourcePreview(
+            source = source,
+            viewModel = viewModel,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.72f) // 标准书籍比例
+                .clip(RoundedCornerShape(1.dp)) // 微信读书封面几乎没有圆角
+        )
+        
+        Spacer(modifier = Modifier.height(6.dp))
+        
+        // 来源名称和书籍数量
+        Text(
+            text = source.getDisplayName(),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth()
+        )
 
-            // 来源名称和书籍数量
-            Column(
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalAlignment = Alignment.Companion.CenterHorizontally
-            ) {
-                Text(
-                    text = source.getDisplayName(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Companion.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Companion.Ellipsis,
-                    textAlign = TextAlign.Companion.Center,
-                    modifier = Modifier.Companion.fillMaxWidth()
-                )
-
-                Text(
-                    text = "$bookCount 本",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Companion.Center,
-                    modifier = Modifier.Companion.fillMaxWidth()
-                )
-            }
-        }
+        Text(
+            text = "$bookCount 本",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -306,22 +290,23 @@ private fun SourcePreview(
 
     Box(
         modifier = modifier
+            .aspectRatio(0.72f) // 添加标准书籍比例，与BookShelfDefaultBookGridItem保持一致
             .background(Color(0xFFF5F5F5))
             .padding(8.dp)
     ) {
         if (books.isEmpty()) {
             // 没有书籍时显示来源名称的首字母
             Box(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Companion.Center
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = source.getDisplayName().take(1),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Companion.Bold
+                    fontWeight = FontWeight.Bold
                 )
             }
         } else {
@@ -331,62 +316,62 @@ private fun SourcePreview(
                     // 只有一本书时，显示单封面
                     BookCover(
                         coverUrl = books[0].coverUrl,
-                        modifier = Modifier.Companion.fillMaxSize()
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
 
                 books.size <= 4 -> {
                     // 2-4本书时，显示2x2网格
                     Column(
-                        modifier = Modifier.Companion.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Row(
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             BookCover(
                                 coverUrl = books.getOrNull(0)?.coverUrl,
-                                modifier = Modifier.Companion
+                                modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
                             )
                             if (books.size > 1) {
                                 BookCover(
                                     coverUrl = books.getOrNull(1)?.coverUrl,
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .weight(1f)
                                         .fillMaxHeight()
                                 )
                             } else {
-                                Spacer(modifier = Modifier.Companion.weight(1f))
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
 
                         if (books.size > 2) {
                             Row(
-                                modifier = Modifier.Companion
+                                modifier = Modifier
                                     .fillMaxWidth()
                                     .weight(1f),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 BookCover(
                                     coverUrl = books.getOrNull(2)?.coverUrl,
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .weight(1f)
                                         .fillMaxHeight()
                                 )
                                 if (books.size > 3) {
                                     BookCover(
                                         coverUrl = books.getOrNull(3)?.coverUrl,
-                                        modifier = Modifier.Companion
+                                        modifier = Modifier
                                             .weight(1f)
                                             .fillMaxHeight()
                                     )
                                 } else {
-                                    Spacer(modifier = Modifier.Companion.weight(1f))
+                                    Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
                         }
@@ -396,20 +381,20 @@ private fun SourcePreview(
                 else -> {
                     // 5+本书时，显示拼贴布局（类似微信读书）
                     Row(
-                        modifier = Modifier.Companion.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         // 左侧大封面
                         BookCover(
                             coverUrl = books[0].coverUrl,
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
                         )
 
                         // 右侧小封面列
                         Column(
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -417,7 +402,7 @@ private fun SourcePreview(
                             for (i in 1 until minOf(5, books.size)) {
                                 BookCover(
                                     coverUrl = books[i].coverUrl,
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f)
                                 )
@@ -432,19 +417,19 @@ private fun SourcePreview(
         val sourceBookCount = books.size
         if (sourceBookCount > 0) {
             Box(
-                modifier = Modifier.Companion
-                    .align(Alignment.Companion.BottomEnd)
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
                     .padding(4.dp)
                     .size(24.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
-                contentAlignment = Alignment.Companion.Center
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = sourceBookCount.toString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Companion.Bold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

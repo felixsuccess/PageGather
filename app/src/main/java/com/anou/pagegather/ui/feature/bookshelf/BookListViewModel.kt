@@ -313,6 +313,13 @@ class BookListViewModel @Inject constructor(
     }
     
     /**
+     * 获取分组中的书籍数量
+     */
+    fun getGroupBookCount(groupId: Long): Flow<Int> {
+        return groupRepository.getBooksByGroupId(groupId).map { books -> books.size }
+    }
+    
+    /**
      * 获取来源中的书籍
      */
     fun getBooksBySourceId(sourceId: Long): Flow<List<BookEntity>> {
@@ -336,6 +343,13 @@ class BookListViewModel @Inject constructor(
     }
     
     /**
+     * 获取指定状态下的书籍
+     */
+    fun getBooksByStatus(status: Int): Flow<List<BookEntity>> {
+        return bookRepository.getBooksByStatus(status)
+    }
+    
+    /**
      * 获取指定状态下的书籍数量
      */
     fun getStatusBookCount(status: com.anou.pagegather.data.local.entity.ReadStatus): Flow<Int> {
@@ -352,12 +366,26 @@ class BookListViewModel @Inject constructor(
     }
     
     /**
+     * 获取指定标签下的书籍列表
+     */
+    fun getBooksWithTag(tagId: Long): Flow<List<BookEntity>> {
+        return bookRepository.getBooksWithTag(tagId)
+    }
+    
+    /**
      * 获取指定评分下的书籍数量
      */
     fun getRatingBookCount(rating: Int): Flow<Int> {
         return bookRepository.getBooksByRating(rating.toFloat()).map { books -> books.size }
     }
-
+    
+    /**
+     * 获取指定评分下的书籍列表
+     */
+    fun getBooksByRating(rating: Float): Flow<List<BookEntity>> {
+        return bookRepository.getBooksByRating(rating)
+    }
+    
     /**
      * 删除书籍
      */

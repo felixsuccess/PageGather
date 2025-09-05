@@ -15,6 +15,9 @@ import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
 import com.anou.pagegather.ui.feature.bookshelf.group.BookShelfGroupDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookShelfSourceDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.rating.BookShelfRatingDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.status.BookShelfStatusDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.tag.BookShelfTagDetailScreen
 import com.anou.pagegather.ui.feature.management.BookGroupManagementScreen
 import com.anou.pagegather.ui.feature.management.BookSourceManagementScreen
 import com.anou.pagegather.ui.feature.management.TagManagementScreen
@@ -87,6 +90,15 @@ fun AppNavigation(
                 },
                 onNavigateToSourceDetail = { sourceId, sourceName ->
                     navController.navigate(Routes.BookRoutes.bookSourceDetail(sourceId, sourceName))
+                },
+                onNavigateToTagDetail = { tagId, tagName, tagColor ->
+                    navController.navigate(Routes.BookRoutes.bookTagDetail(tagId, tagName))
+                },
+                onNavigateToStatusDetail = { status, statusName ->
+                    navController.navigate(Routes.BookRoutes.bookStatusDetail(status, statusName))
+                },
+                onNavigateToRatingDetail = { rating, ratingValue ->
+                    navController.navigate(Routes.BookRoutes.bookRatingDetail(rating, ratingValue))
                 }
             )
 
@@ -343,6 +355,88 @@ fun AppNavigation(
             BookShelfSourceDetailScreen(
                 sourceId = sourceId,
                 sourceName = sourceName,
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { bookId ->
+                    navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                }
+            )
+        }
+        
+        // 标签详情页面
+        composable(
+            route = Routes.BookRoutes.BOOK_TAG_DETAIL,
+            arguments = listOf(
+                navArgument("tag_id") { type = NavType.StringType },
+                navArgument("tagName") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                },
+                navArgument("tagColor") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val tagId = backStackEntry.arguments?.getString("tag_id")?.toLongOrNull() ?: 0L
+            val tagName = backStackEntry.arguments?.getString("tagName") ?: ""
+            val tagColor = backStackEntry.arguments?.getString("tagColor") ?: ""
+            
+            BookShelfTagDetailScreen(
+                tagId = tagId,
+                tagName = tagName,
+                tagColor = tagColor,
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { bookId ->
+                    navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                }
+            )
+        }
+        
+        // 状态详情页面
+        composable(
+            route = Routes.BookRoutes.BOOK_STATUS_DETAIL,
+            arguments = listOf(
+                navArgument("status") { type = NavType.StringType },
+                navArgument("statusName") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val status = backStackEntry.arguments?.getString("status")?.toIntOrNull() ?: 0
+            val statusName = backStackEntry.arguments?.getString("statusName") ?: ""
+            
+            BookShelfStatusDetailScreen(
+                status = status,
+                statusName = statusName,
+                onBackClick = { navController.popBackStack() },
+                onBookClick = { bookId ->
+                    navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                }
+            )
+        }
+        
+        // 评分详情页面
+        composable(
+            route = Routes.BookRoutes.BOOK_RATING_DETAIL,
+            arguments = listOf(
+                navArgument("rating") { type = NavType.StringType },
+                navArgument("ratingValue") { 
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            val rating = backStackEntry.arguments?.getString("rating")?.toIntOrNull() ?: 0
+            val ratingValue = backStackEntry.arguments?.getString("ratingValue") ?: ""
+            
+            BookShelfRatingDetailScreen(
+                rating = rating,
+                ratingValue = ratingValue,
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")

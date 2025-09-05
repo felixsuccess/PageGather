@@ -40,9 +40,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.anou.pagegather.ui.feature.bookshelf.booklist.useLetterPlaceholderForGrid
 
 @Composable
-  fun BookFilterTabs(
+fun BookFilterTabs(
     selectedFilter: FilterOption,
     onFilterSelected: (FilterOption) -> Unit,
     isGridMode: Boolean,
@@ -57,19 +58,19 @@ import androidx.compose.ui.unit.dp
     Column {
         // 使用水平滚动的Row来容纳分类选项和设置按钮
         Row(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Companion.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
             // 使用水平滚动的Row来容纳分类选项
             Row(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .weight(1f)
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Companion.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // 分类选项按钮 - 使用基础的Box和Text实现
                 filterOptions.forEach { option ->
@@ -91,7 +92,7 @@ import androidx.compose.ui.unit.dp
                     )
 
                     Box(
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(backgroundColor)
                             .clickable(
@@ -172,6 +173,25 @@ import androidx.compose.ui.unit.dp
                             )
                         }
                     )
+                    
+                    // 添加网格封面显示方式切换菜单项（在两种模式下都显示）
+                    DropdownMenuItem(
+                        text = { 
+                            Text(
+                                if (useLetterPlaceholderForGrid) "使用封面图片" else "使用首字母占位符"
+                            ) 
+                        },
+                        onClick = {
+                            showSettingsMenu = false
+                            useLetterPlaceholderForGrid = !useLetterPlaceholderForGrid
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (useLetterPlaceholderForGrid) Icons.Default.GridView else Icons.Default.GridView,
+                                contentDescription = null
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -184,7 +204,6 @@ import androidx.compose.ui.unit.dp
         )
     }
 }
-
 
 /**
  * 排序选项对话框

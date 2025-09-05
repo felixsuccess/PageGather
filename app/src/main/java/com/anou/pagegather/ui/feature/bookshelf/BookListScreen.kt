@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.ui.feature.bookshelf.booklist.BatchOperationToolbar
 import com.anou.pagegather.ui.feature.bookshelf.booklist.BookShelfDefaultBookListContent
+import com.anou.pagegather.ui.feature.bookshelf.booklist.useLetterPlaceholderForGrid
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookSourcedBookListContent
 import com.anou.pagegather.ui.feature.bookshelf.filter.BookFilterTabs
 import com.anou.pagegather.ui.feature.bookshelf.filter.filterOptions
@@ -47,7 +48,6 @@ import com.anou.pagegather.ui.feature.bookshelf.group.GroupedBookListContent
 import com.anou.pagegather.ui.feature.bookshelf.rating.RatingBookListContent
 import com.anou.pagegather.ui.feature.bookshelf.status.StatusBookListContent
 import com.anou.pagegather.ui.feature.bookshelf.tag.TagBookListContent
-
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -59,7 +59,10 @@ fun BookListScreen(
     onTimerClick: () -> Unit = {},
     onQuickActionsClick: () -> Unit = {},
     onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航回调参数
-    onNavigateToSourceDetail: (Long, String) -> Unit = { _, _ -> }  // 添加来源详情导航回调参数
+    onNavigateToSourceDetail: (Long, String) -> Unit = { _, _ -> },  // 添加来源详情导航回调参数
+    onNavigateToTagDetail: (Long, String, String?) -> Unit = { _, _, _ -> },  // 添加标签详情导航回调参数
+    onNavigateToStatusDetail: (Int, String) -> Unit = { _, _ -> },  // 添加状态详情导航回调参数
+    onNavigateToRatingDetail: (Int, String) -> Unit = { _, _ -> }  // 添加评分详情导航回调参数
 ) {
     val uiState by viewModel.state.collectAsState()
     val bookListState by viewModel.bookListState.collectAsState()
@@ -231,7 +234,8 @@ fun BookListScreen(
                         onAddBookClick = onAddBookClick,
                         onTimerClick = onTimerClick,
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode
+                        isGridMode = bookListState.isGridMode,
+                        useLetterPlaceholderForGrid = useLetterPlaceholderForGrid // 传递网格封面显示方式设置
                     )
                 }
 
@@ -257,7 +261,8 @@ fun BookListScreen(
                         viewModel = viewModel,
                         isGridMode = bookListState.isGridMode,
                         onTagClick = { tag ->
-                            // TODO: 实现标签详情导航
+                            // 实现标签详情导航
+                            onNavigateToTagDetail(tag.id, tag.name, tag.color)
                         }
                     )
                 }
@@ -267,7 +272,8 @@ fun BookListScreen(
                         viewModel = viewModel,
                         isGridMode = bookListState.isGridMode,
                         onStatusClick = { status ->
-                            // TODO: 实现状态详情导航
+                            // 实现状态详情导航
+                            onNavigateToStatusDetail(status.code, status.message)
                         }
                     )
                 }
@@ -288,7 +294,8 @@ fun BookListScreen(
                         viewModel = viewModel,
                         isGridMode = bookListState.isGridMode,
                         onRatingClick = { rating ->
-                            // TODO: 实现评分详情导航
+                            // 实现评分详情导航
+                            onNavigateToRatingDetail(rating, if (rating == 0) "未评分" else "$rating 星")
                         }
                     )
                 }
@@ -302,7 +309,8 @@ fun BookListScreen(
                         onAddBookClick = onAddBookClick,
                         onTimerClick = onTimerClick,
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode
+                        isGridMode = bookListState.isGridMode,
+                        useLetterPlaceholderForGrid = useLetterPlaceholderForGrid // 传递网格封面显示方式设置
                     )
                 }
             }
