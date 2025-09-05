@@ -40,7 +40,7 @@ import coil.compose.AsyncImage
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
-import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 
 /**
  * 按评分分组显示书籍的内容
@@ -218,7 +218,7 @@ private fun RatingGridItem(
     // 获取该评分下的书籍数量
     val bookCount by viewModel.getRatingBookCount(rating).collectAsState(initial = 0)
 
-    BookGridItem(
+    BookCategoryGrid(
         title = if (rating == 0) "未评分" else "$rating 星",
         bookCount = bookCount,
         onClick = onClick,

@@ -39,7 +39,7 @@ import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
-import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 
 /**
  * 按状态分组显示书籍的内容
@@ -206,7 +206,7 @@ private fun StatusGridItem(
     // 获取该状态下的书籍数量
     val bookCount by viewModel.getStatusBookCount(status).collectAsState(initial = 0)
 
-    BookGridItem(
+    BookCategoryGrid(
         title = status.message,
         bookCount = bookCount,
         onClick = onClick,

@@ -1,20 +1,17 @@
 package com.anou.pagegather.ui.feature.bookshelf.common
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -22,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /**
- * 通用书籍网格项组件，用于显示书籍分组的网格项
+ * 通用书籍网格项件，用于显示书籍分组的网格
  * 
  * @param title 标题
  * @param bookCount 书籍数量
@@ -35,7 +32,7 @@ import androidx.compose.ui.unit.dp
  * @param content 自定义内容（用于显示预览）
  */
 @Composable
-fun BookGridItem(
+fun BookCategoryGrid(
     title: String,
     bookCount: Int,
     onClick: () -> Unit,

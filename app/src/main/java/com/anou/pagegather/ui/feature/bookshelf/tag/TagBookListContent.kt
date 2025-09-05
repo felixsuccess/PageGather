@@ -42,9 +42,8 @@ import coil.compose.AsyncImage
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.TagEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
-import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
-import com.anou.pagegather.ui.feature.bookshelf.common.BookPreview
 
 /**
  * 按标签分组显示书籍的内容
@@ -249,7 +248,7 @@ private fun TagGridItem(
     // 获取该标签下的书籍数量
     val bookCount by viewModel.getTagBookCount(tag.id).collectAsState(initial = 0)
 
-    BookGridItem(
+    BookCategoryGrid(
         title = tag.name,
         bookCount = bookCount,
         onClick = onClick,
@@ -284,7 +283,7 @@ private fun TagPreview(
         books = books,
         bookCount = books.size,
         modifier = modifier,
-        emptyIcon = Icons.Default.Label,
+        emptyIcon = Icons.AutoMirrored.Filled.Label,
         emptyIconTint = getTagColor(tag.color),
         getCoverUrl = { book -> (book as? BookEntity)?.coverUrl }
     )

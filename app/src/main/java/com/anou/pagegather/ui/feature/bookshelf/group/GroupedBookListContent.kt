@@ -41,7 +41,7 @@ import coil.compose.AsyncImage
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
-import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 
 @Composable
 fun GroupedBookListContent(
@@ -240,7 +240,7 @@ private fun GroupGridItem(
     // 获取该分组下的书籍数量
     val bookCount by viewModel.getGroupBookCount(group.id).collectAsState(initial = 0)
 
-    BookGridItem(
+    BookCategoryGrid(
         title = group.name,
         bookCount = bookCount,
         onClick = onClick,

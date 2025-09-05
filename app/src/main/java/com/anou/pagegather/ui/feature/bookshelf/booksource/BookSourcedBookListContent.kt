@@ -39,8 +39,7 @@ import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookSourceEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
-import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
-import com.anou.pagegather.ui.feature.bookshelf.common.BookPreview
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 
 /**
  * 按来源分组显示书籍的内容
@@ -231,7 +230,7 @@ private fun BookSourceGridItem(
     // 获取该来源下的书籍数量
     val bookCount by viewModel.getSourceBookCount(source.id).collectAsState(initial = 0)
 
-    BookGridItem(
+    BookCategoryGrid(
         title = source.getDisplayName(),
         bookCount = bookCount,
         onClick = onClick,
