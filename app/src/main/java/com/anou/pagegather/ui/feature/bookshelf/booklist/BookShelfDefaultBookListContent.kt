@@ -34,8 +34,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
@@ -49,7 +47,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,7 +72,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.anou.pagegather.R
 import com.anou.pagegather.data.local.entity.BookEntity
-import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.feature.bookshelf.BookListUIState
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.theme.Accent
@@ -577,7 +573,7 @@ fun BookShelfDefaultBookGridItem(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.NoteAdd,
+                                imageVector = Icons.AutoMirrored.Filled.NoteAdd,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
@@ -953,7 +949,7 @@ fun BookShelfDefaultBookListItem(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.NoteAdd,
+                                    imageVector = Icons.AutoMirrored.Filled.NoteAdd,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(18.dp)

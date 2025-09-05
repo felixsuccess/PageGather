@@ -1,6 +1,5 @@
 package com.anou.pagegather.ui.feature.bookshelf.rating
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,8 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -38,13 +34,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
+import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
 
 /**
  * 按评分分组显示书籍的内容
@@ -222,41 +218,22 @@ private fun RatingGridItem(
     // 获取该评分下的书籍数量
     val bookCount by viewModel.getRatingBookCount(rating).collectAsState(initial = 0)
 
-   Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(onClick = onClick)
-            .padding(8.dp), // 添加一些内边距
-        horizontalAlignment = Alignment.Start // 左对齐，与微信读书一致
-    ) {
+    BookGridItem(
+        title = if (rating == 0) "未评分" else "$rating 星",
+        bookCount = bookCount,
+        onClick = onClick,
+        content = {
             // 评分预览（使用该评分下的书籍封面拼贴）
             RatingPreview(
                 rating = rating,
                 viewModel = viewModel,
                 modifier = Modifier
                     .fillMaxWidth()
-                     .aspectRatio(0.72f) // 标准书籍比例
-                .clip(RoundedCornerShape(1.dp)) // 微信读书封面几乎没有圆角
+                    .aspectRatio(0.72f) // 标准书籍比例
+                    .clip(RoundedCornerShape(1.dp)) // 微信读书封面几乎没有圆角
             )
-   Spacer(modifier = Modifier.height(6.dp))
-            // 评分和书籍数量
-            Text(
-                        text = if (rating == 0) "未评分" else "$rating 星",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                Text(
-                    text = "$bookCount 本",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                )
-        
-    }
+        }
+    )
 }
 
 /**
@@ -271,180 +248,24 @@ private fun RatingPreview(
     // 获取该评分下的前9本书
     val books by viewModel.getBooksByRating(rating.toFloat()).collectAsState(initial = emptyList())
 
-    Box(
-        modifier = modifier
-            .aspectRatio(0.72f) // 添加标准书籍比例，与BookShelfDefaultBookGridItem保持一致
-            .background(Color(0xFFF5F5F5))
-            .padding(8.dp)
-    ) {
-        if (books.isEmpty()) {
-            // 没有书籍时显示评分星星
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+    BookCollage(
+        books = books,
+        bookCount = books.size,
+        modifier = modifier,
+        emptyContent = {
+            Row(
+                horizontalArrangement = Arrangement.Center
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(5) { index ->
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            }
-        } else {
-            // 根据书籍数量选择不同的布局
-            when {
-                books.size == 1 -> {
-                    // 只有一本书时，显示单封面
-                    BookCover(
-                        coverUrl = books[0].coverUrl,
-                        modifier = Modifier.fillMaxSize()
+                repeat(5) { index ->
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = if (index < rating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
-
-                books.size <= 4 -> {
-                    // 2-4本书时，显示2x2网格
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            BookCover(
-                                coverUrl = books.getOrNull(0)?.coverUrl,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                            )
-                            if (books.size > 1) {
-                                BookCover(
-                                    coverUrl = books.getOrNull(1)?.coverUrl,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                )
-                            } else {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-
-                        if (books.size > 2) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                BookCover(
-                                    coverUrl = books.getOrNull(2)?.coverUrl,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                )
-                                if (books.size > 3) {
-                                    BookCover(
-                                        coverUrl = books.getOrNull(3)?.coverUrl,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxHeight()
-                                    )
-                                } else {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
-                        }
-                    }
-                }
-
-                else -> {
-                    // 5+本书时，显示拼贴布局（类似微信读书）
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // 左侧大封面
-                        BookCover(
-                            coverUrl = books[0].coverUrl,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                        )
-
-                        // 右侧小封面列
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            for (i in 1 until minOf(5, books.size)) {
-                                BookCover(
-                                    coverUrl = books[i].coverUrl,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(1f)
-                                )
-                            }
-                        }
-                    }
-                }
             }
-        }
-
-        // 显示数量角标
-        val ratingBookCount = books.size
-        if (ratingBookCount > 0) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(4.dp)
-                    .size(24.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = ratingBookCount.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
-
-/**
- * 书籍封面组件
- */
-@Composable
-private fun BookCover(
-    coverUrl: String?,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        if (!coverUrl.isNullOrEmpty()) {
-            AsyncImage(
-                model = coverUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-            )
-        }
-    }
+        },
+        getCoverUrl = { book -> (book as? BookEntity)?.coverUrl }
+    )
 }

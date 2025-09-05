@@ -69,7 +69,6 @@ import coil.request.ImageRequest
 import com.anou.pagegather.R
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookSourceEntity
-import com.anou.pagegather.data.repository.BookSourceRepository
 import com.anou.pagegather.data.local.entity.BookType
 import com.anou.pagegather.data.local.entity.ReadPositionUnit
 import com.anou.pagegather.data.local.entity.ReadStatus

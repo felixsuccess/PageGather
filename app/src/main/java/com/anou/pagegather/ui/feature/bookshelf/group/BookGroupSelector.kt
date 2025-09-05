@@ -1,4 +1,4 @@
-package com.anou.pagegather.ui.feature.bookshelf
+package com.anou.pagegather.ui.feature.bookshelf.group
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -116,7 +117,7 @@ fun BookGroupSelector(
                             text = if (availableGroups.isEmpty()) "暂无分组" else "点击选择分组",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            fontStyle = FontStyle.Italic
                         )
                     }
                 }
