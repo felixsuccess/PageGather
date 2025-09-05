@@ -295,13 +295,13 @@ fun SourceBookListItem(
                             }.crossfade(true).build(),
                         contentDescription = null,
                         error = painterResource(id = R.mipmap.default_cover),
-                        modifier = Modifier.Companion.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         // 修改contentScale以保持图片的原始宽高比
                         contentScale = ContentScale.Fit,
                         onSuccess = {
                             Log.i("BookListScreen", "封面加载成功: ${book.coverUrl}")
                         },
-                        onError = { result ->
+                        onError = { result -> 
                             Log.e("BookListScreen", "封面加载失败: ${result.result.throwable}")
                         }
                     )

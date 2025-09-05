@@ -64,21 +64,21 @@ fun BookSourcedBookListContent(
     if (sources.isEmpty()) {
         // 空状态
         Box(
-            modifier = Modifier.Companion.fillMaxSize(),
-            contentAlignment = Alignment.Companion.Center
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
             Column(
-                horizontalAlignment = Alignment.Companion.CenterHorizontally,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "暂无来源",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Companion.SemiBold,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(modifier = Modifier.Companion.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "添加来源来管理你的书籍",
@@ -94,7 +94,7 @@ fun BookSourcedBookListContent(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 contentPadding = PaddingValues(16.dp),
-                modifier = Modifier.Companion.fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -110,11 +110,11 @@ fun BookSourcedBookListContent(
         } else {
             // 列表模式 - 参照微信读书列表布局
             Surface(
-                modifier = Modifier.Companion.fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
             ) {
                 LazyColumn(
-                    modifier = Modifier.Companion.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(sources) { source ->
@@ -145,33 +145,33 @@ private fun BookSourceListItem(
     val books by viewModel.getSourceTopBooks(source.id, 5).collectAsState(initial = emptyList())
 
     Column(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
         // 列表项内容
         Box(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
             // 来源信息和箭头
             Row(
-                modifier = Modifier.Companion.fillMaxWidth(),
-                verticalAlignment = Alignment.Companion.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 // 来源名称和书籍数量
                 Column(
-                    modifier = Modifier.Companion.weight(1f)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = source.getDisplayName(),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Companion.Bold,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.Companion.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
                         text = "$bookCount 本",
@@ -192,7 +192,7 @@ private fun BookSourceListItem(
         // 书籍封面预览区域
         if (books.isNotEmpty()) {
             Row(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -202,24 +202,24 @@ private fun BookSourceListItem(
                     AsyncImage(
                         model = book.coverUrl,
                         contentDescription = null,
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .weight(1f)
                             .aspectRatio(0.72f)
                             .clip(RoundedCornerShape(4.dp)),
-                        contentScale = ContentScale.Companion.Crop
+                        contentScale = ContentScale.Crop
                     )
                 }
 
                 // 如果书籍数量不足5本，添加空白占位
                 repeat(5 - books.size) {
-                    Spacer(modifier = Modifier.Companion.weight(1f))
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
 
         // 分隔线
         HorizontalDivider(
-            modifier = Modifier.Companion.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp),
             thickness = DividerDefaults.Thickness, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
         )
     }
@@ -453,7 +453,7 @@ private fun BookCover(
             Image(
                 painter = rememberAsyncImagePainter(coverUrl),
                 contentDescription = null,
-                modifier = Modifier.Companion.fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
         }

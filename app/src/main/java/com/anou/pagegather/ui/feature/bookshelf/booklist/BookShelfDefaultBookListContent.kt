@@ -130,14 +130,14 @@ fun BookShelfDefaultBookListContent(
     }
 
     Column(
-        modifier = Modifier.Companion.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
     ) {
 
         when (bookListUIState) {
             is BookListUIState.Loading -> {
                 Box(
-                    modifier = Modifier.Companion.fillMaxSize(),
-                    contentAlignment = Alignment.Companion.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
@@ -148,7 +148,7 @@ fun BookShelfDefaultBookListContent(
                 EmptyBooksPlaceholder(
                     onAddBookClick = onAddBookClick,
                     isGridMode = isGridMode, // 使用当前显示模式
-                    modifier = Modifier.Companion.fillMaxSize()
+                    modifier = Modifier.fillMaxSize()
                 )
 
             }
@@ -156,8 +156,8 @@ fun BookShelfDefaultBookListContent(
             is BookListUIState.Error -> {
                 // 添加错误状态UI
                 Box(
-                    modifier = Modifier.Companion.fillMaxSize(),
-                    contentAlignment = Alignment.Companion.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(text = bookListUIState.message)
                 }
@@ -168,14 +168,14 @@ fun BookShelfDefaultBookListContent(
                 if (isGridMode) {
                     // 网格模式
                     LazyVerticalGrid(
-                        modifier = Modifier.Companion.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         columns =  GRID_COLUMNS,
                         contentPadding = GRID_PADDING,
                         state = gridState,
                         verticalArrangement = Arrangement.spacedBy( GRID_SPACING),
                         horizontalArrangement = Arrangement.spacedBy( GRID_SPACING)
                     ) {
-                        items(bookListUIState.books.size) { index ->
+                        items(bookListUIState.books.size) { index -> 
                             val book = bookListUIState.books[index]
                             BookShelfDefaultBookGridItem(
                                 book = book,
@@ -195,10 +195,10 @@ fun BookShelfDefaultBookListContent(
                         if (bookListUIState.isLoadingMore) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 Box(
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(16.dp),
-                                    contentAlignment = Alignment.Companion.Center
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     CircularProgressIndicator()
                                 }
@@ -208,7 +208,7 @@ fun BookShelfDefaultBookListContent(
                 } else {
                     // 列表模式
                     LazyColumn(
-                        modifier = Modifier.Companion.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(vertical = 12.dp),
                         state = listState,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -233,10 +233,10 @@ fun BookShelfDefaultBookListContent(
                         if (bookListUIState.isLoadingMore) {
                             item {
                                 Box(
-                                    modifier = Modifier.Companion
+                                    modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(16.dp),
-                                    contentAlignment = Alignment.Companion.Center
+                                    contentAlignment = Alignment.Center
                                 ) {
                                     CircularProgressIndicator()
                                 }
@@ -1056,7 +1056,7 @@ fun BookShelfDefaultBookListItem(
  */
 @Composable
 private fun EmptyBooksPlaceholder(
-    modifier: Modifier = Modifier.Companion,
+    modifier: Modifier = Modifier,
     onAddBookClick: () -> Unit,
     isGridMode: Boolean = true,
 
@@ -1065,23 +1065,23 @@ private fun EmptyBooksPlaceholder(
         modifier = modifier
             .fillMaxSize()
             .padding(32.dp),
-        contentAlignment = Alignment.Companion.Center
+        contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.Companion.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             if (isGridMode) {
                 // 网格模式：使用原来的图片 + MenuBook图标组合
                 Box(
-                    contentAlignment = Alignment.Companion.Center,
-                    modifier = Modifier.Companion.size(120.dp)
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(120.dp)
                 ) {
                     // 背景图片
                     Image(
                         painter = painterResource(id = R.mipmap.empty),
                         contentDescription = "空列表",
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .size(100.dp)
                             .alpha(0.7f)
                     )
@@ -1090,7 +1090,7 @@ private fun EmptyBooksPlaceholder(
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.MenuBook,
                         contentDescription = null,
-                        modifier = Modifier.Companion.size(48.dp),
+                        modifier = Modifier.size(48.dp),
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                     )
                 }
@@ -1099,17 +1099,17 @@ private fun EmptyBooksPlaceholder(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.MenuBook,
                     contentDescription = null,
-                    modifier = Modifier.Companion.size(64.dp),
+                    modifier = Modifier.size(64.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
 
-            Spacer(modifier = Modifier.Companion.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "暂无书籍",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Companion.SemiBold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 18.sp
             )
@@ -1121,7 +1121,7 @@ private fun EmptyBooksPlaceholder(
                 fontSize = 14.sp
             )
 
-            Spacer(modifier = Modifier.Companion.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Button(
                 onClick = onAddBookClick,
@@ -1134,9 +1134,9 @@ private fun EmptyBooksPlaceholder(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = null,
-                    modifier = Modifier.Companion.size(18.dp)
+                    modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.Companion.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text("添加书籍", fontSize = 14.sp)
             }
         }

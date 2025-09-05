@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
  * 批量操作工具栏
  */
 @Composable
-  fun BatchOperationToolbar(
+fun BatchOperationToolbar(
     selectedCount: Int,
     onClearSelection: () -> Unit,
     onSelectAll: () -> Unit,
@@ -33,15 +33,15 @@ import androidx.compose.ui.unit.dp
     onDeleteSelected: () -> Unit
 ) {
     Row(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Companion.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
         // 左侧：选中数量和操作按钮
         Row(
-            verticalAlignment = Alignment.Companion.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
@@ -73,7 +73,7 @@ import androidx.compose.ui.unit.dp
 
         // 右侧：删除和退出按钮
         Row(
-            verticalAlignment = Alignment.Companion.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // 删除按钮
@@ -88,9 +88,9 @@ import androidx.compose.ui.unit.dp
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "删除",
-                    modifier = Modifier.Companion.size(18.dp)
+                    modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.Companion.width(4.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text("删除")
             }
 
