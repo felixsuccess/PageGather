@@ -135,7 +135,7 @@ fun TagBookListContent(
                                         modifier = Modifier
                                             .size(12.dp)
                                             .clip(RoundedCornerShape(6.dp))
-                                            .background(getTagColor(tag.color))
+                                            .background(tag.getColor())  // 使用新的getColor()方法
                                     )
 
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -205,26 +205,9 @@ private fun TagPreview(
         bookCount = books.size,
         modifier = modifier,
         emptyIcon = Icons.AutoMirrored.Filled.Label,
-        emptyIconTint = getTagColor(tag.color),
+        emptyIconTint = tag.getColor(),  // 使用新的getColor()方法
         getCoverUrl = { book -> (book as? BookEntity)?.coverUrl }
     )
 }
 
 
-/**
- * 获取标签颜色
- */
-@Composable
-private fun getTagColor(color: String?): Color {
-    return when (color) {
-        "red" -> Color(0xFFE57373)
-        "blue" -> Color(0xFF64B5F6)
-        "green" -> Color(0xFF81C784)
-        "yellow" -> Color(0xFFFFF176)
-        "purple" -> Color(0xFFBA68C8)
-        "orange" -> Color(0xFFFFB74D)
-        "pink" -> Color(0xFFF06292)
-        "indigo" -> Color(0xFF7986CB)
-        else -> MaterialTheme.colorScheme.primary
-    }
-}

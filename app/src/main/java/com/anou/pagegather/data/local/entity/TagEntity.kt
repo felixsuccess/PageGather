@@ -1,5 +1,8 @@
 package com.anou.pagegather.data.local.entity
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -79,4 +82,16 @@ data class TagEntity(
      * 获取显示名称
      */
     fun getDisplayName(): String = name.ifBlank { "未知标签" }
+    
+    /**
+     * 获取标签颜色
+     */
+    @Composable
+    fun getColor(): Color {
+        return try {
+            Color(android.graphics.Color.parseColor(getColorValue()))
+        } catch (e: Exception) {
+            MaterialTheme.colorScheme.primary
+        }
+    }
 }

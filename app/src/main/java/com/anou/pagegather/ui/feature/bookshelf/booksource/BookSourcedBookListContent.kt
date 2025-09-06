@@ -1,17 +1,14 @@
 package com.anou.pagegather.ui.feature.bookshelf.booksource
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -19,8 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,16 +26,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookSourceEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryList
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
-import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 
 /**
  * 按来源分组显示书籍的内容
@@ -187,7 +180,7 @@ private fun SourcePreview(
         modifier = modifier,
         emptyContent = {
             Text(
-                text = source.getDisplayName().take(1),
+                text = source.getDisplayName().takeIf { it.isNotEmpty() }?.take(1) ?: "来",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.anou.pagegather.data.local.entity.BookEntity
+import com.anou.pagegather.data.local.entity.BookGroupEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryList
@@ -52,9 +53,7 @@ fun GroupedBookListContent(
 ) {
     // 从ViewModel获取分组数据
     val bookListState by viewModel.bookListState.collectAsState()
-    val groups = bookListState.availableGroups.map { group ->
-        GroupInfo(group.id, group.name, group.getDisplayName())
-    }
+    val groups = bookListState.availableGroups  // 直接使用BookGroupEntity列表
 
     if (groups.isEmpty()) {
         // 空状态
@@ -128,9 +127,9 @@ fun GroupedBookListContent(
                         val books by viewModel.getBooksByGroupId(group.id).collectAsState(initial = emptyList())
                         
                         BookCategoryList(
-                            title = group.name,
+                            title = group.getDisplayName(),  // 使用getDisplayName()方法
                             bookCount = bookCount,
-                            onClick = { onGroupClick(group.id, group.name) },
+                            onClick = { onGroupClick(group.id, group.getDisplayName()) },  // 使用getDisplayName()方法
                             bookPreviewUrls = books.map { it.coverUrl ?: "" },
                             content = {
                                 Icon(
@@ -154,7 +153,7 @@ fun GroupedBookListContent(
  */
 @Composable
 private fun GroupGridItem(
-    group: GroupInfo,
+    group: BookGroupEntity,  // 修改参数类型
     viewModel: BookListViewModel,
     onClick: () -> Unit
 ) {
@@ -162,7 +161,7 @@ private fun GroupGridItem(
     val bookCount by viewModel.getGroupBookCount(group.id).collectAsState(initial = 0)
 
     BookCategoryGrid(
-        title = group.name,
+        title = group.getDisplayName(),  // 使用getDisplayName()方法
         bookCount = bookCount,
         onClick = onClick,
         content = {
@@ -184,7 +183,7 @@ private fun GroupGridItem(
  */
 @Composable
 private fun GroupPreview(
-    group: GroupInfo,
+    group: BookGroupEntity,  // 修改参数类型
     viewModel: BookListViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -197,7 +196,7 @@ private fun GroupPreview(
         modifier = modifier,
         emptyContent = {
             Text(
-                text = group.name.take(1),
+                text = group.getDisplayName().take(1),  // 使用getDisplayName()方法
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
