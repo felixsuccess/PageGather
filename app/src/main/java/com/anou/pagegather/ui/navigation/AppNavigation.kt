@@ -82,9 +82,18 @@ fun AppNavigation(
                 onToBookAddClick = {
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
                 },
+                onNavigateToBookEdit = { bookId ->
+                    // 导航到书籍编辑页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
+                },
                 onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
                 onNavigateToTimer = { navController.navigate(Routes.TimeManagementRoutes.FORWARD_TIMER) },
                 onNavigateToQuickActions = { navController.navigate(Routes.QuickActionsRoutes.QUICK_ACTIONS) },
+                onNavigateToNoteEdit = { noteId, bookId ->
+                    // 导航到笔记编辑页面，传递笔记ID和书籍ID
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/$noteId?book_id=$bookId")
+                },
+
                 onNavigateToGroupDetail = { groupId, groupName ->
                     navController.navigate(Routes.BookRoutes.bookGroupDetail(groupId, groupName))
                 },
@@ -193,13 +202,21 @@ fun AppNavigation(
         }
 
         composable(
-            route = "${Routes.NoteRoutes.NOTE_EDIT}/{${Routes.NoteRoutes.ARG_NOTE_ID}}",
-            arguments = listOf(navArgument(Routes.NoteRoutes.ARG_NOTE_ID) {
-                type = NavType.StringType
-            })
+            route = "${Routes.NoteRoutes.NOTE_EDIT}/{${Routes.NoteRoutes.ARG_NOTE_ID}}?book_id={book_id}",
+            arguments = listOf(
+                navArgument(Routes.NoteRoutes.ARG_NOTE_ID) {
+                    type = NavType.StringType
+                },
+                navArgument("book_id") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
         ) { backStackEntry ->
             val noteId = backStackEntry.arguments?.getString(Routes.NoteRoutes.ARG_NOTE_ID)
-            NoteEditScreen(noteId = noteId, navController = navController)
+            val bookId = backStackEntry.arguments?.getString("book_id")?.toLongOrNull()
+            NoteEditScreen(noteId = noteId, bookId = bookId, navController = navController)
         }
 
         composable(
@@ -333,6 +350,10 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                },
+                onNavigateToBookEdit = { bookId ->
+                    // 导航到书籍编辑页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 }
             )
         }
@@ -358,6 +379,10 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                },
+                onNavigateToBookEdit = { bookId ->
+                    // 导航到书籍编辑页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 }
             )
         }
@@ -390,6 +415,10 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                },
+                onNavigateToBookEdit = { bookId ->
+                    // 导航到书籍编辑页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 }
             )
         }
@@ -415,6 +444,10 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                },
+                onNavigateToBookEdit = { bookId ->
+                    // 导航到书籍编辑页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 }
             )
         }
@@ -440,6 +473,10 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
+                },
+                onNavigateToBookEdit = { bookId ->
+                    // 导航到书籍编辑页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 }
             )
         }

@@ -14,6 +14,8 @@ fun BookShelfScreen(
     onToBookAddClick: () -> Unit,
     onNavigateToTimer: () -> Unit = {},
     onNavigateToQuickActions: () -> Unit = {},
+    onNavigateToNoteEdit: ((Long, Long) -> Unit)? = null,  // 添加导航到笔记编辑页面的回调函数
+    onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数
     onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航到分组详情的回调
     onNavigateToSourceDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航到来源详情的回调
     onNavigateToTagDetail: (Long, String, String?) -> Unit = { _, _, _ -> },  // 添加导航到标签详情的回调
@@ -33,6 +35,8 @@ fun BookShelfScreen(
             onAddBookClick = onToBookAddClick,
             onTimerClick = onNavigateToTimer,
             onQuickActionsClick = onNavigateToQuickActions,
+            onNavigateToNoteEdit = onNavigateToNoteEdit,  // 传递导航到笔记编辑页面的回调函数
+            onNavigateToBookEdit = onNavigateToBookEdit,  // 传递导航到书籍编辑页面的回调函数
             onNavigateToGroupDetail = onNavigateToGroupDetail,  // 传递分组导航回调
             onNavigateToSourceDetail = onNavigateToSourceDetail,  // 传递来源导航回调
             onNavigateToTagDetail = onNavigateToTagDetail,  // 传递标签导航回调

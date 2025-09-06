@@ -56,7 +56,8 @@ fun BookShelfStatusDetailScreen(
     statusName: String,
     viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
-    onBookClick: (Long) -> Unit
+    onBookClick: (Long) -> Unit,
+    onNavigateToBookEdit: ((Long) -> Unit)? = null  // 添加导航到书籍编辑页面的回调函数
 ) {
     val books: List<BookEntity> by viewModel.getBooksByStatus(status).collectAsState(initial = emptyList())
     var isGridMode by remember { mutableStateOf(true) }
@@ -212,7 +213,8 @@ fun BookShelfStatusDetailScreen(
                                     // TODO: 实现删除功能
                                 },
                                 onEditClick = {
-                                    // TODO: 实现编辑功能
+                                    // 实现编辑功能
+                                    onNavigateToBookEdit?.invoke(book.id)
                                 },
                                 onMarkAsFinishedClick = {
                                     // TODO: 实现标记为已完成功能
@@ -246,7 +248,8 @@ fun BookShelfStatusDetailScreen(
                                     // TODO: 实现删除功能
                                 },
                                 onEditClick = {
-                                    // TODO: 实现编辑功能
+                                    // 实现编辑功能
+                                    onNavigateToBookEdit?.invoke(book.id)
                                 },
                                 onMarkAsFinishedClick = {
                                     // TODO: 实现标记为已完成功能

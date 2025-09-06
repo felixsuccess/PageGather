@@ -58,6 +58,8 @@ fun BookListScreen(
     onAddBookClick: () -> Unit,
     onTimerClick: () -> Unit = {},
     onQuickActionsClick: () -> Unit = {},
+    onNavigateToNoteEdit: ((Long, Long) -> Unit)? = null,  // 添加导航到笔记编辑页面的回调函数
+    onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数
     onNavigateToGroupDetail: (Long, String) -> Unit = { _, _ -> },  // 添加导航回调参数
     onNavigateToSourceDetail: (Long, String) -> Unit = { _, _ -> },  // 添加来源详情导航回调参数
     onNavigateToTagDetail: (Long, String, String?) -> Unit = { _, _, _ -> },  // 添加标签详情导航回调参数
@@ -235,7 +237,9 @@ fun BookListScreen(
                         onTimerClick = onTimerClick,
                         viewModel = viewModel,
                         isGridMode = bookListState.isGridMode,
-                        useLetterPlaceholderForGrid = useLetterPlaceholderForGrid // 传递网格封面显示方式设置
+                        useLetterPlaceholderForGrid = useLetterPlaceholderForGrid, // 传递网格封面显示方式设置
+                        onNavigateToBookEdit = onNavigateToBookEdit,  // 传递导航到书籍编辑页面的回调函数
+                        onNavigateToNoteEdit = onNavigateToNoteEdit,  // 传递导航到笔记编辑页面的回调函数
                     )
                 }
 
@@ -295,7 +299,10 @@ fun BookListScreen(
                         isGridMode = bookListState.isGridMode,
                         onRatingClick = { rating ->
                             // 实现评分详情导航
-                            onNavigateToRatingDetail(rating, if (rating == 0) "未评分" else "$rating 星")
+                            onNavigateToRatingDetail(
+                                rating,
+                                if (rating == 0) "未评分" else "$rating 星"
+                            )
                         }
                     )
                 }
@@ -310,7 +317,9 @@ fun BookListScreen(
                         onTimerClick = onTimerClick,
                         viewModel = viewModel,
                         isGridMode = bookListState.isGridMode,
-                        useLetterPlaceholderForGrid = useLetterPlaceholderForGrid // 传递网格封面显示方式设置
+                        useLetterPlaceholderForGrid = useLetterPlaceholderForGrid, // 传递网格封面显示方式设置
+                        onNavigateToBookEdit = onNavigateToBookEdit, // 传递导航到书籍编辑页面的回调函数
+                        onNavigateToNoteEdit = onNavigateToNoteEdit,  // 传递导航到笔记编辑页面的回调函数
                     )
                 }
             }

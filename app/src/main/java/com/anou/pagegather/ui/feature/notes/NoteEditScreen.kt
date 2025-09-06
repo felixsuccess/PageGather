@@ -54,6 +54,7 @@ import com.anou.pagegather.utils.FileOperator
 @Composable
 fun NoteEditScreen(
     noteId: String? = null,
+    bookId: Long? = null,  // 添加书籍ID参数
     viewModel: NoteEditViewModel = hiltViewModel(),
     navController: NavController,
 ) {
@@ -124,7 +125,7 @@ fun NoteEditScreen(
                         .padding(horizontal = 5.dp)
                         .clickable(onClick = {
                             val newNote = NoteEntity(
-                                bookId = null,
+                                bookId = bookId,  // 使用传入的书籍ID
                                 title  = "",
                                 quote = text,
                                 idea = idea,

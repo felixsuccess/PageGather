@@ -42,7 +42,8 @@ fun BookShelfGroupDetailScreen(
     groupName: String, // 通过导航参数直接传递分组名称
     viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
-    onBookClick: (Long) -> Unit
+    onBookClick: (Long) -> Unit,
+    onNavigateToBookEdit: ((Long) -> Unit)? = null  // 添加导航到书籍编辑页面的回调函数
 ) {
     val books by viewModel.getBooksByGroupId(groupId).collectAsState(initial = emptyList())
     var isGridMode by remember { mutableStateOf(true) }
@@ -198,7 +199,8 @@ fun BookShelfGroupDetailScreen(
                                     // TODO: 实现删除功能
                                 },
                                 onEditClick = {
-                                    // TODO: 实现编辑功能
+                                    // 实现编辑功能
+                                    onNavigateToBookEdit?.invoke(book.id)
                                 },
                                 onMarkAsFinishedClick = {
                                     // TODO: 实现标记为已完成功能
@@ -232,7 +234,8 @@ fun BookShelfGroupDetailScreen(
                                     // TODO: 实现删除功能
                                 },
                                 onEditClick = {
-                                    // TODO: 实现编辑功能
+                                    // 实现编辑功能
+                                    onNavigateToBookEdit?.invoke(book.id)
                                 },
                                 onMarkAsFinishedClick = {
                                     // TODO: 实现标记为已完成功能

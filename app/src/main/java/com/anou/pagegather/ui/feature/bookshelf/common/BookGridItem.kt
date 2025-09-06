@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.DropdownMenu
@@ -340,8 +339,7 @@ fun BookGridItem(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // 注意：这里使用 Icons.Filled.NoteAdd 而不是 Icons.AutoMirrored.Filled.NoteAdd
-                            Icon(
+                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,

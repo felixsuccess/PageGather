@@ -185,14 +185,7 @@ fun BookListItem(
                             append(book.press)
                         }
 
-                        val displayDate = book.lastReadDate?.let {
-                            if (it > 0) {
-                                val date = SimpleDateFormat("yyyy/MM/dd日", Locale.getDefault())
-                                    .format(Date(book.lastReadDate))
-                                date
-                            }
-
-                        }
+                        val displayDate = book.publishDate
                         if (isNotEmpty()) {
                             append(" / $displayDate")
                         }

@@ -58,7 +58,9 @@ fun BookShelfDefaultBookListContent(
     onTimerClick: () -> Unit,
     viewModel: BookListViewModel,
     isGridMode: Boolean,
-    useLetterPlaceholderForGrid: Boolean = false // 添加参数控制网格封面显示方式
+    useLetterPlaceholderForGrid: Boolean = false, // 添加参数控制网格封面显示方式
+    onNavigateToBookEdit: ((Long) -> Unit)? = null , // 添加导航到书籍编辑页面的回调函数
+    onNavigateToNoteEdit: ((Long, Long) -> Unit)? = null // 添加导航到笔记编辑页面的回调函数，参数为(noteId, bookId)
 ) {
     val gridState = rememberLazyGridState()
     val listState = rememberLazyListState()
@@ -151,11 +153,17 @@ fun BookShelfDefaultBookListContent(
                                 book = book,
                                 onClick = { onBookClick(book.id) },
                                 onDeleteClick = { showDeleteDialog = book },
-                                onEditClick = { /* TODO: 实现编辑功能 */ },
+                                onEditClick = { 
+                                    // 实现编辑功能，导航到书籍编辑页面
+                                    onNavigateToBookEdit?.invoke(book.id)
+                                },
                                 onMarkAsFinishedClick = { viewModel.markBookAsFinished(book.id) },
                                
                                 onPinClick = { viewModel.toggleBookPin(book.id) },
-                                onAddNoteClick = { /* TODO: 实现记笔记功能 */ },
+                                onAddNoteClick = { 
+                                    // 实现记笔记功能，调用导航回调函数传递书籍ID
+                                    onNavigateToNoteEdit?.invoke(0L, book.id)
+                                },
                                 onTimerClick = onTimerClick,
                                 useLetterPlaceholder = useLetterPlaceholderForGrid // 传递网格封面显示方式设置
                             )
@@ -190,11 +198,17 @@ fun BookShelfDefaultBookListContent(
                                 book = book,
                                 onClick = { onBookClick(book.id) },
                                 onDeleteClick = { showDeleteDialog = book },
-                                onEditClick = { /* TODO: 实现编辑功能 */ },
+                                onEditClick = { 
+                                    // 实现编辑功能，导航到书籍编辑页面
+                                    onNavigateToBookEdit?.invoke(book.id)
+                                },
                                 onMarkAsFinishedClick = { viewModel.markBookAsFinished(book.id) },
                                
                                 onPinClick = { viewModel.toggleBookPin(book.id) },
-                                onAddNoteClick = { /* TODO: 实现记笔记功能 */ },
+                                onAddNoteClick = { 
+                                    // 实现记笔记功能，调用导航回调函数传递书籍ID
+                                    onNavigateToNoteEdit?.invoke(0L, book.id)
+                                },
                                 onTimerClick = onTimerClick
                             )
                         }
