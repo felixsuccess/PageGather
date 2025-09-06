@@ -38,8 +38,9 @@ import coil.compose.AsyncImage
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
-import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryList
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
 
 /**
  * 按状态分组显示书籍的内容
@@ -88,10 +89,23 @@ fun StatusBookListContent(
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 items(statuses) { status ->
-                    StatusListItem(
-                        status = status,
-                        viewModel = viewModel,
-                        onClick = { onStatusClick(status) }
+                    // 获取该状态下的书籍数量
+                    val bookCount by viewModel.getStatusBookCount(status).collectAsState(initial = 0)
+                    // 获取该状态下的前5本书
+                    val books by viewModel.getBooksByStatus(status.code).collectAsState(initial = emptyList())
+                    
+                    BookCategoryList(
+                        title = status.message,
+                        bookCount = bookCount,
+                        onClick = { onStatusClick(status) },
+                        bookPreviewUrls = books.map { it.coverUrl ?: "" },
+                        content = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "查看详情",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     )
                 }
             }
@@ -99,100 +113,7 @@ fun StatusBookListContent(
     }
 }
 
-/**
- * 状态列表项 - 仿微信读书列表样式
- */
-@Composable
-private fun StatusListItem(
-    status: ReadStatus,
-    viewModel: BookListViewModel,
-    onClick: () -> Unit
-) {
-    // 获取该状态下的书籍数量
-    val bookCount by viewModel.getStatusBookCount(status).collectAsState(initial = 0)
-    // 获取该状态下的前5本书
-    val books by viewModel.getBooksByStatus(status.code).collectAsState(initial = emptyList())
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        // 列表项内容
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // 状态信息和箭头
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 状态名称和书籍数量
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = status.message,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "$bookCount 本",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // 右箭头
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "查看详情",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // 书籍封面预览区域
-        if (books.isNotEmpty()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // 显示最多5本书的封面
-                for (book in books.take(5)) {
-                    AsyncImage(
-                        model = book.coverUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(0.72f)
-                            .clip(RoundedCornerShape(4.dp)),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                    )
-                }
-
-                // 如果书籍数量不足5本，添加空白占位
-                repeat(5 - books.size.coerceAtMost(5)) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-
-        // 分隔线
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            thickness = DividerDefaults.Thickness, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-        )
-    }
-}
 
 /**
  * 状态卡片组件（网格模式）

@@ -43,6 +43,7 @@ import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.TagEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryGrid
+import com.anou.pagegather.ui.feature.bookshelf.common.BookCategoryList
 import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
 
 /**
@@ -115,10 +116,37 @@ fun TagBookListContent(
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {
                     items(tags) { tag ->
-                        TagListItem(
-                            tag = tag,
-                            viewModel = viewModel,
-                            onClick = { onTagClick(tag) }
+                        // 获取该标签下的书籍数量
+                        val bookCount by viewModel.getTagBookCount(tag.id).collectAsState(initial = 0)
+                        // 获取该标签下的前5本书
+                        val books by viewModel.getBooksWithTag(tag.id).collectAsState(initial = emptyList())
+                        
+                        BookCategoryList(
+                            title = tag.name,
+                            bookCount = bookCount,
+                            onClick = { onTagClick(tag) },
+                            bookPreviewUrls = books.map { it.coverUrl ?: "" },
+                            content = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // 标签颜色指示器
+                                    Box(
+                                        modifier = Modifier
+                                            .size(12.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(getTagColor(tag.color))
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = "查看详情",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         )
                     }
                 }
@@ -127,114 +155,7 @@ fun TagBookListContent(
     }
 }
 
-/**
- * 标签列表项 - 仿微信读书列表样式
- */
-@Composable
-private fun TagListItem(
-    tag: TagEntity,
-    viewModel: BookListViewModel,
-    onClick: () -> Unit
-) {
-    // 获取该标签下的书籍数量
-    val bookCount by viewModel.getTagBookCount(tag.id).collectAsState(initial = 0)
-    // 获取该标签下的前5本书
-    val books by viewModel.getBooksWithTag(tag.id).collectAsState(initial = emptyList())
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-    ) {
-        // 列表项内容
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // 标签信息和箭头
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 标签名称和书籍数量
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // 标签颜色指示器
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(getTagColor(tag.color))
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = tag.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "$bookCount 本",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // 右箭头
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "查看详情",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // 书籍封面预览区域
-        if (books.isNotEmpty()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // 显示最多5本书的封面
-                for (book in books.take(5)) {
-                    AsyncImage(
-                        model = book.coverUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(0.72f)
-                            .clip(RoundedCornerShape(4.dp)),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                    )
-                }
-
-                // 如果书籍数量不足5本，添加空白占位
-                repeat(5 - books.size.coerceAtMost(5)) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-
-        // 分隔线
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            thickness = DividerDefaults.Thickness, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-        )
-    }
-}
 
 /**
  * 标签卡片组件（网格模式）
