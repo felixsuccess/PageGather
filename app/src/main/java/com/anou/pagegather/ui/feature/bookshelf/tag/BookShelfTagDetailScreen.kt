@@ -197,7 +197,7 @@ fun BookShelfTagDetailScreen(
                                     onNavigateToBookEdit?.invoke(book.id)
                                 },
                                 onMarkAsFinishedClick = {
-                                    // TODO: 实现标记为已完成功能
+                                    viewModel.markBookAsFinished(book.id)
                                 },
                               
                                 onPinClick = {
@@ -234,7 +234,7 @@ fun BookShelfTagDetailScreen(
                                     onNavigateToBookEdit?.invoke(book.id)
                                 },
                                 onMarkAsFinishedClick = {
-                                    // TODO: 实现标记为已完成功能
+                                    viewModel.markBookAsFinished(book.id)
                                 },
                               
                                 onPinClick = {
