@@ -48,7 +48,7 @@ fun BookCategoryGrid(
             .fillMaxSize()
             .clickable(onClick = onClick)
             .padding(8.dp), // 添加一些内边距
-        horizontalAlignment = Alignment.Start // 左对齐，与微信读书一致
+        horizontalAlignment = Alignment.Start 
     ) {
         // 预览内容
         content()

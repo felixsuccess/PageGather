@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
 import com.anou.pagegather.ui.feature.bookshelf.common.BookListItem
@@ -57,7 +58,7 @@ fun BookShelfSourceDetailScreen(
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit
 ) {
-    val books by viewModel.getBooksBySourceId(sourceId).collectAsState(initial = emptyList())
+    val books by viewModel.getBooksBySourceId(sourceId).collectAsState(initial = emptyList<BookEntity>())
     var isGridMode by remember { mutableStateOf(true) }
     var showMenu by remember { mutableStateOf(false) }
 
@@ -191,21 +192,41 @@ fun BookShelfSourceDetailScreen(
             } else {
                 // 根据显示模式选择列表或网格布局
                 if (isGridMode) {
-                    // 网格模式 - 参考微信读书设计
+                    
                     LazyVerticalGrid(
-                        columns = GridCells.Fixed(3), // 微信读书是3列网格
+                        columns = GridCells.Fixed(3), 
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
                             horizontal = 8.dp,
                             vertical = 8.dp
-                        ), // 微信读书边距较小
-                        horizontalArrangement = Arrangement.spacedBy(8.dp), // 微信读书间距较小
-                        verticalArrangement = Arrangement.spacedBy(20.dp) // 垂直间距较大，为标题留出空间
+                        ), 
+                        horizontalArrangement = Arrangement.spacedBy(8.dp), 
+                        verticalArrangement = Arrangement.spacedBy(20.dp) 
                     ) {
                         items(books) { book ->
                             BookGridItem(
                                 book = book,
-                                onClick = { onBookClick(book.id) }
+                                onClick = { onBookClick(book.id) },
+                                // 添加长按菜单相关回调函数
+                                onDeleteClick = {
+                                    // TODO: 实现删除功能
+                                },
+                                onEditClick = {
+                                    // TODO: 实现编辑功能
+                                },
+                                onMarkAsFinishedClick = {
+                                    // TODO: 实现标记为已完成功能
+                                },
+
+                                onPinClick = {
+                                    // TODO: 实现置顶功能
+                                },
+                                onAddNoteClick = {
+                                    // TODO: 实现记笔记功能
+                                },
+                                onTimerClick = {
+                                    // TODO: 实现阅读计时功能
+                                }
                             )
                         }
                     }
@@ -219,7 +240,27 @@ fun BookShelfSourceDetailScreen(
                         items(books) { book ->
                             BookListItem(
                                 book = book,
-                                onClick = { onBookClick(book.id) }
+                                onClick = { onBookClick(book.id) },
+                                // 添加长按菜单相关回调函数
+                                onDeleteClick = {
+                                    // TODO: 实现删除功能
+                                },
+                                onEditClick = {
+                                    // TODO: 实现编辑功能
+                                },
+                                onMarkAsFinishedClick = {
+                                    // TODO: 实现标记为已完成功能
+                                },
+                              
+                                onPinClick = {
+                                    // TODO: 实现置顶功能
+                                },
+                                onAddNoteClick = {
+                                    // TODO: 实现记笔记功能
+                                },
+                                onTimerClick = {
+                                    // TODO: 实现阅读计时功能
+                                }
                             )
                         }
                     }
@@ -228,4 +269,3 @@ fun BookShelfSourceDetailScreen(
         }
     }
 }
-

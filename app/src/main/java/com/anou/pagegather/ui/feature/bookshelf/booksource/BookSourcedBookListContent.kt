@@ -77,8 +77,7 @@ fun BookSourcedBookListContent(
     } else {
         // 根据显示模式选择布局
         if (isGridMode) {
-            // 网格模式 - 参照微信读书布局实现的来源网格
-            LazyVerticalGrid(
+             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 contentPadding = PaddingValues(16.dp),
                 modifier = Modifier.fillMaxSize(),
@@ -95,8 +94,7 @@ fun BookSourcedBookListContent(
                 }
             }
         } else {
-            // 列表模式 - 参照微信读书列表布局
-            Surface(
+             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
             ) {
@@ -156,7 +154,7 @@ private fun BookSourceGridItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(0.72f) // 标准书籍比例
-                    .clip(RoundedCornerShape(1.dp)) // 微信读书封面几乎没有圆角
+                    .clip(RoundedCornerShape(1.dp)) 
             )
         }
     )

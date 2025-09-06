@@ -1,9 +1,10 @@
 package com.anou.pagegather.ui.feature.bookshelf.common
 
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,11 +17,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.anou.pagegather.R
@@ -40,18 +58,34 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * 微信读书样式的来源书籍列表项
+ * 书籍列表项
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookListItem(
     book: BookEntity,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null,
+    onEditClick: (() -> Unit)? = null,
+    onMarkAsFinishedClick: (() -> Unit)? = null,
+    onPinClick: (() -> Unit)? = null,
+    onAddNoteClick: (() -> Unit)? = null,
+    onTimerClick: (() -> Unit)? = null
 ) {
+    var showDropdownMenu by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable(onClick = onClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = if (onDeleteClick != null) { 
+                    { showDropdownMenu = true } 
+                } else { 
+                    null 
+                }
+            ),
         shape = RoundedCornerShape(0.dp), // 方形卡片，没有圆角
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // 无阴影
         colors = CardDefaults.cardColors(
@@ -70,12 +104,10 @@ fun BookListItem(
                 Box(
                     modifier = Modifier
                         .width(65.dp)
-                        .aspectRatio(0.72f) // 与微信读书封面比例一致
-                        .clip( RoundedCornerShape(1.dp))
+                        .aspectRatio(0.72f)  
+                        .clip(RoundedCornerShape(1.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
                 ) {
-                  
-                    
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current).data(book.coverUrl)
                             .apply {
@@ -153,14 +185,16 @@ fun BookListItem(
                             append(book.press)
                         }
 
-                        // 添加假想的出版时间，因为参考图片中有展示
-                        // 实际应该使用书籍的真实出版时间
-                        val publishYear = 2020 + (book.id % 5).toInt() // 仅作演示用
-                        val publishMonth =
-                            (1 + (book.id % 12).toInt()).toString().padStart(2, '0') // 仅作演示用
+                        val displayDate = book.lastReadDate?.let {
+                            if (it > 0) {
+                                val date = SimpleDateFormat("yyyy/MM/dd日", Locale.getDefault())
+                                    .format(Date(book.lastReadDate))
+                                date
+                            }
 
+                        }
                         if (isNotEmpty()) {
-                            append(" / $publishYear-$publishMonth")
+                            append(" / $displayDate")
                         }
                     }
 
@@ -263,6 +297,181 @@ fun BookListItem(
                 textAlign = TextAlign.End
             )
         }
+        
+        // 下拉菜单 - 仅在有删除功能时显示
+        if (onDeleteClick != null) {
+            DropdownMenu(
+                expanded = showDropdownMenu,
+                onDismissRequest = { showDropdownMenu = false },
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+            ) {
+                // 编辑选项
+                if (onEditClick != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "编辑",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        },
+                        onClick = {
+                            showDropdownMenu = false
+                            onEditClick()
+                        }
+                    )
+                }
+
+                // 标记为已完成选项
+                if (onMarkAsFinishedClick != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "标记为已完成",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        },
+                        onClick = {
+                            showDropdownMenu = false
+                            onMarkAsFinishedClick()
+                        }
+                    )
+                }
+
+
+                // 置顶选项
+                if (onPinClick != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PushPin,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = if (book.pinned) "取消置顶" else "置顶",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        },
+                        onClick = {
+                            showDropdownMenu = false
+                            onPinClick()
+                        }
+                    )
+                }
+
+                // 记笔记选项
+                if (onAddNoteClick != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // 注意：这里使用 Icons.Filled.Edit 而不是 Icons.AutoMirrored.Filled.NoteAdd
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "记笔记",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        },
+                        onClick = {
+                            showDropdownMenu = false
+                            onAddNoteClick()
+                        }
+                    )
+                }
+
+                // 阅读计时选项
+                if (onTimerClick != null) {
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Timer,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = "阅读计时",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        },
+                        onClick = {
+                            showDropdownMenu = false
+                            onTimerClick()
+                        }
+                    )
+                }
+
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "删除",
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 14.sp
+                            )
+                        }
+                    },
+                    onClick = {
+                        showDropdownMenu = false
+                        onDeleteClick()
+                    }
+                )
+            }
+        }
     }
 }
-

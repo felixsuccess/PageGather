@@ -151,7 +151,7 @@ private fun RatingGridItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(0.72f) // 标准书籍比例
-                    .clip(RoundedCornerShape(1.dp)) // 微信读书封面几乎没有圆角
+                    .clip(RoundedCornerShape(1.dp)) 
             )
         }
     )

@@ -145,7 +145,7 @@ fun BookCollage(
                 }
 
                 else -> {
-                    // 5+本书时，显示拼贴布局（类似微信读书）
+                    // 5+本书时，显示拼贴布局 
                     Row(
                         modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
