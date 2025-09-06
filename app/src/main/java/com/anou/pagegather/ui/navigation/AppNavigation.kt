@@ -354,6 +354,14 @@ fun AppNavigation(
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
+                },
+                onNavigateToTimer = { bookId ->
+                    // 导航到正向计时器页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                },
+                onNavigateToNoteEdit = { bookId ->
+                    // 导航到笔记编辑页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/0?book_id=$bookId")
                 }
             )
         }
@@ -383,6 +391,14 @@ fun AppNavigation(
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
+                },
+                onNavigateToTimer = { bookId ->
+                    // 导航到正向计时器页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                },
+                onNavigateToNoteEdit = { bookId ->
+                    // 导航到笔记编辑页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/0?book_id=$bookId")
                 }
             )
         }
@@ -419,6 +435,14 @@ fun AppNavigation(
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
+                },
+                onNavigateToTimer = { bookId ->
+                    // 导航到正向计时器页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                },
+                onNavigateToNoteEdit = { bookId ->
+                    // 导航到笔记编辑页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/0?book_id=$bookId")
                 }
             )
         }
@@ -448,6 +472,14 @@ fun AppNavigation(
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
+                },
+                onNavigateToTimer = { bookId ->
+                    // 导航到正向计时器页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                },
+                onNavigateToNoteEdit = { bookId ->
+                    // 导航到笔记编辑页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/0?book_id=$bookId")
                 }
             )
         }
@@ -477,6 +509,14 @@ fun AppNavigation(
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
+                },
+                onNavigateToTimer = { bookId ->
+                    // 导航到正向计时器页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                },
+                onNavigateToNoteEdit = { bookId ->
+                    // 导航到笔记编辑页面，传递书籍ID作为参数
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/0?book_id=$bookId")
                 }
             )
         }

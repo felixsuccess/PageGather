@@ -57,7 +57,9 @@ fun BookShelfRatingDetailScreen(
     viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit,
-    onNavigateToBookEdit: ((Long) -> Unit)? = null  // 添加导航到书籍编辑页面的回调函数
+    onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数
+    onNavigateToTimer: ((Long) -> Unit)? = null,  // 添加导航到计时器页面的回调函数
+    onNavigateToNoteEdit: ((Long) -> Unit)? = null  // 添加导航到笔记编辑页面的回调函数
 ) {
     val books by viewModel.getBooksByRating(rating.toFloat()).collectAsState(initial = emptyList<BookEntity>())
     var isGridMode by remember { mutableStateOf(true) }
@@ -224,10 +226,12 @@ fun BookShelfRatingDetailScreen(
                                     // TODO: 实现置顶功能
                                 },
                                 onAddNoteClick = {
-                                    // TODO: 实现记笔记功能
+                                    // 导航到笔记编辑页面，并传递书籍ID作为参数
+                                    onNavigateToNoteEdit?.invoke(book.id)
                                 },
                                 onTimerClick = {
-                                    // TODO: 实现阅读计时功能
+                                    // 导航到正向计时器页面，并传递选中的书籍ID
+                                    onNavigateToTimer?.invoke(book.id)
                                 }
                             )
                         }
@@ -259,10 +263,12 @@ fun BookShelfRatingDetailScreen(
                                     // TODO: 实现置顶功能
                                 },
                                 onAddNoteClick = {
-                                    // TODO: 实现记笔记功能
+                                    // 导航到笔记编辑页面，并传递书籍ID作为参数
+                                    onNavigateToNoteEdit?.invoke(book.id)
                                 },
                                 onTimerClick = {
-                                    // TODO: 实现阅读计时功能
+                                    // 导航到正向计时器页面，并传递选中的书籍ID
+                                    onNavigateToTimer?.invoke(book.id)
                                 }
                             )
                         }
