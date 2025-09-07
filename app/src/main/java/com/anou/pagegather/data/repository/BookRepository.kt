@@ -426,4 +426,11 @@ class BookRepository @Inject constructor(
         val book = getBookById(bookId)
         book?.let { deleteBook(it) }
     }
+    
+    /**
+     * 获取阅读中的书籍数量
+     */
+    suspend fun getReadingBooksCount(): Int {
+        return bookDao.getReadingBooksCount()
+    }
 }

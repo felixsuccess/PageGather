@@ -164,4 +164,8 @@ interface BookDao {
         ORDER BY updated_date DESC
     """)
     fun getUntaggedBooks(): Flow<List<BookEntity>>
+    
+    /** 获取阅读中的书籍数量 */
+    @Query("SELECT COUNT(*) FROM book WHERE read_status = 1 AND is_deleted = 0")
+    suspend fun getReadingBooksCount(): Int
 }
