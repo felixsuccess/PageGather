@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 fun MainContent(
     modifier: Modifier = Modifier, route: String?,
 ) {
-    var isSplash = remember { mutableStateOf(true) }
+    val isSplash = remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         delay(2000) // 延迟 2 秒
         isSplash.value = false

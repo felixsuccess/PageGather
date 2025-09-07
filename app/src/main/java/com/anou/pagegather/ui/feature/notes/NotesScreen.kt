@@ -91,7 +91,7 @@ fun NotesScreen(
         "书摘", "漫步"
     )
     var selectedTab by remember { mutableIntStateOf(0) }
-    var isShowInput = remember { mutableStateOf(false) }
+    val isShowInput = remember { mutableStateOf(false) }
 
 
     Column(
@@ -207,7 +207,7 @@ fun NotesScreen(
             }
         }
 
-        if (isShowInput.value == true) {
+        if (isShowInput.value) {
             var text by remember { mutableStateOf("") }  // 修改这里，添加by关键字
 
             Box(
@@ -391,7 +391,7 @@ fun NoteListScreen(
             //.padding(padding)
         ) {
             items(notes.size) { index ->
-                var note = notes[index]
+                val note = notes[index]
                 NoteCard(note = note, onNoteClick = {
                     //onNoteClick(note)
                     // onNavigateToNoteView();

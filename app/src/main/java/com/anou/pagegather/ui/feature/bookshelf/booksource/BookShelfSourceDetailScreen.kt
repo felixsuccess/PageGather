@@ -160,8 +160,7 @@ fun BookShelfSourceDetailScreen(
                 .statusBarsPadding()
         ) {
             if (books.isEmpty()) {
-                // 空状态 - 参考分组页面的空状态实现
-                Box(
+                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {

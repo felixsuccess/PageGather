@@ -539,7 +539,7 @@ private fun TagEditDialog(
                             
                             Column {
                                 Text(
-                                    text = if (tagName.trim().isNotEmpty()) tagName.trim() else "请输入标签名称",
+                                    text = tagName.trim().ifEmpty { "请输入标签名称" },
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
