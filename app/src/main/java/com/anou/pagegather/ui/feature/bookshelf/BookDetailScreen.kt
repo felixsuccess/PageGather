@@ -34,6 +34,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +44,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -89,8 +93,8 @@ fun BookDetailScreen(
     onEditBookClick: (Long) -> Unit,
     onNavigateToNoteEdit: (Long) -> Unit,
     onNavigateToNewNote: () -> Unit,
-    onBackClick: () -> Unit
-
+    onBackClick: () -> Unit,
+    onNavigateToTimer: ((Long) -> Unit)? = null
 ) {
     val context = LocalActivity.current
     val view = LocalView.current
@@ -154,6 +158,8 @@ fun BookDetailScreen(
     val appBarAlpha = remember(scrollState.value) {
         (scrollState.value / imageHeightPx).coerceIn(0f, 1f)
     }
+
+    var showMenu by remember { mutableStateOf(false) }
 
 //
 
@@ -248,18 +254,46 @@ fun BookDetailScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                IconButton(onClick = {
-                    //onMoreClick
-
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "更多选项",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
+                
+                // 更多操作菜单
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "更多选项",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("阅读计时") },
+                            onClick = {
+                                showMenu = false
+                                bookId?.toLongOrNull()?.let { parsedId ->
+                                    if (parsedId != 0L) {
+                                        onNavigateToTimer?.invoke(parsedId)
+                                    }
+                                }
+                            }
+                        )
+                        
+                        DropdownMenuItem(
+                            text = { Text("添加笔记") },
+                            onClick = {
+                                showMenu = false
+                                bookId?.toLongOrNull()?.let { parsedId ->
+                                    if (parsedId != 0L) {
+                                        onNavigateToNoteEdit(parsedId)
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
-
-
             }
         }
     }

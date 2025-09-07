@@ -55,7 +55,7 @@ import java.util.Locale
 @Composable
 fun SaveRecordScreen(
     source: RecordSource,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: () -> Unit,  // 恢复原来的签名
     onNavigateToAddBook: () -> Unit,
     elapsedTime: Long? = null,
     startTime: Long? = null,
@@ -65,20 +65,43 @@ fun SaveRecordScreen(
     val uiState by viewModel.uiState.collectAsState()
     
         LaunchedEffect(source, elapsedTime, startTime, selectedBookId) {
+        // 添加调试日志
+        println("SaveRecordScreen: 接收到的参数 - source: $source, elapsedTime: $elapsedTime, startTime: $startTime, selectedBookId: $selectedBookId")
+        
         if (selectedBookId != null && selectedBookId > 0) {
-            println("SaveRecordScreen: 接收到书籍ID = $selectedBookId")
-            viewModel.selectNewlyAddedBook(selectedBookId)
+             viewModel.selectNewlyAddedBook(selectedBookId)
         } else {
             println("SaveRecordScreen: selectedBookId 为空或无效: $selectedBookId")
             viewModel.initialize(source, elapsedTime, startTime, null)
         }
     }
     
+    // 添加UI状态的调试日志
+    LaunchedEffect(uiState) {
+        println("SaveRecordScreen: UI状态更新 - source: ${uiState.source}, elapsedTime: ${uiState.elapsedTime}, startTime: ${uiState.startTime}, selectedBook: ${uiState.selectedBook?.name}")
+    }
+    
+    // 当selectedBookId不为空时，我们也需要初始化计时信息
+    LaunchedEffect(selectedBookId) {
+        if (selectedBookId != null && selectedBookId > 0) {
+            // 先调用initialize设置计时信息，但不设置书籍
+            viewModel.initialize(source, elapsedTime, startTime, null)
+        }
+    }
+    
     LaunchedEffect(uiState.isSaved) {
-        if (uiState.isSaved) {
+         if (uiState.isSaved) {
             onNavigateBack()
         }
     }
+
+    LaunchedEffect(uiState.isBackToTimer) {
+        if (uiState.isBackToTimer) {
+            onNavigateBack()
+        }
+    }
+
+
     
     uiState.errorMessage?.let { error ->
         LaunchedEffect(error) {
@@ -134,8 +157,7 @@ fun SaveRecordScreen(
                     startProgress = uiState.startProgress,
                     endProgress = uiState.endProgress,
                     onStartProgressChange = { progress -> viewModel.setStartProgress(progress) },
-                    onEndProgressChange = { progress -> viewModel.setEndProgress(progress) },
-
+                    onEndProgressChange = { progress -> viewModel.setEndProgress(progress) }
                 )
             }
             

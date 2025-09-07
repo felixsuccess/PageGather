@@ -15,9 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -40,7 +37,6 @@ data class ForwardTimerUIState(
 
 @HiltViewModel
 class ForwardTimerViewModel @Inject constructor(
-    private val readingRecordRepository: ReadingRecordRepository,
     private val bookRepository: BookRepository
 ) : ViewModel() {
 
@@ -55,8 +51,7 @@ class ForwardTimerViewModel @Inject constructor(
      * 选择书籍
      */
     fun selectBook(book: BookEntity) {
-        println("ForwardTimerViewModel: selectBook called with book id = ${book.id}, name = ${book.name}")
-        _uiState.value = _uiState.value.copy(
+         _uiState.value = _uiState.value.copy(
             selectedBook = book,
             currentProgress = book.readPosition,
             startProgress = book.readPosition
@@ -162,14 +157,7 @@ class ForwardTimerViewModel @Inject constructor(
     fun stopTimer() {
         val currentState = _uiState.value
         
-        // 打印调试信息
-        println("ForwardTimerViewModel: stopTimer called")
-        println("ForwardTimerViewModel: current selectedBook = ${currentState.selectedBook?.id}")
-        
-        // 检查是否有选中的书籍
-        if (currentState.selectedBook == null) {
-            println("ForwardTimerViewModel: Warning - No book selected when stopping timer")
-        }
+
         
         // 如果计时器正在运行，先暂停计时器，执行保存逻辑
         if (currentState.status == TimerStatus.RUNNING) {
@@ -197,87 +185,6 @@ class ForwardTimerViewModel @Inject constructor(
                 showSaveDialog = true
             )
         }
-    }
-
-    /**
-     * 保存计时记录
-     */
-    fun saveTimerRecord(bookId: Long?, startProgress: Double, endProgress: Double, notes: String?, markAsFinished: Boolean = false) {
-        viewModelScope.launch {
-            try {
-                val currentState = _uiState.value
-                val startTime = currentState.tempStartTime
-                val endTime = System.currentTimeMillis()
-                val duration = endTime - startTime - currentState.tempPausedDuration
-                
-                if (bookId != null) {
-                    // 创建阅读记录
-                    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    val date = dateFormat.format(Date(endTime))
-                    
-                    readingRecordRepository.addManualReadingRecord(
-                        bookId = bookId,
-                        startProgress = startProgress,
-                        endProgress = endProgress,
-                        duration = duration,
-                        date = date,
-                        notes = notes
-                    )
-                    
-                    // 更新书籍进度
-                    val book = bookRepository.getBookById(bookId)
-                    if (book != null) {
-                        val updatedBook = book.copy(
-                            readPosition = endProgress,
-                            lastReadDate = endTime,
-                            // 如果标记为完成，更新阅读状态
-                            readStatus = if (markAsFinished) com.anou.pagegather.data.local.entity.ReadStatus.FINISHED.code else book.readStatus,
-                            readStatusChangedDate = if (markAsFinished) endTime else book.readStatusChangedDate,
-                            finishedDate = if (markAsFinished) endTime else book.finishedDate
-                        )
-                        bookRepository.updateBook(updatedBook)
-                    }
-                }
-                
-                // 重置状态
-                resetTimer()
-                _uiState.value = _uiState.value.copy(showSaveDialog = false)
-                
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "保存阅读记录失败: ${e.message}",
-                    showSaveDialog = false
-                )
-            }
-        }
-    }
-
-    /**
-     * 继续阅读
-     */
-    fun continueReading(book: BookEntity?) {
-        if (book != null) {
-            // 获取当前状态
-            val currentState = _uiState.value
-            
-            // 设置选中的书籍
-            _uiState.value = currentState.copy(
-                selectedBook = book,
-                startProgress = book.readPosition,
-                currentProgress = book.readPosition
-            )
-        }
-        // 从暂停状态恢复计时
-        resumeTimer()
-    }
-
-    /**
-     * 取消保存计时记录
-     */
-    fun cancelSaveRecord() {
-        // 取消保存，直接重置计时器
-        resetTimer()
-        _uiState.value = _uiState.value.copy(showSaveDialog = false)
     }
 
     /**
@@ -328,36 +235,6 @@ class ForwardTimerViewModel @Inject constructor(
                 
                 _uiState.value = currentState.copy(elapsedTime = totalElapsed)
             }
-        }
-    }
-
-    /**
-     * 计时器结束处理
-     */
-    private fun onTimerFinished() {
-        viewModelScope.launch {
-            saveReadingRecord()
-            // 可以在这里添加通知、声音等提醒
-        }
-    }
-
-    /**
-     * 保存阅读记录
-     */
-    private suspend fun saveReadingRecord() {
-        try {
-            val currentState = _uiState.value
-            val record = currentState.currentReadingRecord ?: return
-            
-            readingRecordRepository.endReadingSession(
-                recordId = record.id,
-                endProgress = currentState.currentProgress
-            )
-            
-        } catch (e: Exception) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "保存阅读记录失败: ${e.message}"
-            )
         }
     }
 

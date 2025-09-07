@@ -26,7 +26,9 @@ data class SaveRecordUIState(
     val markAsFinished: Boolean = false,
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isBackToTimer: Boolean = false,
+    val bookChanged: Boolean = false  // 添加一个字段来跟踪书籍是否被更改
 )
 
 @HiltViewModel
@@ -63,10 +65,12 @@ class SaveRecordViewModel @Inject constructor(
 
     fun selectBook(book: BookEntity) {
         println("SaveRecordViewModel: 选中书籍 = ${book.name}, ID = ${book.id}")
+        // 移除对全局变量的使用
         _uiState.value = _uiState.value.copy(
             selectedBook = book,
             startProgress = book.readPosition,
-            endProgress = book.readPosition
+            endProgress = book.readPosition,
+            bookChanged = true
         )
     }
 
@@ -126,40 +130,43 @@ class SaveRecordViewModel @Inject constructor(
 
                 _uiState.value = currentState.copy(isLoading = true)
 
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val endTime = currentState.startTime + currentState.elapsedTime
-                val date = dateFormat.format(Date(endTime))
-                
-                readingRecordRepository.addManualReadingRecord(
-                    bookId = selectedBook.id,
-                    startProgress = currentState.startProgress,
-                    endProgress = currentState.endProgress,
-                    duration = currentState.elapsedTime,
-                    date = date,
-                    notes = null
-                )
-                
-                val updatedBook = selectedBook.copy(
-                    readPosition = currentState.endProgress,
-                    lastReadDate = endTime,
-                    readStatus = if (currentState.markAsFinished) {
-                        com.anou.pagegather.data.local.entity.ReadStatus.FINISHED.code
-                    } else {
-                        selectedBook.readStatus
-                    },
-                    readStatusChangedDate = if (currentState.markAsFinished) {
-                        endTime
-                    } else {
-                        selectedBook.readStatusChangedDate
-                    },
-                    finishedDate = if (currentState.markAsFinished) {
-                        endTime
-                    } else {
-                        selectedBook.finishedDate
-                    }
-                )
-                
-                bookRepository.updateBook(updatedBook)
+                // 在IO线程中执行数据库操作
+                withContext(Dispatchers.IO) {
+                    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val endTime = currentState.startTime + currentState.elapsedTime
+                    val date = dateFormat.format(Date(endTime))
+                    
+                    readingRecordRepository.addManualReadingRecord(
+                        bookId = selectedBook.id,
+                        startProgress = currentState.startProgress,
+                        endProgress = currentState.endProgress,
+                        duration = currentState.elapsedTime,
+                        date = date,
+                        notes = null
+                    )
+                    
+                    val updatedBook = selectedBook.copy(
+                        readPosition = currentState.endProgress,
+                        lastReadDate = endTime,
+                        readStatus = if (currentState.markAsFinished) {
+                            com.anou.pagegather.data.local.entity.ReadStatus.FINISHED.code
+                        } else {
+                            selectedBook.readStatus
+                        },
+                        readStatusChangedDate = if (currentState.markAsFinished) {
+                            endTime
+                        } else {
+                            selectedBook.readStatusChangedDate
+                        },
+                        finishedDate = if (currentState.markAsFinished) {
+                            endTime
+                        } else {
+                            selectedBook.finishedDate
+                        }
+                    )
+                    
+                    bookRepository.updateBook(updatedBook)
+                }
                 
                 _uiState.value = currentState.copy(
                     isLoading = false,
@@ -176,7 +183,7 @@ class SaveRecordViewModel @Inject constructor(
     }
 
     fun continueReading() {
-        saveRecord()
+        _uiState.value = _uiState.value.copy(isBackToTimer = true)
     }
 
     fun getAllBooks() = bookRepository.getAllBooks()
