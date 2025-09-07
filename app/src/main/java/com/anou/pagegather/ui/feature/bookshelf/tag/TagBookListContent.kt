@@ -59,96 +59,138 @@ fun TagBookListContent(
     val bookListState by viewModel.bookListState.collectAsState()
     val tags = bookListState.availableTags
 
-    if (tags.isEmpty()) {
-        // 空状态
-        Box(
+    // 根据显示模式选择布局
+    if (isGridMode) {
+        // 网格模式
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            contentPadding = PaddingValues(16.dp),
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "暂无标签",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+            // 显示未设置标签的书籍项
+            item {
+                UntaggedGridItem(
+                    viewModel = viewModel,
+                    onClick = { 
+                        // 创建一个特殊的TagEntity来表示未设置标签的书籍
+                        val untaggedTag = TagEntity(
+                            id = -1L,
+                            name = "未设置标签",
+                            color = "#9E9E9E",
+                            tagOrder = 0,
+                            tagType = 0,
+                            createdDate = 0,
+                            updatedDate = 0,
+                            lastSyncDate = 0
+                        )
+                        onTagClick(untaggedTag)
+                    }
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "添加标签来管理你的书籍",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            
+            // 显示所有标签
+            items(tags.size) { index ->
+                val tag = tags[index]
+                TagGridItem(
+                    tag = tag,
+                    viewModel = viewModel,
+                    onClick = { onTagClick(tag) }
                 )
             }
         }
     } else {
-        // 根据显示模式选择布局
-        if (isGridMode) {
-            // 网格模式
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                contentPadding = PaddingValues(16.dp),
+        // 列表模式
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(tags.size) { index ->
-                    val tag = tags[index]
-                    TagGridItem(
-                        tag = tag,
-                        viewModel = viewModel,
-                        onClick = { onTagClick(tag) }
+                // 显示未设置标签的书籍项
+                item {
+                    val untaggedBookCount by viewModel.getUntaggedBookCount().collectAsState(initial = 0)
+                    val untaggedBooks by viewModel.getUntaggedBooks().collectAsState(initial = emptyList())
+                    
+                    BookCategoryList(
+                        title = "未设置标签",
+                        bookCount = untaggedBookCount,
+                        onClick = { 
+                            // 创建一个特殊的TagEntity来表示未设置标签的书籍
+                            val untaggedTag = TagEntity(
+                                id = -1L,
+                                name = "未设置标签",
+                                color = "#9E9E9E",
+                                tagOrder = 0,
+                                tagType = 0,
+                                createdDate = 0,
+                                updatedDate = 0,
+                                lastSyncDate = 0
+                            )
+                            onTagClick(untaggedTag)
+                        },
+                        bookPreviewUrls = untaggedBooks.map { it.coverUrl ?: "" },
+                        content = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // 标签颜色指示器
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0xFF9E9E9E))  // 灰色
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = "查看详情",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     )
                 }
-            }
-        } else {
-            // 列表模式
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    items(tags) { tag ->
-                        // 获取该标签下的书籍数量
-                        val bookCount by viewModel.getTagBookCount(tag.id).collectAsState(initial = 0)
-                        // 获取该标签下的前5本书
-                        val books by viewModel.getBooksWithTag(tag.id).collectAsState(initial = emptyList())
-                        
-                        BookCategoryList(
-                            title = tag.name,
-                            bookCount = bookCount,
-                            onClick = { onTagClick(tag) },
-                            bookPreviewUrls = books.map { it.coverUrl ?: "" },
-                            content = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // 标签颜色指示器
-                                    Box(
-                                        modifier = Modifier
-                                            .size(12.dp)
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(tag.getColor())  // 使用新的getColor()方法
-                                    )
+                
+                // 显示所有标签
+                items(tags) { tag ->
+                    // 获取该标签下的书籍数量
+                    val bookCount by viewModel.getTagBookCount(tag.id).collectAsState(initial = 0)
+                    // 获取该标签下的前5本书
+                    val books by viewModel.getBooksWithTag(tag.id).collectAsState(initial = emptyList())
+                    
+                    BookCategoryList(
+                        title = tag.name,
+                        bookCount = bookCount,
+                        onClick = { onTagClick(tag) },
+                        bookPreviewUrls = books.map { it.coverUrl ?: "" },
+                        content = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // 标签颜色指示器
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(tag.getColor())  // 使用新的getColor()方法
+                                )
 
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
 
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                        contentDescription = "查看详情",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = "查看详情",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }
@@ -156,6 +198,56 @@ fun TagBookListContent(
 }
 
 
+
+/**
+ * 未设置标签卡片组件（网格模式）
+ */
+@Composable
+private fun UntaggedGridItem(
+    viewModel: BookListViewModel,
+    onClick: () -> Unit
+) {
+    // 获取未设置标签的书籍数量
+    val bookCount by viewModel.getUntaggedBookCount().collectAsState(initial = 0)
+
+    BookCategoryGrid(
+        title = "未设置标签",
+        bookCount = bookCount,
+        onClick = onClick,
+        content = {
+            // 未设置标签书籍预览
+            UntaggedPreview(
+                viewModel = viewModel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(0.72f) // 标准书籍比例
+                    .clip(RoundedCornerShape(1.dp)) 
+            )
+        },
+        subtitle = "$bookCount 本"
+    )
+}
+
+/**
+ * 未设置标签预览组件，显示未设置标签书籍的封面拼贴
+ */
+@Composable
+private fun UntaggedPreview(
+    viewModel: BookListViewModel,
+    modifier: Modifier = Modifier
+) {
+    // 获取未设置标签的前9本书
+    val books by viewModel.getUntaggedBooks().collectAsState(initial = emptyList())
+
+    BookCollage(
+        books = books,
+        bookCount = books.size,
+        modifier = modifier,
+        emptyIcon = Icons.AutoMirrored.Filled.Label,
+        emptyIconTint = Color(0xFF9E9E9E),  // 灰色
+        getCoverUrl = { book -> (book as? BookEntity)?.coverUrl }
+    )
+}
 
 /**
  * 标签卡片组件（网格模式）
@@ -209,5 +301,3 @@ private fun TagPreview(
         getCoverUrl = { book -> (book as? BookEntity)?.coverUrl }
     )
 }
-
-

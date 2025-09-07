@@ -63,7 +63,15 @@ fun BookShelfTagDetailScreen(
     onNavigateToTimer: ((Long) -> Unit)? = null,  // 添加导航到计时器页面的回调函数
     onNavigateToNoteEdit: ((Long) -> Unit)? = null  // 添加导航到笔记编辑页面的回调函数
 ) {
-    val books by viewModel.getBooksWithTag(tagId).collectAsState(initial = emptyList<BookEntity>())
+    // 根据tagId确定数据源
+    val books by if (tagId == -1L) {
+        // 特殊处理：未设置标签的书籍
+        viewModel.getUntaggedBooks().collectAsState(initial = emptyList())
+    } else {
+        // 正常标签的书籍
+        viewModel.getBooksWithTag(tagId).collectAsState(initial = emptyList())
+    }
+    
     var isGridMode by remember { mutableStateOf(true) }
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
@@ -188,7 +196,7 @@ fun BookShelfTagDetailScreen(
                         )
 
                         Text(
-                            text = "添加书籍到这个标签",
+                            text = if (tagId == -1L) "暂无未设置标签的书籍" else "添加书籍到这个标签",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             fontSize = 14.sp
@@ -294,4 +302,3 @@ fun BookShelfTagDetailScreen(
         }
     }
 }
-

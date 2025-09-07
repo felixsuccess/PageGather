@@ -342,6 +342,20 @@ class BookRepository @Inject constructor(
     fun getBooksByRating(rating: Float): Flow<List<BookEntity>> {
         return bookDao.getBooksByRating(rating)
     }
+    
+    /**
+     * 获取未分组的书籍
+     */
+    fun getUngroupedBooks(): Flow<List<BookEntity>> {
+        return bookDao.getUngroupedBooks()
+    }
+    
+    /**
+     * 获取未设置标签的书籍
+     */
+    fun getUntaggedBooks(): Flow<List<BookEntity>> {
+        return bookDao.getUntaggedBooks()
+    }
 
     // ========== 复合操作 ==========
 

@@ -146,4 +146,22 @@ interface BookDao {
     /** 根据评分获取书籍 */
     @Query("SELECT * FROM book WHERE rating = :rating AND is_deleted = 0 ORDER BY updated_date DESC")
     fun getBooksByRating(rating: Float): Flow<List<BookEntity>>
+    
+    /** 获取未分组的书籍（即没有关联到任何分组的书籍） */
+    @Query("""
+        SELECT * FROM book 
+        WHERE id NOT IN (SELECT book_id FROM book_group_ref WHERE book_id IS NOT NULL) 
+        AND is_deleted = 0 
+        ORDER BY updated_date DESC
+    """)
+    fun getUngroupedBooks(): Flow<List<BookEntity>>
+    
+    /** 获取未设置标签的书籍（即没有关联到任何标签的书籍） */
+    @Query("""
+        SELECT * FROM book 
+        WHERE id NOT IN (SELECT book_id FROM book_tag_ref WHERE book_id IS NOT NULL AND is_deleted = 0) 
+        AND is_deleted = 0 
+        ORDER BY updated_date DESC
+    """)
+    fun getUntaggedBooks(): Flow<List<BookEntity>>
 }

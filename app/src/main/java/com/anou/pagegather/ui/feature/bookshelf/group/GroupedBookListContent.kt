@@ -55,89 +55,82 @@ fun GroupedBookListContent(
     val bookListState by viewModel.bookListState.collectAsState()
     val groups = bookListState.availableGroups  // 直接使用BookGroupEntity列表
 
-    if (groups.isEmpty()) {
-        // 空状态
-        Box(
+    // 根据显示模式选择布局
+    if (isGridMode) {
+         LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            contentPadding = PaddingValues(16.dp),
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Folder,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            // 显示未分组书籍项
+            item {
+                UngroupedGridItem(
+                    viewModel = viewModel,
+                    onClick = { onGroupClick(-1L, "未分组") }
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "暂无分组",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 18.sp
-                )
-
-                Text(
-                    text = "创建分组来管理你的书籍",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    fontSize = 14.sp
+            }
+            
+            // 显示所有分组
+            items(groups.size) { index ->
+                val group = groups[index]
+                GroupGridItem(
+                    group = group,
+                    viewModel = viewModel,
+                    onClick = { onGroupClick(group.id, group.name) }
                 )
             }
         }
     } else {
-        // 根据显示模式选择布局
-        if (isGridMode) {
-             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                contentPadding = PaddingValues(16.dp),
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(vertical = 8.dp)
             ) {
-                items(groups.size) { index ->
-                    val group = groups[index]
-                    GroupGridItem(
-                        group = group,
-                        viewModel = viewModel,
-                        onClick = { onGroupClick(group.id, group.name) }
+                // 显示未分组书籍项
+                item {
+                    val ungroupedBookCount by viewModel.getUngroupedBookCount().collectAsState(initial = 0)
+                    val ungroupedBooks by viewModel.getUngroupedBooks().collectAsState(initial = emptyList())
+                    
+                    BookCategoryList(
+                        title = "未分组",
+                        bookCount = ungroupedBookCount,
+                        onClick = { onGroupClick(-1L, "未分组") },
+                        bookPreviewUrls = ungroupedBooks.map { it.coverUrl ?: "" },
+                        content = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "查看详情",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     )
                 }
-            }
-        } else {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    items(groups) { group ->
-                        // 获取该分组下的书籍数量
-                        val bookCount by viewModel.getGroupBookCount(group.id).collectAsState(initial = 0)
-                        // 获取该分组下的前5本书
-                        val books by viewModel.getBooksByGroupId(group.id).collectAsState(initial = emptyList())
-                        
-                        BookCategoryList(
-                            title = group.getDisplayName(),  // 使用getDisplayName()方法
-                            bookCount = bookCount,
-                            onClick = { onGroupClick(group.id, group.getDisplayName()) },  // 使用getDisplayName()方法
-                            bookPreviewUrls = books.map { it.coverUrl ?: "" },
-                            content = {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = "查看详情",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        )
-                    }
+                
+                // 显示所有分组
+                items(groups) { group ->
+                    // 获取该分组下的书籍数量
+                    val bookCount by viewModel.getGroupBookCount(group.id).collectAsState(initial = 0)
+                    // 获取该分组下的前5本书
+                    val books by viewModel.getBooksByGroupId(group.id).collectAsState(initial = emptyList())
+                    
+                    BookCategoryList(
+                        title = group.getDisplayName(),  // 使用getDisplayName()方法
+                        bookCount = bookCount,
+                        onClick = { onGroupClick(group.id, group.getDisplayName()) },  // 使用getDisplayName()方法
+                        bookPreviewUrls = books.map { it.coverUrl ?: "" },
+                        content = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "查看详情",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -145,6 +138,61 @@ fun GroupedBookListContent(
 }
 
 
+
+/**
+ * 未分组卡片组件（网格模式）
+ */
+@Composable
+private fun UngroupedGridItem(
+    viewModel: BookListViewModel,
+    onClick: () -> Unit
+) {
+    // 获取未分组书籍数量
+    val bookCount by viewModel.getUngroupedBookCount().collectAsState(initial = 0)
+
+    BookCategoryGrid(
+        title = "未分组",
+        bookCount = bookCount,
+        onClick = onClick,
+        content = {
+            // 未分组书籍预览
+            UngroupedPreview(
+                viewModel = viewModel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(0.72f) // 标准书籍比例
+                    .clip(RoundedCornerShape(1.dp)) 
+            )
+        }
+    )
+}
+
+/**
+ * 未分组预览组件，显示未分组书籍的封面拼贴
+ */
+@Composable
+private fun UngroupedPreview(
+    viewModel: BookListViewModel,
+    modifier: Modifier = Modifier
+) {
+    // 获取未分组的前9本书
+    val books by viewModel.getUngroupedBooks().collectAsState(initial = emptyList())
+
+    BookCollage(
+        books = books,
+        bookCount = books.size,
+        modifier = modifier,
+        emptyContent = {
+            Text(
+                text = "未",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        getCoverUrl = { book -> (book as? BookEntity)?.coverUrl }
+    )
+}
 
 /**
  * 分组卡片组件，显示分组名称和书籍数量（网格模式）
@@ -203,4 +251,3 @@ private fun GroupPreview(
         getCoverUrl = { book -> (book as? BookEntity)?.coverUrl }
     )
 }
-

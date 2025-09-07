@@ -234,7 +234,6 @@ class BookListViewModel @Inject constructor(
                         val allBooks = _bookList.value + newBooks
                         _bookList.value = allBooks
                         hasMoreData = newBooks.size >= pageSize
-                        
                         _bookListState.value = _bookListState.value.copy(
                             books = allBooks,
                             isLoadingMore = false,
@@ -384,6 +383,34 @@ class BookListViewModel @Inject constructor(
      */
     fun getBooksByRating(rating: Float): Flow<List<BookEntity>> {
         return bookRepository.getBooksByRating(rating)
+    }
+    
+    /**
+     * 获取未分组的书籍列表
+     */
+    fun getUngroupedBooks(): Flow<List<BookEntity>> {
+        return bookRepository.getUngroupedBooks()
+    }
+    
+    /**
+     * 获取未分组的书籍数量
+     */
+    fun getUngroupedBookCount(): Flow<Int> {
+        return bookRepository.getUngroupedBooks().map { books -> books.size }
+    }
+    
+    /**
+     * 获取未设置标签的书籍列表
+     */
+    fun getUntaggedBooks(): Flow<List<BookEntity>> {
+        return bookRepository.getUntaggedBooks()
+    }
+    
+    /**
+     * 获取未设置标签的书籍数量
+     */
+    fun getUntaggedBookCount(): Flow<Int> {
+        return bookRepository.getUntaggedBooks().map { books -> books.size }
     }
     
     /**

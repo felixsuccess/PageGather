@@ -62,7 +62,15 @@ fun BookShelfGroupDetailScreen(
     onNavigateToTimer: ((Long) -> Unit)? = null,  // 添加导航到计时器页面的回调函数
     onNavigateToNoteEdit: ((Long) -> Unit)? = null  // 添加导航到笔记编辑页面的回调函数
 ) {
-    val books by viewModel.getBooksByGroupId(groupId).collectAsState(initial = emptyList())
+    // 根据groupId确定数据源
+    val books by if (groupId == -1L) {
+        // 特殊处理：未分组的书籍
+        viewModel.getUngroupedBooks().collectAsState(initial = emptyList())
+    } else {
+        // 正常分组的书籍
+        viewModel.getBooksByGroupId(groupId).collectAsState(initial = emptyList())
+    }
+    
     var isGridMode by remember { mutableStateOf(true) }
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
@@ -187,7 +195,7 @@ fun BookShelfGroupDetailScreen(
                         )
 
                         Text(
-                            text = "添加书籍到这个分组",
+                            text = if (groupId == -1L) "暂无未分组的书籍" else "添加书籍到这个分组",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             fontSize = 14.sp
@@ -293,5 +301,3 @@ fun BookShelfGroupDetailScreen(
         }
     }
 }
-
-
