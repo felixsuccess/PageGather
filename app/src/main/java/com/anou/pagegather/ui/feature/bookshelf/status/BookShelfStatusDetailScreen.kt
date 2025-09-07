@@ -61,6 +61,7 @@ import com.anou.pagegather.ui.feature.bookshelf.common.DeleteBookConfirmDialog
 fun BookShelfStatusDetailScreen(
     status: Int,
     statusName: String,
+    isGridMode: Boolean, // 添加显示模式参数
     viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit,
@@ -69,7 +70,7 @@ fun BookShelfStatusDetailScreen(
     onNavigateToNoteEdit: ((Long) -> Unit)? = null  // 添加导航到笔记编辑页面的回调函数
 ) {
     val books: List<BookEntity> by viewModel.getBooksByStatus(status).collectAsState(initial = emptyList())
-    var isGridMode by remember { mutableStateOf(true) }
+    // 移除组件内的 isGridMode 状态管理
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
 
@@ -102,8 +103,8 @@ fun BookShelfStatusDetailScreen(
                     }
                 },
                 actions = {
-                    // 显示布局切换按钮
-                    IconButton(onClick = { isGridMode = !isGridMode }) {
+                    // 显示布局切换按钮，调用ViewModel的方法来切换显示模式
+                    IconButton(onClick = { viewModel.toggleDisplayMode() }) {
                         Icon(
                             imageVector = if (isGridMode) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
                             contentDescription = if (isGridMode) "列表模式" else "网格模式",

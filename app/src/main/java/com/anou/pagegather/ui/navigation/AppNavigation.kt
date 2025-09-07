@@ -4,7 +4,11 @@ import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -12,9 +16,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookListState
+import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
-import com.anou.pagegather.ui.feature.bookshelf.group.BookShelfGroupDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookShelfSourceDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.group.BookShelfGroupDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.rating.BookShelfRatingDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.status.BookShelfStatusDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.tag.BookShelfTagDetailScreen
@@ -25,14 +31,17 @@ import com.anou.pagegather.ui.feature.my.ProfileScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
 import com.anou.pagegather.ui.feature.notes.NotesScreen
+import com.anou.pagegather.ui.feature.quickactions.QuickActionsScreen
+import com.anou.pagegather.ui.feature.quickactions.QuickNoteScreen
+import com.anou.pagegather.ui.feature.quickactions.QuickReviewScreen
+import com.anou.pagegather.ui.feature.reading.RecordSource
+import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
 import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
-import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
-import com.anou.pagegather.ui.feature.quickactions.*
 import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
-import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
-import com.anou.pagegather.ui.feature.reading.RecordSource
+import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
+import com.anou.pagegather.ui.navigation.StatisticsScreen
 
 @Composable
 fun AppNavigation(
@@ -593,10 +602,15 @@ fun AppNavigation(
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("group_id")?.toLongOrNull() ?: 0L
             val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
+            // 获取ViewModel以访问显示模式状态
+            val viewModel = hiltViewModel<BookListViewModel>()
+            val bookListState by viewModel.bookListState.collectAsState()
             
             BookShelfGroupDetailScreen(
                 groupId = groupId,
                 groupName = groupName,
+                isGridMode = bookListState.isGridMode, // 传递显示模式状态
+                viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
@@ -630,10 +644,15 @@ fun AppNavigation(
         ) { backStackEntry ->
             val sourceId = backStackEntry.arguments?.getString("source_id")?.toLongOrNull() ?: 0L
             val sourceName = backStackEntry.arguments?.getString("sourceName") ?: ""
+            // 获取ViewModel以访问显示模式状态
+            val viewModel = hiltViewModel<BookListViewModel>()
+            val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
             
             BookShelfSourceDetailScreen(
                 sourceId = sourceId,
                 sourceName = sourceName,
+                isGridMode = bookListState.isGridMode, // 传递显示模式状态
+                viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
@@ -673,11 +692,16 @@ fun AppNavigation(
             val tagId = backStackEntry.arguments?.getString("tag_id")?.toLongOrNull() ?: 0L
             val tagName = backStackEntry.arguments?.getString("tagName") ?: ""
             val tagColor = backStackEntry.arguments?.getString("tagColor") ?: ""
+            // 获取ViewModel以访问显示模式状态
+            val viewModel = hiltViewModel<BookListViewModel>()
+            val bookListState by viewModel.bookListState.collectAsState()
             
             BookShelfTagDetailScreen(
                 tagId = tagId,
                 tagName = tagName,
                 tagColor = tagColor,
+                isGridMode = bookListState.isGridMode, // 传递显示模式状态
+                viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
@@ -711,10 +735,15 @@ fun AppNavigation(
         ) { backStackEntry ->
             val status = backStackEntry.arguments?.getString("status")?.toIntOrNull() ?: 0
             val statusName = backStackEntry.arguments?.getString("statusName") ?: ""
+            // 获取ViewModel以访问显示模式状态
+            val viewModel = hiltViewModel<BookListViewModel>()
+            val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
             
             BookShelfStatusDetailScreen(
                 status = status,
                 statusName = statusName,
+                isGridMode = bookListState.isGridMode, // 传递显示模式状态
+                viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
@@ -748,10 +777,15 @@ fun AppNavigation(
         ) { backStackEntry ->
             val rating = backStackEntry.arguments?.getString("rating")?.toIntOrNull() ?: 0
             val ratingValue = backStackEntry.arguments?.getString("ratingValue") ?: ""
+            // 获取ViewModel以访问显示模式状态
+            val viewModel = hiltViewModel<BookListViewModel>()
+            val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
             
             BookShelfRatingDetailScreen(
                 rating = rating,
                 ratingValue = ratingValue,
+                isGridMode = bookListState.isGridMode, // 传递显示模式状态
+                viewModel = viewModel,
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")

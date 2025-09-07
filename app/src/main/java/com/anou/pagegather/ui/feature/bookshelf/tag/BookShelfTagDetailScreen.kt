@@ -57,6 +57,7 @@ fun BookShelfTagDetailScreen(
     tagId: Long,
     tagName: String,
     tagColor: String?,
+    isGridMode: Boolean, // 添加显示模式参数
     viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit,
@@ -73,7 +74,6 @@ fun BookShelfTagDetailScreen(
         viewModel.getBooksWithTag(tagId).collectAsState(initial = emptyList())
     }
     
-    var isGridMode by remember { mutableStateOf(true) }
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
 
@@ -109,8 +109,8 @@ fun BookShelfTagDetailScreen(
                     }
                 },
                 actions = {
-                    // 显示布局切换按钮
-                    IconButton(onClick = { isGridMode = !isGridMode }) {
+                    // 显示布局切换按钮，调用ViewModel的方法来切换显示模式
+                    IconButton(onClick = { viewModel.toggleDisplayMode() }) {
                         Icon(
                             imageVector = if (isGridMode) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
                             contentDescription = if (isGridMode) "列表模式" else "网格模式",
