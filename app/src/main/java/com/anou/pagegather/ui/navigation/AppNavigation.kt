@@ -602,19 +602,18 @@ fun AppNavigation(
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("group_id")?.toLongOrNull() ?: 0L
             val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
-            // 获取ViewModel以访问显示模式状态
-            val viewModel = hiltViewModel<BookListViewModel>()
-            val bookListState by viewModel.bookListState.collectAsState()
+            // 获取ViewModel实例，确保所有页面共享同一个实例
+            val viewModel: BookListViewModel = hiltViewModel()
             
             BookShelfGroupDetailScreen(
                 groupId = groupId,
                 groupName = groupName,
-                isGridMode = bookListState.isGridMode, // 传递显示模式状态
-                viewModel = viewModel,
+                // 移除 isGridMode 参数，让组件直接从 ViewModel 获取
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
                 },
+                viewModel = viewModel, // 传递ViewModel实例
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
@@ -644,19 +643,18 @@ fun AppNavigation(
         ) { backStackEntry ->
             val sourceId = backStackEntry.arguments?.getString("source_id")?.toLongOrNull() ?: 0L
             val sourceName = backStackEntry.arguments?.getString("sourceName") ?: ""
-            // 获取ViewModel以访问显示模式状态
-            val viewModel = hiltViewModel<BookListViewModel>()
-            val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
+            // 获取ViewModel实例，确保所有页面共享同一个实例
+            val viewModel: BookListViewModel = hiltViewModel()
             
             BookShelfSourceDetailScreen(
                 sourceId = sourceId,
                 sourceName = sourceName,
-                isGridMode = bookListState.isGridMode, // 传递显示模式状态
-                viewModel = viewModel,
+                // 移除 isGridMode 参数，让组件直接从 ViewModel 获取
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
                 },
+                viewModel = viewModel, // 传递ViewModel实例
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
@@ -692,20 +690,19 @@ fun AppNavigation(
             val tagId = backStackEntry.arguments?.getString("tag_id")?.toLongOrNull() ?: 0L
             val tagName = backStackEntry.arguments?.getString("tagName") ?: ""
             val tagColor = backStackEntry.arguments?.getString("tagColor") ?: ""
-            // 获取ViewModel以访问显示模式状态
-            val viewModel = hiltViewModel<BookListViewModel>()
-            val bookListState by viewModel.bookListState.collectAsState()
+            // 获取ViewModel实例，确保所有页面共享同一个实例
+            val viewModel: BookListViewModel = hiltViewModel()
             
             BookShelfTagDetailScreen(
                 tagId = tagId,
                 tagName = tagName,
                 tagColor = tagColor,
-                isGridMode = bookListState.isGridMode, // 传递显示模式状态
-                viewModel = viewModel,
+                // 移除 isGridMode 参数，让组件直接从 ViewModel 获取
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
                 },
+                viewModel = viewModel, // 传递ViewModel实例
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
@@ -735,19 +732,18 @@ fun AppNavigation(
         ) { backStackEntry ->
             val status = backStackEntry.arguments?.getString("status")?.toIntOrNull() ?: 0
             val statusName = backStackEntry.arguments?.getString("statusName") ?: ""
-            // 获取ViewModel以访问显示模式状态
-            val viewModel = hiltViewModel<BookListViewModel>()
-            val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
+            // 获取ViewModel实例，确保所有页面共享同一个实例
+            val viewModel: BookListViewModel = hiltViewModel()
             
             BookShelfStatusDetailScreen(
                 status = status,
                 statusName = statusName,
-                isGridMode = bookListState.isGridMode, // 传递显示模式状态
-                viewModel = viewModel,
+                // 移除 isGridMode 参数，让组件直接从 ViewModel 获取
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
                 },
+                viewModel = viewModel, // 传递ViewModel实例
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
@@ -777,19 +773,18 @@ fun AppNavigation(
         ) { backStackEntry ->
             val rating = backStackEntry.arguments?.getString("rating")?.toIntOrNull() ?: 0
             val ratingValue = backStackEntry.arguments?.getString("ratingValue") ?: ""
-            // 获取ViewModel以访问显示模式状态
-            val viewModel = hiltViewModel<BookListViewModel>()
-            val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
+            // 获取ViewModel实例，确保所有页面共享同一个实例
+            val viewModel: BookListViewModel = hiltViewModel()
             
             BookShelfRatingDetailScreen(
                 rating = rating,
                 ratingValue = ratingValue,
-                isGridMode = bookListState.isGridMode, // 传递显示模式状态
-                viewModel = viewModel,
+                // 移除 isGridMode 参数，让组件直接从 ViewModel 获取
                 onBackClick = { navController.popBackStack() },
                 onBookClick = { bookId ->
                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$bookId")
                 },
+                viewModel = viewModel, // 传递ViewModel实例
                 onNavigateToBookEdit = { bookId ->
                     // 导航到书籍编辑页面
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")

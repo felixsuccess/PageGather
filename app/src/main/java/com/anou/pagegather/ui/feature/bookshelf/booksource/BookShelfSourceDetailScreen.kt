@@ -56,18 +56,17 @@ import com.anou.pagegather.ui.feature.bookshelf.common.DeleteBookConfirmDialog
 fun BookShelfSourceDetailScreen(
     sourceId: Long,
     sourceName: String,
-    isGridMode: Boolean, // 添加显示模式参数
-    viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit,
+    viewModel: BookListViewModel = hiltViewModel(), // 通过参数传递 ViewModel 实例
     onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数
     onNavigateToTimer: ((Long) -> Unit)? = null,  // 添加导航到计时器页面的回调函数
     onNavigateToNoteEdit: ((Long) -> Unit)? = null  // 添加导航到笔记编辑页面的回调函数
 ) {
-
     val books by viewModel.getBooksBySourceId(sourceId).collectAsState(initial = emptyList<BookEntity>())
+    // 使用ViewModel中的实时显示模式状态
     val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
-    val isGridMode =bookListState.isGridMode
+    val isGridMode = bookListState.isGridMode
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
 
@@ -226,7 +225,7 @@ fun BookShelfSourceDetailScreen(
                                 onMarkAsFinishedClick = {
                                     viewModel.markBookAsFinished(book.id)
                                 },
-
+                              
                                 onPinClick = {
                                     // TODO: 实现置顶功能
                                 },
@@ -296,5 +295,3 @@ fun BookShelfSourceDetailScreen(
         }
     }
 }
-
-

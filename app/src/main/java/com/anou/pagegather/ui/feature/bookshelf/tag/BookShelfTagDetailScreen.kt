@@ -44,7 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.navOptions
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
@@ -57,10 +56,9 @@ fun BookShelfTagDetailScreen(
     tagId: Long,
     tagName: String,
     tagColor: String?,
-    isGridMode: Boolean, // 添加显示模式参数
-    viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit,
+    viewModel: BookListViewModel = hiltViewModel(), // 通过参数传递 ViewModel 实例
     onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数
     onNavigateToTimer: ((Long) -> Unit)? = null,  // 添加导航到计时器页面的回调函数
     onNavigateToNoteEdit: ((Long) -> Unit)? = null  // 添加导航到笔记编辑页面的回调函数
@@ -73,6 +71,10 @@ fun BookShelfTagDetailScreen(
         // 正常标签的书籍
         viewModel.getBooksWithTag(tagId).collectAsState(initial = emptyList())
     }
+    
+    // 使用ViewModel中的实时显示模式状态
+    val bookListState by viewModel.bookListState.collectAsState()
+    val isGridMode = bookListState.isGridMode
     
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }

@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,9 +32,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -44,11 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
@@ -61,15 +55,17 @@ import com.anou.pagegather.ui.feature.bookshelf.common.DeleteBookConfirmDialog
 fun BookShelfStatusDetailScreen(
     status: Int,
     statusName: String,
-    isGridMode: Boolean, // 添加显示模式参数
-    viewModel: BookListViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onBookClick: (Long) -> Unit,
+    viewModel: BookListViewModel = hiltViewModel(), // 通过参数传递 ViewModel 实例
     onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数
     onNavigateToTimer: ((Long) -> Unit)? = null,  // 添加导航到计时器页面的回调函数
     onNavigateToNoteEdit: ((Long) -> Unit)? = null  // 添加导航到笔记编辑页面的回调函数
 ) {
     val books: List<BookEntity> by viewModel.getBooksByStatus(status).collectAsState(initial = emptyList())
+    // 使用ViewModel中的实时显示模式状态
+    val bookListState by viewModel.bookListState.collectAsState()
+    val isGridMode = bookListState.isGridMode
     // 移除组件内的 isGridMode 状态管理
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
@@ -300,5 +296,3 @@ fun BookShelfStatusDetailScreen(
         }
     }
 }
-
-

@@ -247,7 +247,6 @@ fun BookListScreen(
                         onAddBookClick = onAddBookClick,
                         onTimerClick = onTimerClick,
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode,
                         useLetterPlaceholderForGrid = useLetterPlaceholderForGrid, // 传递网格封面显示方式设置
                         onNavigateToBookEdit = onNavigateToBookEdit,  // 传递导航到书籍编辑页面的回调函数
                         onNavigateToNoteEdit = onNavigateToNoteEdit,  // 传递导航到笔记编辑页面的回调函数
@@ -259,8 +258,7 @@ fun BookListScreen(
                     // 按书籍分组筛选
                     GroupedBookListContent(
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode, // 传递显示模式参数
-                        onGroupClick = { groupId, groupName ->
+                         onGroupClick = { groupId, groupName ->
                             // 导航到分组详情页面
                             onNavigateToGroupDetail(groupId, groupName)
                         }
@@ -274,8 +272,7 @@ fun BookListScreen(
                 "tag" -> {
                     TagBookListContent(
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode,
-                        onTagClick = { tag ->
+                          onTagClick = { tag ->
                             // 实现标签详情导航
                             onNavigateToTagDetail(tag.id, tag.name, tag.color)
                         }
@@ -285,8 +282,7 @@ fun BookListScreen(
                 "status" -> {
                     StatusBookListContent(
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode,
-                        onStatusClick = { status ->
+                         onStatusClick = { status ->
                             // 实现状态详情导航
                             onNavigateToStatusDetail(status.code, status.message)
                         }
@@ -296,8 +292,7 @@ fun BookListScreen(
                 "source" -> {
                     BookSourcedBookListContent(
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode,
-                        onSourceClick = { sourceId, sourceName ->
+                         onSourceClick = { sourceId, sourceName ->
                             // 导航到来源详情页面
                             onNavigateToSourceDetail(sourceId, sourceName)
                         }
@@ -307,8 +302,7 @@ fun BookListScreen(
                 "rating" -> {
                     RatingBookListContent(
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode,
-                        onRatingClick = { rating ->
+                         onRatingClick = { rating ->
                             // 实现评分详情导航
                             onNavigateToRatingDetail(
                                 rating,
@@ -327,7 +321,6 @@ fun BookListScreen(
                         onAddBookClick = onAddBookClick,
                         onTimerClick = onTimerClick,
                         viewModel = viewModel,
-                        isGridMode = bookListState.isGridMode,
                         useLetterPlaceholderForGrid = useLetterPlaceholderForGrid, // 传递网格封面显示方式设置
                         onNavigateToBookEdit = onNavigateToBookEdit, // 传递导航到书籍编辑页面的回调函数
                         onNavigateToNoteEdit = onNavigateToNoteEdit,  // 传递导航到笔记编辑页面的回调函数

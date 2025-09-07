@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookSourceEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
@@ -41,13 +42,12 @@ import com.anou.pagegather.ui.feature.bookshelf.common.BookCollage
 @Composable
 fun BookSourcedBookListContent(
     viewModel: BookListViewModel,
-    isGridMode: Boolean,
     onSourceClick: (sourceId: Long, sourceName: String) -> Unit
 ) {
     // 从ViewModel获取来源数据
-    val bookListState by viewModel.bookListState.collectAsState()
+    val bookListState by viewModel.bookListState.collectAsStateWithLifecycle()
     val sources = bookListState.availableSources
-
+    val isGridMode = bookListState.isGridMode
     if (sources.isEmpty()) {
         // 空状态
         Box(

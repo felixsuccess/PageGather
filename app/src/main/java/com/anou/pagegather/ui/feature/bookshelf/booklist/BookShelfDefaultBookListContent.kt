@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,13 +57,14 @@ fun BookShelfDefaultBookListContent(
     onAddBookClick: () -> Unit,
     onTimerClick: (Long) -> Unit,
     viewModel: BookListViewModel,
-    isGridMode: Boolean,
     useLetterPlaceholderForGrid: Boolean = false, // 添加参数控制网格封面显示方式
     onNavigateToBookEdit: ((Long) -> Unit)? = null , // 添加导航到书籍编辑页面的回调函数
     onNavigateToNoteEdit: ((Long, Long) -> Unit)? = null // 添加导航到笔记编辑页面的回调函数，参数为(noteId, bookId)
 ) {
     val gridState = rememberLazyGridState()
     val listState = rememberLazyListState()
+    val bookListState by viewModel.bookListState.collectAsState()
+    val isGridMode = bookListState.isGridMode
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
 
