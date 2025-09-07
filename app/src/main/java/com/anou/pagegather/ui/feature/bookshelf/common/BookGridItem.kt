@@ -61,7 +61,7 @@ fun BookGridItem(
     onMarkAsFinishedClick: (() -> Unit)? = null,
     onPinClick: (() -> Unit)? = null,
     onAddNoteClick: (() -> Unit)? = null,
-    onTimerClick: (() -> Unit)? = null,
+    onTimerClick: ((Long) -> Unit)? = null,
     useLetterPlaceholder: Boolean = false // 添加参数控制封面显示方式
 ) {
     var showDropdownMenu by remember { mutableStateOf(false) }
@@ -382,7 +382,7 @@ fun BookGridItem(
                     },
                     onClick = {
                         showDropdownMenu = false
-                        onTimerClick()
+                        onTimerClick?.invoke(book.id)
                     }
                 )
             }

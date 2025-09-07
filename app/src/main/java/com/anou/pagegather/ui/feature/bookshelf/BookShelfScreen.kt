@@ -12,7 +12,7 @@ fun BookShelfScreen(
     onNavigateToBookGroups: () -> Unit,
     onToBookViewClick: (Long) -> Unit,
     onToBookAddClick: () -> Unit,
-    onNavigateToTimer: () -> Unit = {},
+    onNavigateToTimer: (Long) -> Unit = {},
     onNavigateToQuickActions: () -> Unit = {},
     onNavigateToNoteEdit: ((Long, Long) -> Unit)? = null,  // 添加导航到笔记编辑页面的回调函数
     onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数

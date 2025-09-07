@@ -87,7 +87,10 @@ fun AppNavigation(
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 },
                 onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
-                onNavigateToTimer = { navController.navigate(Routes.TimeManagementRoutes.FORWARD_TIMER) },
+                onNavigateToTimer = { bookId ->
+                    val bookIdParam = if (bookId > 0L) "?selectedBookId=$bookId" else ""
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}$bookIdParam")
+                },
                 onNavigateToQuickActions = { navController.navigate(Routes.QuickActionsRoutes.QUICK_ACTIONS) },
                 onNavigateToNoteEdit = { noteId, bookId ->
                     // 导航到笔记编辑页面，传递笔记ID和书籍ID
@@ -235,23 +238,28 @@ fun AppNavigation(
 
         // 时间管理相关页面
         composable(
-            route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId={newlyAddedBookId}",
+            route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId={selectedBookId}",
             arguments = listOf(
-                navArgument("newlyAddedBookId") { 
+                navArgument("selectedBookId") { 
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 }
             )
         ) { backStackEntry ->
-            val newlyAddedBookId = backStackEntry.arguments?.getString("newlyAddedBookId")?.toLongOrNull()
+            val selectedBookId = backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
             
             ForwardTimerScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToSaveRecord = { elapsedTime, startTime ->
-                    navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?source=TIMER&elapsedTime=$elapsedTime&startTime=$startTime")
+                onNavigateToSaveRecord = { elapsedTime, startTime, bookId ->
+                    val bookIdParam = bookId?.let { "&selectedBookId=$it" } ?: ""
+                    println("AppNavigation: 导航到保存记录页面")
+                    println("AppNavigation: elapsedTime = $elapsedTime")
+                    println("AppNavigation: startTime = $startTime")
+                    println("AppNavigation: bookId = $bookId")
+                    navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?source=TIMER&elapsedTime=$elapsedTime&startTime=$startTime$bookIdParam")
                 },
-                newlyAddedBookId = newlyAddedBookId
+                selectedBookId = selectedBookId
             ) 
         }
         
@@ -266,7 +274,7 @@ fun AppNavigation(
 
         // 阅读记录相关页面
         composable(
-            route = "${Routes.ReadingRoutes.SAVE_RECORD}?source={source}&elapsedTime={elapsedTime}&startTime={startTime}&preSelectedBookId={preSelectedBookId}&newlyAddedBookId={newlyAddedBookId}",
+            route = "${Routes.ReadingRoutes.SAVE_RECORD}?source={source}&elapsedTime={elapsedTime}&startTime={startTime}&selectedBookId={selectedBookId}",
             arguments = listOf(
                 navArgument("source") { 
                     type = NavType.StringType
@@ -282,12 +290,7 @@ fun AppNavigation(
                     nullable = true
                     defaultValue = null
                 },
-                navArgument("preSelectedBookId") { 
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("newlyAddedBookId") { 
+                navArgument("selectedBookId") { 
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
@@ -302,8 +305,7 @@ fun AppNavigation(
             }
             val elapsedTime = backStackEntry.arguments?.getString("elapsedTime")?.toLongOrNull()
             val startTime = backStackEntry.arguments?.getString("startTime")?.toLongOrNull()
-            val preSelectedBookId = backStackEntry.arguments?.getString("preSelectedBookId")?.toLongOrNull()
-            val newlyAddedBookId = backStackEntry.arguments?.getString("newlyAddedBookId")?.toLongOrNull()
+            val selectedBookId = backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
             
             SaveRecordScreen(
                 source = source,
@@ -313,14 +315,13 @@ fun AppNavigation(
                     val currentRoute = "${Routes.ReadingRoutes.SAVE_RECORD}?source=$sourceStr" +
                         (elapsedTime?.let { "&elapsedTime=$it" } ?: "") +
                         (startTime?.let { "&startTime=$it" } ?: "") +
-                        (preSelectedBookId?.let { "&preSelectedBookId=$it" } ?: "")
+                        (selectedBookId?.let { "&selectedBookId=$it" } ?: "")
                     val encodedCallback = Uri.encode(currentRoute)
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=$encodedCallback")
                 },
                 elapsedTime = elapsedTime,
                 startTime = startTime,
-                preSelectedBookId = preSelectedBookId,
-                newlyAddedBookId = newlyAddedBookId
+                selectedBookId = selectedBookId
             )
         }
 
@@ -357,7 +358,7 @@ fun AppNavigation(
                 },
                 onNavigateToTimer = { bookId ->
                     // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId")
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -394,7 +395,7 @@ fun AppNavigation(
                 },
                 onNavigateToTimer = { bookId ->
                     // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId")
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -438,7 +439,7 @@ fun AppNavigation(
                 },
                 onNavigateToTimer = { bookId ->
                     // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId")
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -475,7 +476,7 @@ fun AppNavigation(
                 },
                 onNavigateToTimer = { bookId ->
                     // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId")
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -512,7 +513,7 @@ fun AppNavigation(
                 },
                 onNavigateToTimer = { bookId ->
                     // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?newlyAddedBookId=$bookId")
+                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId")
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数

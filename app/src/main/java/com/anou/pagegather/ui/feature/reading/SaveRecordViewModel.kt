@@ -42,12 +42,12 @@ class SaveRecordViewModel @Inject constructor(
         source: RecordSource,
         elapsedTime: Long? = null,
         startTime: Long? = null,
-        preSelectedBookId: Long? = null
+        selectedBookId: Long? = null
     ) {
         viewModelScope.launch {
             var selectedBook: BookEntity? = null
-            if (preSelectedBookId != null) {
-                selectedBook = bookRepository.getBookById(preSelectedBookId)
+            if (selectedBookId != null) {
+                selectedBook = bookRepository.getBookById(selectedBookId)
             }
             
             _uiState.value = _uiState.value.copy(

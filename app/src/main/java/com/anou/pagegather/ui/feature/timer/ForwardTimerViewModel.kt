@@ -7,12 +7,14 @@ import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.repository.BookRepository
 import com.anou.pagegather.data.repository.ReadingRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,27 +55,41 @@ class ForwardTimerViewModel @Inject constructor(
      * 选择书籍
      */
     fun selectBook(book: BookEntity) {
+        println("ForwardTimerViewModel: selectBook called with book id = ${book.id}, name = ${book.name}")
         _uiState.value = _uiState.value.copy(
             selectedBook = book,
             currentProgress = book.readPosition,
             startProgress = book.readPosition
         )
+        println("ForwardTimerViewModel: UI state updated, selectedBook id = ${_uiState.value.selectedBook?.id}")
     }
 
     /**
      * 选择新添加的书籍
      */
     fun selectNewlyAddedBook(bookId: Long) {
-        viewModelScope.launch {
+        println("ForwardTimerViewModel: selectNewlyAddedBook called with bookId = $bookId")
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val book = bookRepository.getBookById(bookId)
-                if (book != null) {
-                    selectBook(book)
+                withContext(Dispatchers.Main) {
+                    if (book != null) {
+                        println("ForwardTimerViewModel: Book found, name = ${book.name}")
+                        selectBook(book)
+                    } else {
+                        println("ForwardTimerViewModel: Book not found for id = $bookId")
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = "未找到ID为 $bookId 的书籍"
+                        )
+                    }
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "选择新添加书籍失败: ${e.message}"
-                )
+                println("ForwardTimerViewModel: Error selecting book: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "选择新添加书籍失败: ${e.message}"
+                    )
+                }
             }
         }
     }
@@ -145,6 +161,15 @@ class ForwardTimerViewModel @Inject constructor(
      */
     fun stopTimer() {
         val currentState = _uiState.value
+        
+        // 打印调试信息
+        println("ForwardTimerViewModel: stopTimer called")
+        println("ForwardTimerViewModel: current selectedBook = ${currentState.selectedBook?.id}")
+        
+        // 检查是否有选中的书籍
+        if (currentState.selectedBook == null) {
+            println("ForwardTimerViewModel: Warning - No book selected when stopping timer")
+        }
         
         // 如果计时器正在运行，先暂停计时器，执行保存逻辑
         if (currentState.status == TimerStatus.RUNNING) {

@@ -48,6 +48,7 @@ import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
 import com.anou.pagegather.ui.feature.bookshelf.common.BookListItem
+import com.anou.pagegather.ui.feature.bookshelf.common.DeleteBookConfirmDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +65,7 @@ fun BookShelfSourceDetailScreen(
     val books by viewModel.getBooksBySourceId(sourceId).collectAsState(initial = emptyList<BookEntity>())
     var isGridMode by remember { mutableStateOf(true) }
     var showMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf<BookEntity?>(null) }
 
     Scaffold(
         topBar = {
@@ -212,7 +214,7 @@ fun BookShelfSourceDetailScreen(
                                 onClick = { onBookClick(book.id) },
                                 // 添加长按菜单相关回调函数
                                 onDeleteClick = {
-                                    // TODO: 实现删除功能
+                                    showDeleteDialog = book
                                 },
                                 onEditClick = {
                                     // 实现编辑功能
@@ -249,7 +251,7 @@ fun BookShelfSourceDetailScreen(
                                 onClick = { onBookClick(book.id) },
                                 // 添加长按菜单相关回调函数
                                 onDeleteClick = {
-                                    // TODO: 实现删除功能
+                                    showDeleteDialog = book
                                 },
                                 onEditClick = {
                                     // 实现编辑功能
@@ -274,7 +276,22 @@ fun BookShelfSourceDetailScreen(
                         }
                     }
                 }
+                
+                // 删除确认对话框
+                showDeleteDialog?.let { book ->
+                    DeleteBookConfirmDialog(
+                        bookName = book.name ?: "未知书名",
+                        onConfirm = {
+                            viewModel.deleteBook(book) {
+                                showDeleteDialog = null
+                            }
+                        },
+                        onDismiss = { showDeleteDialog = null }
+                    )
+                }
             }
         }
     }
 }
+
+

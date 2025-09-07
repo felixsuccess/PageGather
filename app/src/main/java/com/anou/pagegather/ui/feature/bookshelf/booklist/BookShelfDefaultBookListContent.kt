@@ -17,11 +17,9 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,13 +47,14 @@ import com.anou.pagegather.ui.feature.bookshelf.BookListUIState
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
 import com.anou.pagegather.ui.feature.bookshelf.common.BookListItem
+import com.anou.pagegather.ui.feature.bookshelf.common.DeleteBookConfirmDialog
 
 @Composable
 fun BookShelfDefaultBookListContent(
     bookListUIState: BookListUIState,
     onBookClick: (Long) -> Unit,
     onAddBookClick: () -> Unit,
-    onTimerClick: () -> Unit,
+    onTimerClick: (Long) -> Unit,
     viewModel: BookListViewModel,
     isGridMode: Boolean,
     useLetterPlaceholderForGrid: Boolean = false, // 添加参数控制网格封面显示方式
@@ -164,7 +163,7 @@ fun BookShelfDefaultBookListContent(
                                     // 实现记笔记功能，调用导航回调函数传递书籍ID
                                     onNavigateToNoteEdit?.invoke(0L, book.id)
                                 },
-                                onTimerClick = onTimerClick,
+                                onTimerClick = { bookId -> onTimerClick(bookId) },
                                 useLetterPlaceholder = useLetterPlaceholderForGrid // 传递网格封面显示方式设置
                             )
                         }
@@ -359,54 +358,4 @@ private fun EmptyBooksPlaceholder(
         }
     }
 }
-
-/**
- * 删除书籍确认对话框
- */
-@Composable
-fun DeleteBookConfirmDialog(
-    bookName: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "确认删除",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        text = {
-            Text(
-                text = "确定要删除书籍 \"》$bookName《\" 吗？\n\n此操作将永久删除该书籍及其所有相关信息（包括阅读记录、笔记等）。",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        confirmButton = {
-            androidx.compose.material3.Button(
-                onClick = onConfirm,
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text("删除")
-            }
-        },
-        dismissButton = {
-            androidx.compose.material3.TextButton(
-                onClick = onDismiss,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text("取消")
-            }
-        },
-        shape = RoundedCornerShape(16.dp),
-        tonalElevation = 6.dp
-    )
-}
-
+ 

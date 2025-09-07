@@ -347,7 +347,7 @@ fun BookEditScreen(
                                 val decodedCallback = Uri.decode(callbackRoute)
                                 // 构建带有新书籍ID的回调URL，使用实际的书籍ID
                                 val separator = if (decodedCallback.contains("?")) "&" else "?"
-                                val callbackWithBookId = "${decodedCallback}${separator}newlyAddedBookId=${actualBookId}"
+                                val callbackWithBookId = "${decodedCallback}${separator}selectedBookId=${actualBookId}"
                                 
                                 navController.navigate(callbackWithBookId) {
                                     // 清除当前的书籍编辑页面

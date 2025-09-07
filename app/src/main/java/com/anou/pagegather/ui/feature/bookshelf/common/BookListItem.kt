@@ -70,7 +70,7 @@ fun BookListItem(
     onMarkAsFinishedClick: (() -> Unit)? = null,
     onPinClick: (() -> Unit)? = null,
     onAddNoteClick: (() -> Unit)? = null,
-    onTimerClick: (() -> Unit)? = null
+    onTimerClick: ((Long) -> Unit)? = null
 ) {
     var showDropdownMenu by remember { mutableStateOf(false) }
 
@@ -435,7 +435,7 @@ fun BookListItem(
                         },
                         onClick = {
                             showDropdownMenu = false
-                            onTimerClick()
+                            onTimerClick?.invoke(book.id)
                         }
                     )
                 }

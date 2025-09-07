@@ -43,8 +43,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun ForwardTimerScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToSaveRecord: (Long, Long) -> Unit = { _, _ -> },
-    newlyAddedBookId: Long? = null,
+    onNavigateToSaveRecord: (Long, Long, Long?) -> Unit = { _, _, _ -> },
+    selectedBookId: Long? = null,
     viewModel: ForwardTimerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,30 +52,28 @@ fun ForwardTimerScreen(
     // 监听showSaveDialog状态，导航到保存记录页面
     LaunchedEffect(uiState.showSaveDialog) {
         if (uiState.showSaveDialog) {
+            // 打印调试信息
+            println("ForwardTimerScreen: 准备导航到保存记录页面")
+            println("ForwardTimerScreen: elapsedTIme = ${uiState.elapsedTime}")
+            println("ForwardTimerScreen: tempStartTime = ${uiState.tempStartTime}")
+            println("ForwardTimerScreen: selectedBookId = ${uiState.selectedBook?.id}")
+            
+            // 检查是否有选中的书籍
+            if (uiState.selectedBook == null) {
+                println("ForwardTimerScreen: Warning - No book selected when navigating to save record")
+            }
+            
             // 清除对话框状态
             viewModel.clearSaveDialog()
-            // 导航到保存记录页面，传递计时数据
-            onNavigateToSaveRecord(uiState.elapsedTime, uiState.tempStartTime)
+            // 导航到保存记录页面，传递计时数据和书籍ID
+            onNavigateToSaveRecord(uiState.elapsedTime, uiState.tempStartTime, uiState.selectedBook?.id)
         }
     }
     
     // 处理新添加的书籍ID
-    LaunchedEffect(newlyAddedBookId) {
-        if (newlyAddedBookId != null && newlyAddedBookId > 0) {
-            viewModel.selectNewlyAddedBook(newlyAddedBookId)
-        }
-    }
-    
-    LaunchedEffect(newlyAddedBookId) {
-        if (newlyAddedBookId != null && newlyAddedBookId > 0) {
-            viewModel.selectNewlyAddedBook(newlyAddedBookId)
-        }
-    }
-    
-    LaunchedEffect(uiState.showSaveDialog) {
-        if (uiState.showSaveDialog && uiState.status == TimerStatus.PAUSED) {
-            onNavigateToSaveRecord(uiState.elapsedTime, uiState.tempStartTime)
-            viewModel.clearSaveDialog()
+    LaunchedEffect(selectedBookId) {
+        if (selectedBookId != null && selectedBookId > 0) {
+            viewModel.selectNewlyAddedBook(selectedBookId)
         }
     }
     

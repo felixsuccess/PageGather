@@ -56,7 +56,7 @@ fun BookListScreen(
     viewModel: BookListViewModel = hiltViewModel(),
     onBookClick: (Long) -> Unit,
     onAddBookClick: () -> Unit,
-    onTimerClick: () -> Unit = {},
+    onTimerClick: (Long) -> Unit = {},
     onQuickActionsClick: () -> Unit = {},
     onNavigateToNoteEdit: ((Long, Long) -> Unit)? = null,  // 添加导航到笔记编辑页面的回调函数
     onNavigateToBookEdit: ((Long) -> Unit)? = null,  // 添加导航到书籍编辑页面的回调函数
@@ -120,7 +120,7 @@ fun BookListScreen(
                     }
                 } else {
                     // 阅读计时按钮
-                    IconButton(onClick = onTimerClick) {
+                    IconButton(onClick = { onTimerClick(0L) }) {
                         Icon(
                             imageVector = Icons.Default.Timer,
                             contentDescription = "阅读计时",
@@ -196,7 +196,7 @@ fun BookListScreen(
                                 text = { Text("阅读计时") },
                                 onClick = {
                                     showMoreMenu = false
-                                    onTimerClick()
+                                    onTimerClick(0L)
                                 },
                                 leadingIcon = {
                                     Icon(
