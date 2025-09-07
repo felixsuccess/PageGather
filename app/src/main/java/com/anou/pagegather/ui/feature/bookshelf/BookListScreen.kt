@@ -69,7 +69,14 @@ fun BookListScreen(
     val uiState by viewModel.state.collectAsState()
     val bookListState by viewModel.bookListState.collectAsState()
 
-    var selectedTab by remember { mutableStateOf(filterOptions[0]) }
+    // 使用ViewModel中的筛选选项状态
+    var selectedTab by remember { mutableStateOf(bookListState.selectedFilter) }
+    
+    // 当ViewModel中的筛选选项发生变化时，更新本地状态
+    LaunchedEffect(bookListState.selectedFilter) {
+        selectedTab = bookListState.selectedFilter
+    }
+    
     var searchQuery by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     var isSearching by remember { mutableStateOf(false) }
@@ -221,7 +228,11 @@ fun BookListScreen(
         // 书籍筛选选项卡
         BookFilterTabs(
             selectedFilter = selectedTab,
-            onFilterSelected = { selectedTab = it },
+            onFilterSelected = { filter ->
+                selectedTab = filter
+                // 更新ViewModel中的筛选选项状态
+                viewModel.updateSelectedFilter(filter)
+            },
             isGridMode = bookListState.isGridMode,
             onToggleDisplayMode = { viewModel.toggleDisplayMode() },
             onEnterBatchMode = { viewModel.toggleBatchMode() }  // 传递批量操作回调

@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.navOptions
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
@@ -96,7 +97,10 @@ fun BookShelfTagDetailScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = {
+                        // 在返回时调用onBackClick回调
+                        onBackClick()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "返回",

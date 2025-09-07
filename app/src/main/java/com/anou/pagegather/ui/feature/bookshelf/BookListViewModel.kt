@@ -2,18 +2,22 @@ package com.anou.pagegather.ui.feature.bookshelf
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anou.pagegather.data.local.DataStoreManager
 import com.anou.pagegather.data.local.entity.BookEntity
 import com.anou.pagegather.data.local.entity.BookGroupEntity
 import com.anou.pagegather.data.local.entity.BookSourceEntity
 import com.anou.pagegather.data.repository.BookRepository
 import com.anou.pagegather.data.repository.BookGroupRepository
 import com.anou.pagegather.data.repository.BookSourceRepository
+import com.anou.pagegather.ui.feature.bookshelf.filter.FilterOption
+import com.anou.pagegather.ui.feature.bookshelf.filter.filterOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,10 +41,12 @@ data class BookListState(
     val isBatchMode: Boolean = false,
     val selectedBooks: Set<Long> = emptySet(),
     // 排序相关状态
-    val sortField: SortField = SortField.ADD_TIME,
+    val sortField: BookListState.SortField = BookListState.SortField.ADD_TIME,
     val isAscending: Boolean = false,
     // 显示模式状态
-    val isGridMode: Boolean = true
+    val isGridMode: Boolean = true,
+    // 筛选选项状态
+    val selectedFilter: FilterOption = filterOptions[0]  // 默认筛选选项
 ) {
     /**
      * 排序字段枚举
@@ -57,7 +63,8 @@ data class BookListState(
 class BookListViewModel @Inject constructor(
     private val bookRepository: BookRepository,
     private val groupRepository: BookGroupRepository,
-    private val bookSourceRepository: BookSourceRepository
+    private val bookSourceRepository: BookSourceRepository,
+    private val dataStoreManager: DataStoreManager  // 注入DataStoreManager
 ) : ViewModel() {
     private var _bookList = MutableStateFlow<List<BookEntity>>(emptyList())
     private val _isLoading = MutableStateFlow(true)
@@ -75,6 +82,9 @@ class BookListViewModel @Inject constructor(
     
     init {
         viewModelScope.launch {
+            // 初始化应用配置
+            initializeAppSettings()
+            
             // 加载分组列表
             loadAvailableGroups()
             // 加载来源列表
@@ -84,6 +94,37 @@ class BookListViewModel @Inject constructor(
             // 加载书籍列表
             loadBooks()
         }
+    }
+
+    /**
+     * 初始化应用配置
+     */
+    private suspend fun initializeAppSettings() {
+        // 从DataStore获取保存的设置
+        val isGridMode = dataStoreManager.isGridMode.first()
+        val selectedFilterCode = dataStoreManager.selectedFilterCode.first()
+        val sortField = dataStoreManager.sortField.first()
+        val isAscending = dataStoreManager.isAscending.first()
+        
+        // 根据保存的筛选选项代码找到对应的FilterOption对象
+        val selectedFilter = filterOptions.find { it.code == selectedFilterCode } ?: filterOptions[0]
+        
+        // 根据保存的排序字段代码找到对应的SortField枚举
+        val sortFieldEnum = when (sortField) {
+            0 -> BookListState.SortField.ADD_TIME
+            1 -> BookListState.SortField.NAME
+            2 -> BookListState.SortField.AUTHOR
+            3 -> BookListState.SortField.READ_STATUS
+            else -> BookListState.SortField.ADD_TIME
+        }
+        
+        // 更新状态
+        _bookListState.value = _bookListState.value.copy(
+            isGridMode = isGridMode,
+            selectedFilter = selectedFilter,
+            sortField = sortFieldEnum,
+            isAscending = isAscending
+        )
     }
 
     /**
@@ -552,6 +593,16 @@ class BookListViewModel @Inject constructor(
             _bookListState.value = currentState.copy(
                 sortField = sortField
             )
+            // 保存到DataStore
+            viewModelScope.launch {
+                val sortFieldType = when (sortField) {
+                    BookListState.SortField.ADD_TIME -> 0
+                    BookListState.SortField.NAME -> 1
+                    BookListState.SortField.AUTHOR -> 2
+                    BookListState.SortField.READ_STATUS -> 3
+                }
+                dataStoreManager.updateSortField(sortFieldType)
+            }
             // 重新加载书籍列表以应用新的排序
             viewModelScope.launch {
                 loadBooks()
@@ -568,6 +619,10 @@ class BookListViewModel @Inject constructor(
             _bookListState.value = currentState.copy(
                 isAscending = isAscending
             )
+            // 保存到DataStore
+            viewModelScope.launch {
+                dataStoreManager.updateIsAscending(isAscending)
+            }
             // 重新加载书籍列表以应用新的排序方向
             viewModelScope.launch {
                 loadBooks()
@@ -580,9 +635,25 @@ class BookListViewModel @Inject constructor(
      */
     fun toggleDisplayMode() {
         val currentState = _bookListState.value
+        val newIsGridMode = !currentState.isGridMode
         _bookListState.value = currentState.copy(
-            isGridMode = !currentState.isGridMode
+            isGridMode = newIsGridMode
         )
+        // 保存到DataStore
+        viewModelScope.launch {
+            dataStoreManager.updateGridMode(newIsGridMode)
+        }
+    }
+    
+    /**
+     * 更新筛选选项
+     */
+    fun updateSelectedFilter(filter: FilterOption) {
+        _bookListState.value = _bookListState.value.copy(selectedFilter = filter)
+        // 保存到DataStore
+        viewModelScope.launch {
+            dataStoreManager.updateSelectedFilterCode(filter.code)
+        }
     }
     
     /**
