@@ -35,13 +35,15 @@ import com.anou.pagegather.ui.feature.quickactions.QuickActionsScreen
 import com.anou.pagegather.ui.feature.quickactions.QuickNoteScreen
 import com.anou.pagegather.ui.feature.quickactions.QuickReviewScreen
 import com.anou.pagegather.ui.feature.reading.RecordSource
+import com.anou.pagegather.ui.feature.reading.ReadingRecordsScreen
+import com.anou.pagegather.ui.feature.reading.BookReadingStatisticsScreen
 import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
+import com.anou.pagegather.ui.feature.statistics.StatisticsScreen
 import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
 import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
 import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
-import com.anou.pagegather.ui.navigation.StatisticsScreen
 
 @Composable
 fun AppNavigation(
@@ -144,7 +146,7 @@ fun AppNavigation(
             val bookId = backStackEntry.arguments?.getString(Routes.BookRoutes.BOOK_ID)
             val callback = backStackEntry.arguments?.getString("callback")
             BookEditScreen(
-                bookId = bookId, 
+                bookId = bookId,
                 navController = navController,
                 callbackRoute = callback
             )
@@ -185,16 +187,15 @@ fun AppNavigation(
         // 统计页面
         composable(Routes.DashboardRoutes.STATISTICS) {
             StatisticsScreen(
-                onNavigateToTimeline = { navController.navigate(Routes.DashboardRoutes.TIMELINE) },
-                onNavigateToCalendar = { navController.navigate(Routes.DashboardRoutes.CALENDAR) },
-                onNavigateToCharts = { navController.navigate(Routes.DashboardRoutes.CHARTS) })
+                navController = navController
+            )
         }
 
         // 我的子页面
-        composable(Routes.ProfileRoutes.TAG_SETTINGS) { 
+        composable(Routes.ProfileRoutes.TAG_SETTINGS) {
             TagManagementScreen(navController = navController)
         }
-        composable(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) { 
+        composable(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) {
             BookGroupManagementScreen(navController = navController)
         }
         composable(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) {
@@ -248,11 +249,25 @@ fun AppNavigation(
         composable(Routes.DashboardRoutes.CALENDAR) { CalendarScreen() }
         composable(Routes.DashboardRoutes.CHARTS) { ChartsScreen() }
 
+        // 阅读记录列表页面
+        composable(Routes.ReadingRoutes.READING_RECORDS) {
+            ReadingRecordsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // 书籍阅读统计页面
+        composable(Routes.ReadingRoutes.BOOK_READING_STATISTICS) {
+            BookReadingStatisticsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
         // 时间管理相关页面
         composable(
             route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId={selectedBookId}&from={from}&bookId={bookId}&groupId={groupId}&groupName={groupName}&sourceId={sourceId}&sourceName={sourceName}&tagId={tagId}&tagName={tagName}&status={status}&statusName={statusName}&rating={rating}&ratingValue={ratingValue}",
             arguments = listOf(
-                navArgument("selectedBookId") { 
+                navArgument("selectedBookId") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
@@ -319,7 +334,8 @@ fun AppNavigation(
                 }
             )
         ) { backStackEntry ->
-            val selectedBookId = backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
+            val selectedBookId =
+                backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
             val from = backStackEntry.arguments?.getString("from")
             val bookId = backStackEntry.arguments?.getString("bookId")
             val groupId = backStackEntry.arguments?.getString("groupId")
@@ -332,7 +348,7 @@ fun AppNavigation(
             val statusName = backStackEntry.arguments?.getString("statusName")
             val rating = backStackEntry.arguments?.getString("rating")
             val ratingValue = backStackEntry.arguments?.getString("ratingValue")
-            
+
             ForwardTimerScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSaveRecord = { elapsedTime, startTime, bookId ->
@@ -356,13 +372,13 @@ fun AppNavigation(
                     navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?source=TIMER&elapsedTime=$elapsedTime&startTime=$startTime$bookIdParam$fromParam$fromBookIdParam$groupIdParam$groupNameParam$sourceIdParam$sourceNameParam$tagIdParam$tagNameParam$statusParam$statusNameParam$ratingParam$ratingValueParam")
                 },
                 selectedBookId = selectedBookId
-            ) 
+            )
         }
-        
-        composable(Routes.TimeManagementRoutes.REVERSE_TIMER) { 
+
+        composable(Routes.TimeManagementRoutes.REVERSE_TIMER) {
             ReverseTimerScreen(
                 onNavigateBack = { navController.popBackStack() }
-            ) 
+            )
         }
         composable(Routes.TimeManagementRoutes.GOAL_SETTING) { GoalSettingScreen() }
         composable(Routes.TimeManagementRoutes.READING_PLAN) { ReadingPlanScreen() }
@@ -372,21 +388,21 @@ fun AppNavigation(
         composable(
             route = "${Routes.ReadingRoutes.SAVE_RECORD}?source={source}&elapsedTime={elapsedTime}&startTime={startTime}&selectedBookId={selectedBookId}&from={from}&bookId={bookId}&groupId={groupId}&groupName={groupName}&sourceId={sourceId}&sourceName={sourceName}&tagId={tagId}&tagName={tagName}&status={status}&statusName={statusName}&rating={rating}&ratingValue={ratingValue}",
             arguments = listOf(
-                navArgument("source") { 
+                navArgument("source") {
                     type = NavType.StringType
                     defaultValue = "MANUAL"
                 },
-                navArgument("elapsedTime") { 
+                navArgument("elapsedTime") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 },
-                navArgument("startTime") { 
+                navArgument("startTime") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 },
-                navArgument("selectedBookId") { 
+                navArgument("selectedBookId") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
@@ -461,7 +477,8 @@ fun AppNavigation(
             }
             val elapsedTime = backStackEntry.arguments?.getString("elapsedTime")?.toLongOrNull()
             val startTime = backStackEntry.arguments?.getString("startTime")?.toLongOrNull()
-            val selectedBookId = backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
+            val selectedBookId =
+                backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
             val from = backStackEntry.arguments?.getString("from")
             val bookId = backStackEntry.arguments?.getString("bookId")
             val groupId = backStackEntry.arguments?.getString("groupId")
@@ -474,16 +491,16 @@ fun AppNavigation(
             val statusName = backStackEntry.arguments?.getString("statusName")
             val rating = backStackEntry.arguments?.getString("rating")
             val ratingValue = backStackEntry.arguments?.getString("ratingValue")
-            
+
             SaveRecordScreen(
                 source = source,
-                onNavigateBack = { 
+                onNavigateBack = {
                     // 根据用户是否更改了书籍来决定返回路径
                     val returnBookId = when (from) {
                         "book_detail" -> bookId?.toLongOrNull()
                         else -> null
                     }
-                    
+
                     if (returnBookId != null && returnBookId > 0) {
                         // 如果有返回书籍ID，返回到该书籍的详情页
                         navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$returnBookId") {
@@ -495,85 +512,128 @@ fun AppNavigation(
                         when (from) {
                             "book_detail" -> {
                                 // 如果来自书籍详情页，返回到对应的书籍详情页
-                                bookId?.let { 
+                                bookId?.let {
                                     navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$it") {
                                         // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) { inclusive = true }
+                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
+                                            inclusive = true
+                                        }
                                     }
                                 } ?: navController.popBackStack()
                             }
+
                             "book_group_detail" -> {
                                 // 如果来自分组详情页面，返回到对应的分组详情页面
                                 groupId?.let {
-                                    navController.navigate(Routes.BookRoutes.bookGroupDetail(groupId.toLong(), groupName ?: "")) {
+                                    navController.navigate(
+                                        Routes.BookRoutes.bookGroupDetail(
+                                            groupId.toLong(),
+                                            groupName ?: ""
+                                        )
+                                    ) {
                                         // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) { inclusive = true }
+                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
+                                            inclusive = true
+                                        }
                                     }
                                 } ?: navController.popBackStack()
                             }
+
                             "book_source_detail" -> {
                                 // 如果来自来源详情页面，返回到对应的来源详情页面
                                 sourceId?.let {
-                                    navController.navigate(Routes.BookRoutes.bookSourceDetail(sourceId.toLong(), sourceName ?: "")) {
+                                    navController.navigate(
+                                        Routes.BookRoutes.bookSourceDetail(
+                                            sourceId.toLong(),
+                                            sourceName ?: ""
+                                        )
+                                    ) {
                                         // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) { inclusive = true }
+                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
+                                            inclusive = true
+                                        }
                                     }
                                 } ?: navController.popBackStack()
                             }
+
                             "book_tag_detail" -> {
                                 // 如果来自标签详情页面，返回到对应的标签详情页面
                                 tagId?.let {
-                                    navController.navigate(Routes.BookRoutes.bookTagDetail(tagId.toLong(), tagName ?: "")) {
+                                    navController.navigate(
+                                        Routes.BookRoutes.bookTagDetail(
+                                            tagId.toLong(),
+                                            tagName ?: ""
+                                        )
+                                    ) {
                                         // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) { inclusive = true }
+                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
+                                            inclusive = true
+                                        }
                                     }
                                 } ?: navController.popBackStack()
                             }
+
                             "book_status_detail" -> {
                                 // 如果来自状态详情页面，返回到对应的状态详情页面
                                 status?.let {
-                                    navController.navigate(Routes.BookRoutes.bookStatusDetail(status.toInt(), statusName ?: "")) {
+                                    navController.navigate(
+                                        Routes.BookRoutes.bookStatusDetail(
+                                            status.toInt(),
+                                            statusName ?: ""
+                                        )
+                                    ) {
                                         // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) { inclusive = true }
+                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
+                                            inclusive = true
+                                        }
                                     }
                                 } ?: navController.popBackStack()
                             }
+
                             "book_rating_detail" -> {
                                 // 如果来自评分详情页面，返回到对应的评分详情页面
                                 rating?.let {
-                                    navController.navigate(Routes.BookRoutes.bookRatingDetail(rating.toInt(), ratingValue ?: "")) {
+                                    navController.navigate(
+                                        Routes.BookRoutes.bookRatingDetail(
+                                            rating.toInt(),
+                                            ratingValue ?: ""
+                                        )
+                                    ) {
                                         // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) { inclusive = true }
+                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
+                                            inclusive = true
+                                        }
                                     }
                                 } ?: navController.popBackStack()
                             }
+
                             else -> {
                                 // 默认返回逻辑
                                 navController.popBackStack()
                             }
                         }
                     }
-                    
+
                     // 移除对全局变量的重置
                 },
                 onNavigateToAddBook = {
                     // 构建回调URL，包含当前页面的所有参数
                     val currentRoute = "${Routes.ReadingRoutes.SAVE_RECORD}?source=$sourceStr" +
-                        (elapsedTime?.let { "&elapsedTime=$it" } ?: "") +
-                        (startTime?.let { "&startTime=$it" } ?: "") +
-                        (selectedBookId?.let { "&selectedBookId=$it" } ?: "") +
-                        (from?.let { "&from=$it" } ?: "") +
-                        (bookId?.let { "&bookId=$it" } ?: "") +
-                        (groupId?.let { "&groupId=$it" } ?: "") +
-                        (groupName?.let { "&groupName=$it" } ?: "") +
-                        (sourceId?.let { "&sourceId=$it" } ?: "") +
-                        (sourceName?.let { "&sourceName=$it" } ?: "") +
-                        (tagId?.let { "&tagId=$it" } ?: "") +
-                        (tagName?.let { "&tagName=$it" } ?: "") +
-                        (status?.let { "&status=$it" } ?: "") +
-                        (statusName?.let { "&statusName=$it" } ?: "") +
-                        (rating?.let { "&rating=$it" } ?: "") +
-                        (ratingValue?.let { "&ratingValue=$it" } ?: "")
+                            (elapsedTime?.let { "&elapsedTime=$it" } ?: "") +
+                            (startTime?.let { "&startTime=$it" } ?: "") +
+                            (selectedBookId?.let { "&selectedBookId=$it" } ?: "") +
+                            (from?.let { "&from=$it" } ?: "") +
+                            (bookId?.let { "&bookId=$it" } ?: "") +
+                            (groupId?.let { "&groupId=$it" } ?: "") +
+                            (groupName?.let { "&groupName=$it" } ?: "") +
+                            (sourceId?.let { "&sourceId=$it" } ?: "") +
+                            (sourceName?.let { "&sourceName=$it" } ?: "") +
+                            (tagId?.let { "&tagId=$it" } ?: "") +
+                            (tagName?.let { "&tagName=$it" } ?: "") +
+                            (status?.let { "&status=$it" } ?: "") +
+                            (statusName?.let { "&statusName=$it" } ?: "") +
+                            (rating?.let { "&rating=$it" } ?: "") +
+                            (ratingValue?.let { "&ratingValue=$it" } ?: "")
                     val encodedCallback = Uri.encode(currentRoute)
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=$encodedCallback")
                 },
@@ -587,13 +647,13 @@ fun AppNavigation(
         composable(Routes.QuickActionsRoutes.QUICK_ACTIONS) { QuickActionsScreen() }
         composable(Routes.QuickActionsRoutes.QUICK_NOTE) { QuickNoteScreen() }
         composable(Routes.QuickActionsRoutes.QUICK_REVIEW) { QuickReviewScreen() }
-        
+
         // 分组详情页面
         composable(
             route = Routes.BookRoutes.BOOK_GROUP_DETAIL,
             arguments = listOf(
                 navArgument("group_id") { type = NavType.StringType },
-                navArgument("groupName") { 
+                navArgument("groupName") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = ""
@@ -604,7 +664,7 @@ fun AppNavigation(
             val groupName = backStackEntry.arguments?.getString("groupName") ?: ""
             // 获取ViewModel实例，确保所有页面共享同一个实例
             val viewModel: BookListViewModel = hiltViewModel()
-            
+
             BookShelfGroupDetailScreen(
                 groupId = groupId,
                 groupName = groupName,
@@ -628,13 +688,13 @@ fun AppNavigation(
                 }
             )
         }
-        
+
         // 来源详情页面
         composable(
             route = Routes.BookRoutes.BOOK_SOURCE_DETAIL,
             arguments = listOf(
                 navArgument("source_id") { type = NavType.StringType },
-                navArgument("sourceName") { 
+                navArgument("sourceName") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = ""
@@ -645,7 +705,7 @@ fun AppNavigation(
             val sourceName = backStackEntry.arguments?.getString("sourceName") ?: ""
             // 获取ViewModel实例，确保所有页面共享同一个实例
             val viewModel: BookListViewModel = hiltViewModel()
-            
+
             BookShelfSourceDetailScreen(
                 sourceId = sourceId,
                 sourceName = sourceName,
@@ -669,18 +729,18 @@ fun AppNavigation(
                 }
             )
         }
-        
+
         // 标签详情页面
         composable(
             route = Routes.BookRoutes.BOOK_TAG_DETAIL,
             arguments = listOf(
                 navArgument("tag_id") { type = NavType.StringType },
-                navArgument("tagName") { 
+                navArgument("tagName") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = ""
                 },
-                navArgument("tagColor") { 
+                navArgument("tagColor") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = ""
@@ -692,7 +752,7 @@ fun AppNavigation(
             val tagColor = backStackEntry.arguments?.getString("tagColor") ?: ""
             // 获取ViewModel实例，确保所有页面共享同一个实例
             val viewModel: BookListViewModel = hiltViewModel()
-            
+
             BookShelfTagDetailScreen(
                 tagId = tagId,
                 tagName = tagName,
@@ -717,13 +777,13 @@ fun AppNavigation(
                 }
             )
         }
-        
+
         // 状态详情页面
         composable(
             route = Routes.BookRoutes.BOOK_STATUS_DETAIL,
             arguments = listOf(
                 navArgument("status") { type = NavType.StringType },
-                navArgument("statusName") { 
+                navArgument("statusName") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = ""
@@ -734,7 +794,7 @@ fun AppNavigation(
             val statusName = backStackEntry.arguments?.getString("statusName") ?: ""
             // 获取ViewModel实例，确保所有页面共享同一个实例
             val viewModel: BookListViewModel = hiltViewModel()
-            
+
             BookShelfStatusDetailScreen(
                 status = status,
                 statusName = statusName,
@@ -758,13 +818,13 @@ fun AppNavigation(
                 }
             )
         }
-        
+
         // 评分详情页面
         composable(
             route = Routes.BookRoutes.BOOK_RATING_DETAIL,
             arguments = listOf(
                 navArgument("rating") { type = NavType.StringType },
-                navArgument("ratingValue") { 
+                navArgument("ratingValue") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = ""
@@ -775,7 +835,7 @@ fun AppNavigation(
             val ratingValue = backStackEntry.arguments?.getString("ratingValue") ?: ""
             // 获取ViewModel实例，确保所有页面共享同一个实例
             val viewModel: BookListViewModel = hiltViewModel()
-            
+
             BookShelfRatingDetailScreen(
                 rating = rating,
                 ratingValue = ratingValue,

@@ -80,6 +80,8 @@ object Routes {
         const val EDIT_RECORD = "reading/edit/{recordId}"
         const val RECORD_ANALYTICS = "reading/analytics"
         const val RECORD_TIMELINE = "reading/timeline"
+        const val READING_RECORDS = "reading_records"
+        const val BOOK_READING_STATISTICS = "book_reading_statistics"  // 添加书籍阅读统计路由
     }
 
     // 快捷操作相关路由
