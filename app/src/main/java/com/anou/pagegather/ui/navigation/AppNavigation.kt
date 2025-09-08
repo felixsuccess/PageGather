@@ -181,9 +181,6 @@ fun AppNavigation(
         }
 
 
-        // 统计子页面
-
-
         // 统计页面
         composable(Routes.DashboardRoutes.STATISTICS) {
             StatisticsScreen(
@@ -244,10 +241,6 @@ fun AppNavigation(
             val noteId = backStackEntry.arguments?.getString(Routes.NoteRoutes.ARG_NOTE_ID)
             NoteViewScreen(noteId = noteId)
         }
-
-        composable(Routes.DashboardRoutes.TIMELINE) { TimelineScreen() }
-        composable(Routes.DashboardRoutes.CALENDAR) { CalendarScreen() }
-        composable(Routes.DashboardRoutes.CHARTS) { ChartsScreen() }
 
         // 阅读记录列表页面
         composable(Routes.ReadingRoutes.READING_RECORDS) {

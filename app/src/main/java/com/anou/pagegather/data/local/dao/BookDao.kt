@@ -71,7 +71,7 @@ interface BookDao {
     fun delete(bookEntity: BookEntity)
 
     @Query("SELECT * FROM book WHERE id = :id")
-    fun getById(id: Long): BookEntity?
+    suspend fun getById(id: Long): BookEntity?
 
     /** 根据关键词搜索书籍 */
     @Query("""
