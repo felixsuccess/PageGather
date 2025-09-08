@@ -19,6 +19,10 @@ object Routes {
         const val BOOK_LIST = "$PREFIX/list"
         const val BOOK_EDIT = "$PREFIX/edit/{$BOOK_ID}"
         const val BOOK_DETAIL = "$PREFIX/detail/{$BOOK_ID}"
+        const val BOOK_READING_HISTORY = "$PREFIX/reading_history/{$BOOK_ID}"
+        const val BOOK_EXCERPTS = "$PREFIX/excerpts/{$BOOK_ID}"
+        const val BOOK_REVIEWS = "$PREFIX/reviews/{$BOOK_ID}"
+        const val BOOK_RELATED_DATA = "$PREFIX/related_data/{$BOOK_ID}"
         const val BOOK_GROUP_DETAIL = "$PREFIX/group/{group_id}?groupName={groupName}"  // 更新分组详情路由，添加groupName参数
         const val BOOK_SOURCE_DETAIL = "$PREFIX/source/{source_id}?sourceName={sourceName}"  // 来源详情路由
         const val BOOK_TAG_DETAIL = "$PREFIX/tag/{tag_id}?tagName={tagName}"  // 标签详情路由
@@ -27,6 +31,10 @@ object Routes {
 
         fun bookEdit(bookId: Long): String = "$PREFIX/edit/$bookId"
         fun bookDetail(bookId: Long): String = "$PREFIX/detail/$bookId"
+        fun bookReadingHistory(bookId: Long): String = "$PREFIX/reading_history/$bookId"
+        fun bookExcerpts(bookId: Long): String = "$PREFIX/excerpts/$bookId"
+        fun bookReviews(bookId: Long): String = "$PREFIX/reviews/$bookId"
+        fun bookRelatedData(bookId: Long): String = "$PREFIX/related_data/$bookId"
         fun bookGroupDetail(groupId: Long, groupName: String = ""): String = "$PREFIX/group/$groupId?groupName=$groupName"  // 更新分组详情路由函数，添加groupName参数
         fun bookSourceDetail(sourceId: Long, sourceName: String = ""): String = "$PREFIX/source/$sourceId?sourceName=$sourceName"  // 来源详情路由函数
         fun bookTagDetail(tagId: Long, tagName: String = ""): String = "$PREFIX/tag/$tagId?tagName=$tagName"  // 标签详情路由函数

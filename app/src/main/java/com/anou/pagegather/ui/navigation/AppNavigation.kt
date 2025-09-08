@@ -15,6 +15,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookReadingHistoryScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookExcerptsScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookReviewsScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookRelatedDataScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookListState
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
@@ -849,6 +853,72 @@ fun AppNavigation(
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
                     navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/0?book_id=$bookId")
+                }
+            )
+        }
+
+        // 添加书籍详情页的Tab页面路由
+        composable(
+            route = Routes.BookRoutes.BOOK_READING_HISTORY,
+            arguments = listOf(navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.LongType })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getLong(Routes.BookRoutes.BOOK_ID) ?: 0L
+            BookReadingHistoryScreen(
+                navController = navController,
+                bookId = bookId,
+                onNavigateToNoteEdit = { noteId ->
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/$noteId")
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.BookRoutes.BOOK_EXCERPTS,
+            arguments = listOf(navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.LongType })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getLong(Routes.BookRoutes.BOOK_ID) ?: 0L
+            BookExcerptsScreen(
+                navController = navController,
+                bookId = bookId,
+                onNavigateToNoteEdit = { noteId ->
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/$noteId")
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.BookRoutes.BOOK_REVIEWS,
+            arguments = listOf(navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.LongType })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getLong(Routes.BookRoutes.BOOK_ID) ?: 0L
+            BookReviewsScreen(
+                navController = navController,
+                bookId = bookId,
+                onNavigateToNoteEdit = { noteId ->
+                    navController.navigate("${Routes.NoteRoutes.NOTE_EDIT}/$noteId")
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.BookRoutes.BOOK_RELATED_DATA,
+            arguments = listOf(navArgument(Routes.BookRoutes.BOOK_ID) { type = NavType.LongType })
+        ) { backStackEntry ->
+            val bookId = backStackEntry.arguments?.getLong(Routes.BookRoutes.BOOK_ID) ?: 0L
+            BookRelatedDataScreen(
+                navController = navController,
+                bookId = bookId,
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }

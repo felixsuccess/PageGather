@@ -1,6 +1,5 @@
 package com.anou.pagegather.ui.feature.bookshelf
 
-import android.annotation.SuppressLint
 import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -21,12 +20,11 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -36,7 +34,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -44,10 +41,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -90,21 +83,13 @@ import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.model.BookReadingStatistics
 import com.anou.pagegather.ui.theme.Accent
+import com.anou.pagegather.ui.navigation.Routes
 import com.anou.pagegather.utils.BlurTransformation
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// 定义Tab枚举
-enum class BookDetailTab(val title: String) {
-    BASIC_INFO("基础信息"),
-    READING_HISTORY("阅读历史"),
-    EXCERPTS("书摘"),
-    REVIEWS("书评"),
-    RELATED_DATA("相关数据")
-}
 
-@SuppressLint("ContextCastToActivity")
 @Composable
 fun BookDetailScreen(
     navController: NavController,
@@ -181,7 +166,7 @@ fun BookDetailScreen(
 
     var showMenu by remember { mutableStateOf(false) }
     // 当前选中的Tab
-    var selectedTab by remember { mutableStateOf(BookDetailTab.BASIC_INFO) }
+    // var selectedTab by remember { mutableStateOf(BookDetailTab.BASIC_INFO) }
 
 //
 
@@ -199,15 +184,9 @@ fun BookDetailScreen(
             // book?.let { TopImgLayout(it, imageHeight) }
             book?.let { TopBackImgLayout(it, imageHeight, bookSource) }
             
-            // Tab导航
+            // 显示基础信息
             book?.let { bookEntity ->
-                BookDetailTabs(
-                    selectedTab = selectedTab,
-                    onTabSelected = { selectedTab = it },
-                    book = bookEntity,
-                    navController = navController,
-                    onNavigateToNoteEdit = onNavigateToNoteEdit
-                )
+                BasicInfoTab(bookEntity)
             }
         }
 
@@ -272,22 +251,11 @@ fun BookDetailScreen(
                     }) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "收藏",
+                        contentDescription = "编辑",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
-                }
-                IconButton(onClick = {
-                    // onShareClick
                 }
 
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Share,
-                        contentDescription = "分享",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                
                 // 更多操作菜单
                 Box {
                     IconButton(onClick = { showMenu = true }) {
@@ -325,67 +293,56 @@ fun BookDetailScreen(
                                 }
                             }
                         )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BookDetailTabs(
-    selectedTab: BookDetailTab,
-    onTabSelected: (BookDetailTab) -> Unit,
-    book: BookEntity,
-    navController: NavController,
-    onNavigateToNoteEdit: (Long) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-    ) {
-        // Tab导航栏
-        TabRow(
-            selectedTabIndex = selectedTab.ordinal,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary,
-            indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
-                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        ) {
-            BookDetailTab.entries.forEach { tab ->
-                Tab(
-                    selected = selectedTab == tab,
-                    onClick = { onTabSelected(tab) },
-                    text = {
-                        Text(
-                            text = tab.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = if (selectedTab == tab) FontWeight.Medium else FontWeight.Normal
+                        
+                        DropdownMenuItem(
+                            text = { Text("阅读历史") },
+                            onClick = {
+                                showMenu = false
+                                bookId?.toLongOrNull()?.let { parsedId ->
+                                    if (parsedId != 0L) {
+                                        navController.navigate(Routes.BookRoutes.bookReadingHistory(parsedId))
+                                    }
+                                }
+                            }
+                        )
+                        
+                        DropdownMenuItem(
+                            text = { Text("书摘") },
+                            onClick = {
+                                showMenu = false
+                                bookId?.toLongOrNull()?.let { parsedId ->
+                                    if (parsedId != 0L) {
+                                        navController.navigate(Routes.BookRoutes.bookExcerpts(parsedId))
+                                    }
+                                }
+                            }
+                        )
+                        
+                        DropdownMenuItem(
+                            text = { Text("书评") },
+                            onClick = {
+                                showMenu = false
+                                bookId?.toLongOrNull()?.let { parsedId ->
+                                    if (parsedId != 0L) {
+                                        navController.navigate(Routes.BookRoutes.bookReviews(parsedId))
+                                    }
+                                }
+                            }
+                        )
+                        
+                        DropdownMenuItem(
+                            text = { Text("相关数据") },
+                            onClick = {
+                                showMenu = false
+                                bookId?.toLongOrNull()?.let { parsedId ->
+                                    if (parsedId != 0L) {
+                                        navController.navigate(Routes.BookRoutes.bookRelatedData(parsedId))
+                                    }
+                                }
+                            }
                         )
                     }
-                )
-            }
-        }
-        
-        // Tab内容区域 - 使用Box替代LazyColumn避免嵌套滚动问题
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()  // 使用fillMaxHeight替代weight
-                .padding(horizontal = 16.dp)
-        ) {
-            // 根据选中的Tab显示对应的内容
-            when (selectedTab) {
-                BookDetailTab.BASIC_INFO -> BasicInfoTab(book)
-                BookDetailTab.READING_HISTORY -> ReadingHistoryTabContent(book.id)
-                BookDetailTab.EXCERPTS -> BookExcerptsTabContent(book.id, onNavigateToNoteEdit)
-                BookDetailTab.REVIEWS -> BookReviewsTabContent(book.id, onNavigateToNoteEdit)
-                BookDetailTab.RELATED_DATA -> RelatedDataTabContent(book.id, navController)
+                }
             }
         }
     }
@@ -597,61 +554,12 @@ private fun BookReviewsTabContent(bookId: Long, onNavigateToNoteEdit: (Long) -> 
 }
 
 @Composable
-private fun RelatedDataTabContent(bookId: Long, navController: NavController) {
-    val viewModel: BookRelatedDataViewModel = hiltViewModel()
-    val bookStatistics by viewModel.bookStatistics.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
-    
-    // 加载书籍统计数据
-    LaunchedEffect(bookId) {
-        viewModel.loadBookStatistics(bookId)
-    }
-    
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = "相关数据",
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        
-        when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            error != null -> {
-                Text(
-                    text = "加载失败: ${error}",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            bookStatistics != null -> {
-                RelatedDataContent(bookStatistics!!, navController, bookId)
-            }
-            else -> {
-                Text(
-                    text = "暂无数据",
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun BasicInfoTab(book: BookEntity) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars) // 添加底部导航栏安全区域 padding
     ) {
         // 基本信息卡片
         Card(
