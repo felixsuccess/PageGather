@@ -103,24 +103,14 @@ class ReadingRecordRepository @Inject constructor(
         return readingRecordDao.getReadingSessionCountByDate(date)
     }
 
+    /** 获取总阅读时长 */
+    suspend fun getTotalReadingTime(): Long {
+        return readingRecordDao.getTotalReadingTime() ?: 0L
+    }
+    
     /** 获取指定日期范围内的阅读天数 */
     suspend fun getReadingDaysCount(startDate: String, endDate: String): Int {
         return readingRecordDao.getReadingDaysCount(startDate, endDate)
-    }
-    
-    /** 获取指定书籍的阅读记录数量 */
-    suspend fun getReadingRecordCountByBookId(bookId: Long): Int {
-        return readingRecordDao.getReadingRecordCountByBookId(bookId)
-    }
-    
-    /** 获取指定书籍的平均阅读时长 */
-    suspend fun getAverageReadingTimeByBookId(bookId: Long): Long {
-        return readingRecordDao.getAverageReadingTimeByBookId(bookId) ?: 0L
-    }
-    
-    /** 获取指定书籍的最后一次阅读时间 */
-    suspend fun getLastReadingTimeByBookId(bookId: Long): Long? {
-        return readingRecordDao.getLastReadingTimeByBookId(bookId)
     }
     
     /** 获取今天的总阅读时长 */
@@ -141,6 +131,21 @@ class ReadingRecordRepository @Inject constructor(
     /** 获取阅读中的书籍数量 */
     suspend fun getReadingBooksCount(): Int {
         return readingRecordDao.getReadingBooksCount()
+    }
+    
+    /** 获取指定书籍的阅读记录数量 */
+    suspend fun getReadingRecordCountByBookId(bookId: Long): Int {
+        return readingRecordDao.getReadingRecordCountByBookId(bookId)
+    }
+    
+    /** 获取指定书籍的平均阅读时长 */
+    suspend fun getAverageReadingTimeByBookId(bookId: Long): Long {
+        return readingRecordDao.getAverageReadingTimeByBookId(bookId) ?: 0L
+    }
+    
+    /** 获取指定书籍的最后一次阅读时间 */
+    suspend fun getLastReadingTimeByBookId(bookId: Long): Long? {
+        return readingRecordDao.getLastReadingTimeByBookId(bookId)
     }
     
     // ========== 阅读会话管理 ==========

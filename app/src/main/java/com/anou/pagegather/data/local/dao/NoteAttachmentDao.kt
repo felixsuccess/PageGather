@@ -42,6 +42,10 @@ interface NoteAttachmentDao {
     @Query("SELECT COUNT(*) FROM note_attachment WHERE note_id = :noteId AND is_inline_image = 1")
     suspend fun getInlineImageCount(noteId: Long): Int
     
+    /** 获取所有笔记附件 */
+    @Query("SELECT * FROM note_attachment")
+    fun getAllNoteAttachments(): Flow<List<NoteAttachmentEntity>>
+    
     // ========== 增删改操作 ==========
     
     /** 插入附件 */

@@ -33,6 +33,10 @@ interface NoteTagRefDao {
     @Query("SELECT COUNT(*) FROM note_tag_ref WHERE note_id = :noteId AND is_deleted = 0")
     suspend fun getTagCountForNote(noteId: Long): Int
     
+    /** 获取所有笔记标签关联 */
+    @Query("SELECT * FROM note_tag_ref")
+    fun getAllNoteTagRefs(): Flow<List<NoteTagRefEntity>>
+    
     // ========== 增删改操作 ==========
     
     /** 为笔记添加标签 */

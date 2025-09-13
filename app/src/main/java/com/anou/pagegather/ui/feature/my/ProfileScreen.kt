@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.automirrored.filled.Label 
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,10 +20,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.anou.pagegather.R
 import com.anou.pagegather.ui.feature.my.components.SettingsItem
 import com.anou.pagegather.ui.feature.my.components.SettingsSection
 import com.anou.pagegather.ui.feature.my.components.UserProfileCard
+import com.anou.pagegather.ui.theme.PageGatherTheme
 
 /**
  * 我的页面 - 用户设置和管理功能入口
@@ -32,7 +34,8 @@ import com.anou.pagegather.ui.feature.my.components.UserProfileCard
 fun ProfileScreen(
     onNavigateToTagSettings: () -> Unit,
     onNavigateToGroupSettings: () -> Unit,
-    onNavigateToBookSourceSettings: () -> Unit
+    onNavigateToBookSourceSettings: () -> Unit,
+    onNavigateToReadingRecords: () -> Unit 
 ) {
     LazyColumn(
         modifier = Modifier
@@ -57,8 +60,8 @@ fun ProfileScreen(
                         .background(
                             brush = Brush.horizontalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primaryContainer,
-                                    MaterialTheme.colorScheme.tertiaryContainer
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
                                 )
                             )
                         )
@@ -68,7 +71,11 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                     
+
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // 用户信息
                         Text(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineSmall,
@@ -80,15 +87,13 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text =  stringResource(R.string.app_slogan),
+                            text = stringResource(R.string.app_slogan),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
-
-
                     }
                 }
             }
@@ -98,7 +103,7 @@ fun ProfileScreen(
             // 用户信息卡片
             UserProfileCard()
         }
-        
+
         item {
             // 数据管理分组
             SettingsSection(
@@ -123,10 +128,11 @@ fun ProfileScreen(
                         subtitle = "管理书籍信息来源",
                         onClick = onNavigateToBookSourceSettings
                     )
+                   
                 )
             )
         }
-        
+
         item {
             // 阅读管理分组
             SettingsSection(
@@ -153,7 +159,7 @@ fun ProfileScreen(
                 )
             )
         }
-        
+
         item {
             // 统计分析分组
             SettingsSection(
@@ -163,7 +169,7 @@ fun ProfileScreen(
                         icon = Icons.Default.BarChart,
                         title = "阅读统计",
                         subtitle = "查看阅读数据和趋势",
-                        onClick = { /* TODO: 实现统计页面导航 */ }
+                        onClick = onNavigateToReadingRecords
                     ),
                     SettingsItem(
                         icon = Icons.Default.EmojiEvents,
@@ -174,7 +180,7 @@ fun ProfileScreen(
                 )
             )
         }
-        
+
         item {
             // 系统设置分组
             SettingsSection(

@@ -33,6 +33,10 @@ interface BookGroupRefDao {
     @Query("SELECT COUNT(*) FROM book_group_ref WHERE book_id = :bookId")
     suspend fun getGroupCountForBook(bookId: Long): Int
     
+    /** 获取所有书籍分组关联 */
+    @Query("SELECT * FROM book_group_ref")
+    fun getAllGroupRefs(): Flow<List<BookGroupRefEntity>>
+    
     // ========== 增删改操作 ==========
     
     /** 添加书籍到分组 */

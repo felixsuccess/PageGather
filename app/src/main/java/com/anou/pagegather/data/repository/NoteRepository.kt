@@ -137,6 +137,13 @@ class NoteRepository @Inject constructor(
         noteAttachmentDao.deleteAttachmentsByNoteId(noteId)
     }
 
+    /**
+     * 获取所有笔记附件
+     */
+    fun getAllNoteAttachments(): Flow<List<NoteAttachmentEntity>> {
+        return noteAttachmentDao.getAllNoteAttachments()
+    }
+
     // ========== 复合操作 ==========
 
     /** 创建笔记并添加附件 */

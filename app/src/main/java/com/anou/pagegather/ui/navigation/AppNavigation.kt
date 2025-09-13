@@ -4,11 +4,8 @@ import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,7 +17,6 @@ import com.anou.pagegather.ui.feature.bookshelf.BookExcerptsScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookReviewsScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookRelatedDataScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
-import com.anou.pagegather.ui.feature.bookshelf.BookListState
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookShelfSourceDetailScreen
@@ -48,6 +44,7 @@ import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
 import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
+import java.util.Calendar
 
 @Composable
 fun AppNavigation(
@@ -84,7 +81,8 @@ fun AppNavigation(
             ProfileScreen(
                 onNavigateToTagSettings = { navController.navigate(Routes.ProfileRoutes.TAG_SETTINGS) },
                 onNavigateToGroupSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
-                onNavigateToBookSourceSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) }
+                onNavigateToBookSourceSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) },
+                onNavigateToReadingRecords = { navController.navigate(Routes.ReadingRoutes.READING_RECORDS) }
             )
         }
 
@@ -203,7 +201,6 @@ fun AppNavigation(
             BookSourceManagementScreen(navController = navController)
         }
 
-
         // 随记页面
         composable(Routes.NoteRoutes.NOTE_LIST) {
             NotesScreen(
@@ -259,6 +256,9 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() }
             )
         }
+
+
+
 
         // 时间管理相关页面
         composable(
@@ -363,7 +363,7 @@ fun AppNavigation(
                     val ratingParam = rating?.let { "&rating=$it" } ?: ""
                     val ratingValueParam = ratingValue?.let { "&ratingValue=$it" } ?: ""
                     println("AppNavigation: 导航到保存记录页面")
-                    println("AppNavigation: elapsedTime = $elapsedTime")
+                    println("AppAppNavigation: elapsedTime = $elapsedTime")
                     println("AppNavigation: startTime = $startTime")
                     println("AppNavigation: bookId = $bookId")
                     navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?source=TIMER&elapsedTime=$elapsedTime&startTime=$startTime$bookIdParam$fromParam$fromBookIdParam$groupIdParam$groupNameParam$sourceIdParam$sourceNameParam$tagIdParam$tagNameParam$statusParam$statusNameParam$ratingParam$ratingValueParam")
@@ -922,5 +922,7 @@ fun AppNavigation(
                 }
             )
         }
+        
+
     }
 }

@@ -33,6 +33,10 @@ interface BookTagRefDao {
     @Query("SELECT COUNT(*) FROM book_tag_ref WHERE book_id = :bookId AND is_deleted = 0")
     suspend fun getTagCountForBook(bookId: Long): Int
     
+    /** 获取所有书籍标签关联 */
+    @Query("SELECT * FROM book_tag_ref")
+    fun getAllTagRefs(): Flow<List<BookTagRefEntity>>
+    
     // ========== 增删改操作 ==========
     
     /** 为书籍添加标签 */

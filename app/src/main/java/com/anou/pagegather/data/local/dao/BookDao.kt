@@ -165,6 +165,14 @@ interface BookDao {
     """)
     fun getUntaggedBooks(): Flow<List<BookEntity>>
     
+    /** 获取读完的书籍数量 */
+    @Query("SELECT COUNT(*) FROM book WHERE read_status = 2 AND is_deleted = 0")
+    suspend fun getFinishedBooksCount(): Int
+    
+    /** 获取书籍总数 */
+    @Query("SELECT COUNT(*) FROM book WHERE is_deleted = 0")
+    suspend fun getTotalBooksCount(): Int
+    
     /** 获取阅读中的书籍数量 */
     @Query("SELECT COUNT(*) FROM book WHERE read_status = 1 AND is_deleted = 0")
     suspend fun getReadingBooksCount(): Int

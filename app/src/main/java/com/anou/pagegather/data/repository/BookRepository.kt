@@ -351,10 +351,31 @@ class BookRepository @Inject constructor(
     }
     
     /**
-     * 获取未设置标签的书籍
+     * 获取未设置标签的书籍（即没有关联到任何标签的书籍）
      */
     fun getUntaggedBooks(): Flow<List<BookEntity>> {
         return bookDao.getUntaggedBooks()
+    }
+
+    /**
+     * 获取所有书籍收藏信息
+     */
+    fun getAllBookCollections(): Flow<List<BookCollectionEntity>> {
+        return bookCollectionDao.getAllCollections()
+    }
+
+    /**
+     * 获取所有书籍分组关联
+     */
+    fun getAllBookGroupRefs(): Flow<List<BookGroupRefEntity>> {
+        return bookGroupRefDao.getAllGroupRefs()
+    }
+
+    /**
+     * 获取所有书籍标签关联
+     */
+    fun getAllBookTagRefs(): Flow<List<BookTagRefEntity>> {
+        return bookTagRefDao.getAllTagRefs()
     }
 
     // ========== 复合操作 ==========
@@ -427,9 +448,17 @@ class BookRepository @Inject constructor(
         book?.let { deleteBook(it) }
     }
     
-    /**
-     * 获取阅读中的书籍数量
-     */
+    /** 获取读完的书籍数量 */
+    suspend fun getFinishedBooksCount(): Int {
+        return bookDao.getFinishedBooksCount()
+    }
+    
+    /** 获取书籍总数 */
+    suspend fun getTotalBooksCount(): Int {
+        return bookDao.getTotalBooksCount()
+    }
+    
+    /** 获取阅读中的书籍数量 */
     suspend fun getReadingBooksCount(): Int {
         return bookDao.getReadingBooksCount()
     }

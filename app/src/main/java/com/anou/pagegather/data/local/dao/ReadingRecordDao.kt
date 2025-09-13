@@ -51,21 +51,13 @@ interface ReadingRecordDao {
     @Query("SELECT COUNT(*) FROM reading_record WHERE date = :date")
     suspend fun getReadingSessionCountByDate(date: String): Int
     
+    /** 获取总阅读时长 */
+    @Query("SELECT SUM(duration) FROM reading_record")
+    suspend fun getTotalReadingTime(): Long?
+    
     /** 获取指定日期范围内的阅读天数 */
     @Query("SELECT COUNT(DISTINCT date) FROM reading_record WHERE date BETWEEN :startDate AND :endDate")
     suspend fun getReadingDaysCount(startDate: String, endDate: String): Int
-    
-    /** 获取指定书籍的阅读记录数量 */
-    @Query("SELECT COUNT(*) FROM reading_record WHERE book_id = :bookId")
-    suspend fun getReadingRecordCountByBookId(bookId: Long): Int
-    
-    /** 获取指定书籍的平均阅读时长 */
-    @Query("SELECT AVG(duration) FROM reading_record WHERE book_id = :bookId")
-    suspend fun getAverageReadingTimeByBookId(bookId: Long): Long?
-    
-    /** 获取指定书籍的最后一次阅读时间 */
-    @Query("SELECT MAX(start_time) FROM reading_record WHERE book_id = :bookId")
-    suspend fun getLastReadingTimeByBookId(bookId: Long): Long?
     
     /** 获取今天的总阅读时长 */
     @Query("SELECT SUM(duration) FROM reading_record WHERE date = date('now')")
@@ -82,6 +74,18 @@ interface ReadingRecordDao {
     /** 获取阅读中的书籍数量 */
     @Query("SELECT COUNT(*) FROM book WHERE read_status = 1")
     suspend fun getReadingBooksCount(): Int
+    
+    /** 获取指定书籍的阅读记录数量 */
+    @Query("SELECT COUNT(*) FROM reading_record WHERE book_id = :bookId")
+    suspend fun getReadingRecordCountByBookId(bookId: Long): Int
+    
+    /** 获取指定书籍的平均阅读时长 */
+    @Query("SELECT AVG(duration) FROM reading_record WHERE book_id = :bookId")
+    suspend fun getAverageReadingTimeByBookId(bookId: Long): Long?
+    
+    /** 获取指定书籍的最后一次阅读时间 */
+    @Query("SELECT MAX(start_time) FROM reading_record WHERE book_id = :bookId")
+    suspend fun getLastReadingTimeByBookId(bookId: Long): Long?
     
     // ========== 特殊查询 ==========
     

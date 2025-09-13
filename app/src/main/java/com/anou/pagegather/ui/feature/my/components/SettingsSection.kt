@@ -3,14 +3,19 @@ package com.anou.pagegather.ui.feature.my.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import com.anou.pagegather.ui.theme.PageGatherTheme
 
 /**
  * 设置分组组件
@@ -26,7 +31,7 @@ fun SettingsSection(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
         )
         
@@ -104,7 +109,7 @@ private fun SettingsItemRow(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "进入",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -113,8 +118,32 @@ private fun SettingsItemRow(
         if (showDivider) {
             HorizontalDivider(
                 modifier = Modifier.padding(start = 56.dp),
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SettingsSectionPreview() {
+    PageGatherTheme {
+        SettingsSection(
+            title = "数据管理",
+            items = listOf(
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Filled.Label,
+                    title = "标签管理",
+                    subtitle = "管理书籍和笔记标签",
+                    onClick = {}
+                ),
+                SettingsItem(
+                    icon = Icons.Default.Folder,
+                    title = "书籍分组",
+                    subtitle = "管理书籍分组",
+                    onClick = {}
+                )
+            )
+        )
     }
 }

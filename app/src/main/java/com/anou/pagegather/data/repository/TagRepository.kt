@@ -92,6 +92,13 @@ class TagRepository @Inject constructor(
         return tagDao.getMaxOrderByType(type)
     }
 
+    /**
+     * 获取所有笔记标签关联
+     */
+    fun getAllNoteTagRefs(): Flow<List<NoteTagRefEntity>> {
+        return noteTagRefDao.getAllNoteTagRefs()
+    }
+
     // ========== 标签与书籍关联操作 ==========
 
     /**

@@ -70,6 +70,7 @@ object Routes {
         const val TAG_SETTINGS = "tag_settings"
         const val BOOK_GROUP_SETTINGS = "book_group_settings"
         const val BOOK_SOURCE_SETTINGS = "book_source_settings"
+        const val DATA_MANAGEMENT = "data_management"
     }
 
     // 时间管理相关路由
@@ -90,6 +91,11 @@ object Routes {
         const val RECORD_TIMELINE = "reading/timeline"
         const val READING_RECORDS = "reading_records"
         const val BOOK_READING_STATISTICS = "book_reading_statistics"  // 添加书籍阅读统计路由
+        const val LONGEST_READING_BOOKS = "longest_reading_books"  // 添加阅读最久书籍路由
+        const val PREFERRED_BOOK_TYPES = "preferred_book_types"  // 添加偏好阅读类型路由
+        const val READING_HABIT_DISTRIBUTION = "reading_habit_distribution"  // 添加阅读习惯时间分布路由
+        const val BOOK_TYPE_DISTRIBUTION = "book_type_distribution"  // 添加书籍类型分布路由
+        const val PREFERRED_AUTHORS_PUBLISHERS = "preferred_authors_publishers"  // 添加偏好作者和版权方路由
     }
 
     // 快捷操作相关路由

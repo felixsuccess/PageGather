@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,9 +84,49 @@ fun ReadingOverviewCard(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 StatisticRow(
+                    icon = Icons.Default.AccessTime,
+                    label = "总阅读时长",
+                    value = formatDuration(uiState.totalReadingTime)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                StatisticRow(
                     icon = Icons.Default.Book,
                     label = "在读书籍",
                     value = "${uiState.readingBooksCount} 本"
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                StatisticRow(
+                    icon = Icons.Default.Book,
+                    label = "读完书籍",
+                    value = "${uiState.finishedBooksCount} 本"
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                StatisticRow(
+                    icon = Icons.Default.Book,
+                    label = "书籍总数",
+                    value = "${uiState.totalBooksCount} 本"
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                StatisticRow(
+                    icon = Icons.Default.CalendarToday,
+                    label = "阅读天数",
+                    value = "${uiState.readingDaysCount} 天"
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                StatisticRow(
+                    icon = Icons.Default.Edit,
+                    label = "笔记数量",
+                    value = "${uiState.noteCount} 条"
                 )
             }
         }

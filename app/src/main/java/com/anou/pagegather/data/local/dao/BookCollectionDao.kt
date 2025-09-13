@@ -21,6 +21,10 @@ interface BookCollectionDao {
     @Query("SELECT * FROM book_collection WHERE book_id = :bookId")
     fun getByBookIdFlow(bookId: Long): Flow<BookCollectionEntity?>
     
+    /** 根据存放位置搜索 */
+    @Query("SELECT * FROM book_collection WHERE storage_location LIKE '%' || :location || '%'")
+    fun getByStorageLocation(location: String): Flow<List<BookCollectionEntity>>
+    
     /** 获取所有收藏信息 */
     @Query("SELECT * FROM book_collection")
     fun getAllCollections(): Flow<List<BookCollectionEntity>>
@@ -40,10 +44,6 @@ interface BookCollectionDao {
     /** 获取已拥有的书籍收藏信息 */
     @Query("SELECT * FROM book_collection WHERE ownership_status = 1")
     fun getOwnedBooks(): Flow<List<BookCollectionEntity>>
-    
-    /** 根据存放位置搜索 */
-    @Query("SELECT * FROM book_collection WHERE storage_location LIKE '%' || :location || '%'")
-    fun getByStorageLocation(location: String): Flow<List<BookCollectionEntity>>
     
     // ========== 增删改操作 ==========
     

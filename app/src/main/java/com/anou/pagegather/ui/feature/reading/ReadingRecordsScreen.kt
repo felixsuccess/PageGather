@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +30,7 @@ fun ReadingRecordsScreen(
     viewModel: ReadingRecordsViewModel = hiltViewModel()
 ) {
     val readingRecords by viewModel.readingRecords.collectAsState()
+    var showFilterDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -39,6 +41,14 @@ fun ReadingRecordsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "返回"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showFilterDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "筛选"
                         )
                     }
                 }
@@ -72,6 +82,20 @@ fun ReadingRecordsScreen(
                     )
                 }
             }
+        }
+        
+        // 筛选对话框
+        if (showFilterDialog) {
+            FilterDialog(
+                onDismiss = { showFilterDialog = false },
+                onApply = { date, bookId -> 
+                    viewModel.setDateFilter(date)
+                    // TODO: 传递其他筛选条件到ViewModel
+                    showFilterDialog = false 
+                },
+                currentDate = null,
+                currentBookId = null
+            )
         }
     }
 }
@@ -181,4 +205,81 @@ private fun formatDuration(milliseconds: Long): String {
         minutes > 0 -> "${minutes}分钟${seconds % 60}秒"
         else -> "${seconds}秒"
     }
+}
+
+/**
+ * 筛选对话框
+ */
+@Composable
+private fun FilterDialog(
+    onDismiss: () -> Unit,
+    onApply: (date: String?, bookId: Long?) -> Unit,
+    currentDate: String?,
+    currentBookId: Long?
+) {
+    var selectedDate by remember { mutableStateOf(currentDate) }
+    var selectedBookId by remember { mutableStateOf(currentBookId) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("筛选条件")
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 日期筛选
+                Text(
+                    text = "按日期筛选",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val calendar = Calendar.getInstance()
+                            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            selectedDate = dateFormat.format(calendar.time)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("今天")
+                    }
+                    
+                    Button(
+                        onClick = {
+                            selectedDate = null
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("清除")
+                    }
+                }
+                
+                Text(
+                    text = "选定日期: ${selectedDate ?: "无"}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onApply(selectedDate, selectedBookId)
+                }
+            ) {
+                Text("应用")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }

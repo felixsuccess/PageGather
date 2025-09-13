@@ -14,11 +14,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// 添加扩展属性
-val MaterialTheme.primaryContainer: Color
-    @Composable
-    get() = colorScheme.primaryContainer
-
 private val DarkColorScheme = darkColorScheme(
     primary = Primary,
     secondary = Secondary,
@@ -90,7 +85,12 @@ fun PageGatherTheme(
             success = Success,
             error = Error,
             warning = Warning,
-            info = Info
+            info = Info,
+            titleColor = if (darkTheme) TextWhite else TextDark,
+            bodyColor = if (darkTheme) TextWhite else TextDark,
+            subtitleColor = if (darkTheme) TextGray else TextGray,
+            descriptionColor = if (darkTheme) TextGray else TextGray,
+            accentColor = Accent
         )
     ) {
         MaterialTheme(
@@ -108,7 +108,12 @@ data class ExtendedColors(
     val success: Color,
     val error: Color,
     val warning: Color,
-    val info: Color
+    val info: Color,
+    val titleColor: Color,
+    val bodyColor: Color,
+    val subtitleColor: Color,
+    val descriptionColor: Color,
+    val accentColor: Color
 )
 
 // 创建CompositionLocal
@@ -119,7 +124,12 @@ private val LocalExtendedColors = staticCompositionLocalOf {
         success = Color.Unspecified,
         error = Color.Unspecified,
         warning = Color.Unspecified,
-        info = Color.Unspecified
+        info = Color.Unspecified,
+        titleColor = Color.Unspecified,
+        bodyColor = Color.Unspecified,
+        subtitleColor = Color.Unspecified,
+        descriptionColor = Color.Unspecified,
+        accentColor = Color.Unspecified
     )
 }
 

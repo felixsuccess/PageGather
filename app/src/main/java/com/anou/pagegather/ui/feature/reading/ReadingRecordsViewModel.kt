@@ -5,10 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.repository.ReadingRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,17 +18,43 @@ class ReadingRecordsViewModel @Inject constructor(
     private val readingRecordRepository: ReadingRecordRepository
 ) : ViewModel() {
 
+    // 筛选条件状态
+    private val _filterDate = MutableStateFlow<String?>(null)
+
     /**
      * 阅读记录列表状态
      */
-    val readingRecords: StateFlow<List<ReadingRecordEntity>> = readingRecordRepository
-        .getAllReadingRecords()
-        .map { records -> records.sortedByDescending { it.startTime } }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    val readingRecords: StateFlow<List<ReadingRecordEntity>> = combine(
+        readingRecordRepository.getAllReadingRecords(),
+        _filterDate
+    ) { records, filterDate ->
+        records
+            .sortedByDescending { it.startTime }
+            .filter { record ->
+                // 日期筛选
+                filterDate?.let { date ->
+                    record.date == date
+                } ?: true
+            }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    /**
+     * 设置日期筛选条件
+     */
+    fun setDateFilter(date: String?) {
+        _filterDate.value = date
+    }
+
+    /**
+     * 清除所有筛选条件
+     */
+    fun clearAllFilters() {
+        _filterDate.value = null
+    }
 
     /**
      * 删除阅读记录

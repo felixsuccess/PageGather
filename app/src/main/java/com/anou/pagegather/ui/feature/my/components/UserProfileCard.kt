@@ -24,10 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.anou.pagegather.ui.theme.PageGatherTheme
 
 /**
  * 用户信息卡片组件 阅读统计数据
@@ -51,8 +54,8 @@ fun UserProfileCard() {
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.tertiaryContainer
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
                         )
                     )
                 )
@@ -62,9 +65,6 @@ fun UserProfileCard() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-
-                
                 // 统计数据行
                 // TODO: 连接真实的阅读统计数据，可考虑传入ViewModel或Repository
                 Row(
@@ -111,9 +111,9 @@ private fun UserStatItem(
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
@@ -121,12 +121,20 @@ private fun UserStatItem(
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 18.sp
         )
-        
+
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 12.sp
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun UserProfileCardPreview() {
+    PageGatherTheme {
+        UserProfileCard()
     }
 }
