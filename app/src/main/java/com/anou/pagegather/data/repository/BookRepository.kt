@@ -462,4 +462,47 @@ class BookRepository @Inject constructor(
     suspend fun getReadingBooksCount(): Int {
         return bookDao.getReadingBooksCount()
     }
+    
+    /**
+     * 获取书籍类型分布数据
+     * 返回一个Map，键为书籍类型名称，值为该类型书籍的数量
+     */
+    suspend fun getBookTypeDistribution(): Map<String, Int> {
+        val books = bookDao.getAllBooksDirect() // 使用直接获取所有书籍的方法
+        val distribution = mutableMapOf<String, Int>()
+        
+        books.forEach { book ->
+            val type = BookType.fromValue(book.type).message
+            distribution[type] = distribution.getOrDefault(type, 0) + 1
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 根据时间范围获取书籍类型分布数据
+     * @param bookIds 在指定时间范围内有阅读记录的书籍ID列表
+     * @return 返回一个Map，键为书籍类型名称，值为该类型书籍的数量
+     */
+    suspend fun getBookTypeDistributionByBookIds(bookIds: List<Long>): Map<String, Int> {
+        // 如果没有书籍ID，返回空的分布
+        if (bookIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 批量获取书籍信息以提高性能
+        val books: List<BookEntity> = bookDao.getBooksByIds(bookIds)
+        
+        // 统计书籍类型分布
+        val distribution = mutableMapOf<String, Int>()
+        books.forEach { book: BookEntity ->
+            val type: String = BookType.fromValue(book.type).message
+            distribution[type] = distribution.getOrDefault(type, 0) + 1
+        }
+        
+        return distribution
+    }
+
+
+
 }

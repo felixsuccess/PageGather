@@ -45,10 +45,11 @@ class ChartsViewModel @Inject constructor(
                 // TODO: 实现获取阅读习惯时间分布数据的逻辑
                 
                 // 获取书籍类型分布
-                // TODO: 实现获取书籍类型分布数据的逻辑
+                val bookTypeData = bookRepository.getBookTypeDistribution()
                 
                 _uiState.value = ChartsUiState(
-                    isLoading = false
+                    isLoading = false,
+                    bookTypeData = bookTypeData
                 )
             } catch (e: Exception) {
                 // 处理异常
@@ -67,5 +68,6 @@ class ChartsViewModel @Inject constructor(
  */
 data class ChartsUiState(
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val bookTypeData: Map<String, Int> = emptyMap() // 类型 -> 书籍数量
 )

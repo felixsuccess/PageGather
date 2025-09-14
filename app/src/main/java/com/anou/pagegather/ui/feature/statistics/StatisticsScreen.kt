@@ -47,10 +47,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
+import com.anou.pagegather.ui.feature.statistics.components.BookTypeDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.ReadingOverviewCard
 import com.anou.pagegather.ui.navigation.Routes
 import java.text.SimpleDateFormat
-import java.text.ParseException
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -335,7 +335,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
         }
 
         item {
-            // 书籍类型分布图表占位符
+            // 书籍类型分布图表
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -355,18 +355,13 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Box(
+                    // 使用专门的书籍类型分布图表组件，并传递时间范围参数
+                    BookTypeDistributionChart(
+                        timeRange = selectedTimeRange,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "书籍类型分布图表（饼图）",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                            .height(200.dp)
+                    )
                 }
             }
         }

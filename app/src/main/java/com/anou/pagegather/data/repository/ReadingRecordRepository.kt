@@ -5,6 +5,7 @@ import com.anou.pagegather.data.local.database.AppDatabase
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -243,5 +244,17 @@ class ReadingRecordRepository @Inject constructor(
         )
         
         return insertReadingRecord(readingRecord)
+    }
+    
+    /**
+     * 获取指定日期范围内有阅读记录的书籍ID列表
+     * @param startDate 开始日期 (格式: yyyy-MM-dd)
+     * @param endDate 结束日期 (格式: yyyy-MM-dd)
+     * @return 书籍ID列表
+     */
+    suspend fun getBookIdsByDateRange(startDate: String, endDate: String): List<Long> {
+        val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
+        val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
+        return readingRecords.map { record -> record.bookId }.distinct()
     }
 }

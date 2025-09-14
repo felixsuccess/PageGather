@@ -20,14 +20,7 @@ fun CalendarScreen() {
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.primary)
 }
-
-// 统计子页面 - 图表
-@Composable
-fun ChartsScreen() {
-    Text(text = "图表：展示各种统计图表的页面", overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.primary)
-}
+ 
 
 // 搜索相关 - 搜索结果
 @Composable

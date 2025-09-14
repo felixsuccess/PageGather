@@ -176,4 +176,12 @@ interface BookDao {
     /** 获取阅读中的书籍数量 */
     @Query("SELECT COUNT(*) FROM book WHERE read_status = 1 AND is_deleted = 0")
     suspend fun getReadingBooksCount(): Int
+    
+    /** 直接获取所有书籍（非Flow版本） */
+    @Query("SELECT * FROM book WHERE is_deleted = 0 ORDER BY updated_date DESC")
+    suspend fun getAllBooksDirect(): List<BookEntity>
+    
+    /** 根据ID列表批量获取书籍 */
+    @Query("SELECT * FROM book WHERE id IN (:bookIds) AND is_deleted = 0")
+    suspend fun getBooksByIds(bookIds: List<Long>): List<BookEntity>
 }
