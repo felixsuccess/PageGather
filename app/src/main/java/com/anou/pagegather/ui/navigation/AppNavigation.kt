@@ -82,7 +82,8 @@ fun AppNavigation(
                 onNavigateToTagSettings = { navController.navigate(Routes.ProfileRoutes.TAG_SETTINGS) },
                 onNavigateToGroupSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
                 onNavigateToBookSourceSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) },
-                onNavigateToReadingRecords = { navController.navigate(Routes.ReadingRoutes.READING_RECORDS) }
+                onNavigateToReadingRecords = { navController.navigate(Routes.ReadingRoutes.READING_RECORDS) },
+                onNavigateToReadingSSRecords = { navController.navigate(Routes.ReadingRoutes.BOOK_READING_STATISTICS) }
             )
         }
 
@@ -256,8 +257,6 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() }
             )
         }
-
-
 
 
         // 时间管理相关页面
@@ -922,7 +921,7 @@ fun AppNavigation(
                 }
             )
         }
-        
+
 
     }
 }

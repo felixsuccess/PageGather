@@ -35,7 +35,8 @@ fun ProfileScreen(
     onNavigateToTagSettings: () -> Unit,
     onNavigateToGroupSettings: () -> Unit,
     onNavigateToBookSourceSettings: () -> Unit,
-    onNavigateToReadingRecords: () -> Unit 
+    onNavigateToReadingRecords: () -> Unit ,
+    onNavigateToReadingSSRecords:() -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -167,9 +168,15 @@ fun ProfileScreen(
                 items = listOf(
                     SettingsItem(
                         icon = Icons.Default.BarChart,
-                        title = "阅读统计",
-                        subtitle = "查看阅读数据和趋势",
+                        title = "阅读记录",
+                        subtitle = "查看阅读记录",
                         onClick = onNavigateToReadingRecords
+                    ),
+                    SettingsItem(
+                        icon = Icons.Default.StackedLineChart,
+                        title = "阅读统计",
+                        subtitle = "查看阅读统计",
+                        onClick = onNavigateToReadingSSRecords
                     ),
                     SettingsItem(
                         icon = Icons.Default.EmojiEvents,
