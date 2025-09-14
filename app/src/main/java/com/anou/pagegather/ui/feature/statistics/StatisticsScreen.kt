@@ -20,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -35,6 +33,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,12 +42,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
+import com.anou.pagegather.ui.components.charts.ChartData
+import com.anou.pagegather.ui.components.charts.WeBarChart
 import com.anou.pagegather.ui.feature.statistics.components.BookTypeDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.BookSourceDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.BookStatusDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.BookTagDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.BookRatingDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.BookGroupDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.ReadingDurationDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.ReadingTrendChart
 import com.anou.pagegather.ui.feature.statistics.components.ReadingOverviewCard
+import com.anou.pagegather.ui.feature.statistics.components.FinishedBooksChart
+import com.anou.pagegather.ui.feature.statistics.components.ReadingHabitDistributionChart
 import com.anou.pagegather.ui.navigation.Routes
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -219,13 +231,30 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
                 onTimeRangeChanged = { it: TimeRange -> selectedTimeRange = it }
             )
         }
+        
+        // 年度总览卡片（使用ViewModel获取数据）
+        item {
 
-        // 阅读时长分布图表占位符
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+
+                    AnnualOverviewCard(timeRange = selectedTimeRange)
+                }
+            }
+
+
+        }
+        // 阅读时长分布图表
         item {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
@@ -241,29 +270,25 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Box(
+                    // 使用阅读时长分布图表组件，并传递时间范围和时间粒度参数
+                    ReadingDurationDistributionChart(
+                        timeRange = selectedTimeRange,
+                        timeGranularity = selectedTimeGranularity,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "阅读时长分布图表（柱状图）",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                            .height(200.dp)
+                    )
                 }
             }
         }
 
         item {
-            // 阅读趋势图表占位符 (移除了年度报告卡片)
+            // 阅读趋势图表
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth() ,
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+
             ) {
                 Column(
                     modifier = Modifier
@@ -278,31 +303,22 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Box(
+                    // 使用专门的阅读趋势图表组件，并传递时间范围和时间粒度参数
+                    ReadingTrendChart(
+                        timeRange = selectedTimeRange,
+                        timeGranularity = selectedTimeGranularity,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "阅读趋势图表（柱状图）",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                            .height(200.dp)
+                    )
                 }
             }
-
-
         }
-
-
         item {
-            // 阅读习惯时间分布图表占位符
+            // 阅读习惯时间分布图表
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
@@ -318,28 +334,24 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Box(
+                    // 使用专门的阅读习惯时间分布图表组件，并传递时间范围参数
+                    ReadingHabitDistributionChart(
+                        timeRange = selectedTimeRange,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "阅读习惯时间分布图表（热力图）",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                            .height(200.dp)
+                    )
                 }
             }
         }
+
+
 
         item {
             // 书籍类型分布图表
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth() ,
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
@@ -368,11 +380,201 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
 
 
         item {
+            // 书籍来源分布图表
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth() ,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "书籍来源分布",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 使用专门的书籍来源分布图表组件，并传递时间范围参数
+                    BookSourceDistributionChart(
+                        timeRange = selectedTimeRange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+            }
+        }
+
+        item {
+            // 读完书籍图表
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth() ,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "读完书籍",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 使用专门的读完书籍图表组件，并传递时间范围参数
+                    FinishedBooksChart(
+                        timeRange = selectedTimeRange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+            }
+        }
+
+
+        item {
+            // 书籍状态分布图表
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth() ,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "书籍状态分布",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 使用专门的书籍状态分布图表组件，并传递时间范围参数
+                    BookStatusDistributionChart(
+                        timeRange = selectedTimeRange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+            }
+        }
+
+
+        item {
+            // 书籍标签分布图表
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth() ,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "书籍标签分布",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 使用专门的书籍标签分布图表组件，并传递时间范围参数
+                    BookTagDistributionChart(
+                        timeRange = selectedTimeRange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+            }
+        }
+
+
+        item {
+            // 书籍评分分布图表
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth() ,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "书籍评分分布",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 使用专门的书籍评分分布图表组件，并传递时间范围参数
+                    BookRatingDistributionChart(
+                        timeRange = selectedTimeRange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+            }
+        }
+
+
+        item {
+            // 书籍分组分布图表
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth() ,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "书籍分组分布",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 使用专门的书籍分组分布图表组件，并传递时间范围参数
+                    BookGroupDistributionChart(
+                        timeRange = selectedTimeRange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                }
+            }
+        }
+
+
+        item {
             // 阅读最久的书籍占位符
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth() ,
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
@@ -398,11 +600,10 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
         }
 
         item {
-            // 偏好阅读类型占位符
+            // 偏好阅读类型图表
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth() ,
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
@@ -420,140 +621,16 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "偏好阅读类型分析（饼图）", style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                            navController.navigate(Routes.ReadingRoutes.PREFERRED_BOOK_TYPES)
-                        }, modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("查看详情")
-                    }
-                }
-            }
-        }
-
-        item {
-            // 阅读习惯时间分布占位符
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "阅读习惯时间分布",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(16.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "阅读习惯时间分布分析（热力图）",
+                        text = "偏好阅读类型文史等分析（饼图）",
                         style = MaterialTheme.typography.bodyMedium
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = {
-                            navController.navigate(Routes.ReadingRoutes.READING_HABIT_DISTRIBUTION)
-                        }, modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("查看详情")
-                    }
                 }
             }
         }
 
-        item {
-            // 书籍类型分布占位符
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "书籍类型分布",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(16.dp)
-                    )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "书籍类型分布分析（饼图）", style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                            navController.navigate(Routes.ReadingRoutes.BOOK_TYPE_DISTRIBUTION)
-                        }, modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("查看详情")
-                    }
-                }
-            }
-        }
-
-        item {
-            // 偏好作者和版权方占位符
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "偏好作者和版权方",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(16.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "偏好作者和版权方分析（云图）",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                            navController.navigate(Routes.ReadingRoutes.PREFERRED_AUTHORS_PUBLISHERS)
-                        }, modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("查看详情")
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -783,7 +860,7 @@ private fun getWeekRange(year: Int, week: Int): TimeRange {
     calendar.set(Calendar.YEAR, year)
     calendar.set(Calendar.WEEK_OF_YEAR, week)
     calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-    
+
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val startDate = dateFormat.format(calendar.time)
 
@@ -837,12 +914,12 @@ private fun TimeRangeSelector(
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    
+
     // 从当前选中的时间范围解析出年月日信息用于显示
     val (displayYear, displayMonth, displayDay, displayWeek) = remember(selectedTimeRange) {
         val calendar = Calendar.getInstance()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        
+
         try {
             val startDate = dateFormat.parse(selectedTimeRange.startDate)
             calendar.time = startDate
@@ -862,7 +939,7 @@ private fun TimeRangeSelector(
             )
         }
     }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -904,9 +981,9 @@ private fun TimeRangeSelector(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // 基于统一时间范围的时间信息显示和控制
-            UnifiedDateInfoSection(
+            DateInfoSection(
                 selectedTimeGranularity = selectedTimeGranularity,
                 selectedTimeRange = selectedTimeRange,
                 displayYear = displayYear,
@@ -959,7 +1036,12 @@ private fun TimeRangeSelector(
                     onWeekChanged = { week: Int ->
                         // 根据当前时间粒度更新时间范围
                         val newRange = when (selectedTimeGranularity) {
-                            TimeGranularity.DAY -> getDayRange(displayYear, displayMonth, displayDay)
+                            TimeGranularity.DAY -> getDayRange(
+                                displayYear,
+                                displayMonth,
+                                displayDay
+                            )
+
                             TimeGranularity.WEEK -> getWeekRange(displayYear, week)
                             TimeGranularity.MONTH -> getMonthRange(displayYear, displayMonth)
                             TimeGranularity.YEAR -> getYearRange(displayYear)
@@ -984,7 +1066,7 @@ private fun TimeRangeSelector(
 }
 
 @Composable
-private fun UnifiedDateInfoSection(
+private fun DateInfoSection(
     selectedTimeGranularity: TimeGranularity,
     selectedTimeRange: TimeRange,
     displayYear: Int,
@@ -1016,13 +1098,17 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.YEAR, -1)
                         val newStartDate = dateFormat.format(calendar.time)
-                        
+
                         // 计算新的结束日期（年末）
-                        calendar.set(Calendar.DAY_OF_YEAR, calendar.getActualMaximum(Calendar.DAY_OF_YEAR))
+                        calendar.set(
+                            Calendar.DAY_OF_YEAR,
+                            calendar.getActualMaximum(Calendar.DAY_OF_YEAR)
+                        )
                         val newEndDate = dateFormat.format(calendar.time)
-                        
+
                         TimeRange(newStartDate, newEndDate, "${calendar.get(Calendar.YEAR)}年")
                     }
+
                     TimeGranularity.MONTH -> {
                         val calendar = Calendar.getInstance()
                         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -1030,13 +1116,21 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.MONTH, -1)
                         val newStartDate = dateFormat.format(calendar.time)
-                        
+
                         // 计算新的结束日期（月末）
-                        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+                        calendar.set(
+                            Calendar.DAY_OF_MONTH,
+                            calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+                        )
                         val newEndDate = dateFormat.format(calendar.time)
-                        
-                        TimeRange(newStartDate, newEndDate, "${calendar.get(Calendar.YEAR)}年${calendar.get(Calendar.MONTH) + 1}月")
+
+                        TimeRange(
+                            newStartDate,
+                            newEndDate,
+                            "${calendar.get(Calendar.YEAR)}年${calendar.get(Calendar.MONTH) + 1}月"
+                        )
                     }
+
                     TimeGranularity.WEEK -> {
                         val calendar = Calendar.getInstance()
                         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -1044,13 +1138,18 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.WEEK_OF_YEAR, -1)
                         val newStartDate = dateFormat.format(calendar.time)
-                        
+
                         // 计算新的结束日期（周日）
                         calendar.add(Calendar.DAY_OF_WEEK, 6)
                         val newEndDate = dateFormat.format(calendar.time)
-                        
-                        TimeRange(newStartDate, newEndDate, "${calendar.get(Calendar.YEAR)}年第${calendar.get(Calendar.WEEK_OF_YEAR)}周")
+
+                        TimeRange(
+                            newStartDate,
+                            newEndDate,
+                            "${calendar.get(Calendar.YEAR)}年第${calendar.get(Calendar.WEEK_OF_YEAR)}周"
+                        )
                     }
+
                     TimeGranularity.DAY -> {
                         val calendar = Calendar.getInstance()
                         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -1058,8 +1157,14 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.DAY_OF_MONTH, -1)
                         val newDate = dateFormat.format(calendar.time)
-                        
-                        TimeRange(newDate, newDate, "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.DAY_OF_MONTH)}")
+
+                        TimeRange(
+                            newDate,
+                            newDate,
+                            "${calendar.get(Calendar.YEAR)}年${calendar.get(Calendar.MONTH) + 1}-${
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            }"
+                        )
                     }
                 }
                 onDateChanged(newRange)
@@ -1095,13 +1200,17 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.YEAR, 1)
                         val newStartDate = dateFormat.format(calendar.time)
-                        
+
                         // 计算新的结束日期（年末）
-                        calendar.set(Calendar.DAY_OF_YEAR, calendar.getActualMaximum(Calendar.DAY_OF_YEAR))
+                        calendar.set(
+                            Calendar.DAY_OF_YEAR,
+                            calendar.getActualMaximum(Calendar.DAY_OF_YEAR)
+                        )
                         val newEndDate = dateFormat.format(calendar.time)
-                        
+
                         TimeRange(newStartDate, newEndDate, "${calendar.get(Calendar.YEAR)}年")
                     }
+
                     TimeGranularity.MONTH -> {
                         val calendar = Calendar.getInstance()
                         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -1109,13 +1218,21 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.MONTH, 1)
                         val newStartDate = dateFormat.format(calendar.time)
-                        
+
                         // 计算新的结束日期（月末）
-                        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+                        calendar.set(
+                            Calendar.DAY_OF_MONTH,
+                            calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+                        )
                         val newEndDate = dateFormat.format(calendar.time)
-                        
-                        TimeRange(newStartDate, newEndDate, "${calendar.get(Calendar.YEAR)}年${calendar.get(Calendar.MONTH) + 1}月")
+
+                        TimeRange(
+                            newStartDate,
+                            newEndDate,
+                            "${calendar.get(Calendar.YEAR)}年${calendar.get(Calendar.MONTH) + 1}月"
+                        )
                     }
+
                     TimeGranularity.WEEK -> {
                         val calendar = Calendar.getInstance()
                         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -1123,13 +1240,18 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.WEEK_OF_YEAR, 1)
                         val newStartDate = dateFormat.format(calendar.time)
-                        
+
                         // 计算新的结束日期（周日）
                         calendar.add(Calendar.DAY_OF_WEEK, 6)
                         val newEndDate = dateFormat.format(calendar.time)
-                        
-                        TimeRange(newStartDate, newEndDate, "${calendar.get(Calendar.YEAR)}年第${calendar.get(Calendar.WEEK_OF_YEAR)}周")
+
+                        TimeRange(
+                            newStartDate,
+                            newEndDate,
+                            "${calendar.get(Calendar.YEAR)}年第${calendar.get(Calendar.WEEK_OF_YEAR)}周"
+                        )
                     }
+
                     TimeGranularity.DAY -> {
                         val calendar = Calendar.getInstance()
                         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -1137,8 +1259,14 @@ private fun UnifiedDateInfoSection(
                         calendar.time = startDate
                         calendar.add(Calendar.DAY_OF_MONTH, 1)
                         val newDate = dateFormat.format(calendar.time)
-                        
-                        TimeRange(newDate, newDate, "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.DAY_OF_MONTH)}")
+
+                        TimeRange(
+                            newDate,
+                            newDate,
+                            "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            }"
+                        )
                     }
                 }
                 onDateChanged(newRange)
@@ -1333,7 +1461,7 @@ private fun WeekPicker(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { onYearChanged(selectedYear - 1) }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Previous Year")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Year")
             }
 
             Text(
@@ -1343,7 +1471,7 @@ private fun WeekPicker(
             )
 
             IconButton(onClick = { onYearChanged(selectedYear + 1) }) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Next Year")
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Year")
             }
         }
 
@@ -1365,7 +1493,7 @@ private fun WeekPicker(
                     onYearChanged(selectedYear - 1)
                 }
             }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Previous Week")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Week")
             }
 
             Text(
@@ -1386,7 +1514,7 @@ private fun WeekPicker(
                     onYearChanged(selectedYear + 1)
                 }
             }) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Next Week")
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Week")
             }
         }
     }
@@ -1439,7 +1567,7 @@ private fun DayPicker(
                     onYearChanged(selectedYear - 1)
                 }
             }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Previous Month")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Month")
             }
 
             Text(
@@ -1456,7 +1584,7 @@ private fun DayPicker(
                     onYearChanged(selectedYear + 1)
                 }
             }) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Next Month")
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Month")
             }
         }
 
@@ -1483,7 +1611,7 @@ private fun DayPicker(
                     }
                 }
             }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Previous Day")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Day")
             }
 
             Text(
@@ -1508,9 +1636,71 @@ private fun DayPicker(
                     }
                 }
             }) {
-                Icon(Icons.Default.ArrowForward, contentDescription = "Next Day")
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Day")
             }
         }
+    }
+}
+
+/**
+ * 年度总览卡片组件
+ * 展示总阅读时长、阅读天数、读完书籍和笔记数量等年度统计数据
+ */
+@Composable
+private fun AnnualOverviewCard(
+    timeRange: TimeRange,
+    viewModel: StatisticsOverviewViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // 当时间范围改变时，重新加载数据
+    LaunchedEffect(timeRange) {
+        viewModel.loadStatisticsByDateRange(timeRange.startDate, timeRange.endDate)
+    }
+    
+    // 初始化时加载数据
+    LaunchedEffect(Unit) {
+        viewModel.loadStatisticsByDateRange(timeRange.startDate, timeRange.endDate)
+    }
+    
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else if (uiState.error != null) {
+        Text(
+            text = "加载数据失败: ${uiState.error}",
+            color = MaterialTheme.colorScheme.error
+        )
+    } else {
+        StatisticRow(
+            label = "总阅读时长",
+            value = formatDuration(uiState.totalReadingTime)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        StatisticRow(
+            label = "阅读天数",
+            value = "${uiState.readingDaysCount} 天"
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        StatisticRow(
+            label = "读完书籍",
+            value = "${uiState.finishedBooksCount} 本"
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        StatisticRow(
+            label = "笔记数量",
+            value = "${uiState.noteCount} 条"
+        )
     }
 }
 

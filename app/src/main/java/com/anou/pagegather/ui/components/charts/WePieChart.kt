@@ -42,8 +42,11 @@ fun WePieChart(
     animationSpec: AnimationSpec<Float> = tween(durationMillis = 800),
     formatter: (Float) -> String = { it.format() }
 ) {
-    // 数值之和
-    val total = remember(dataSource) { dataSource.sumOf { it.value.toDouble() }.toFloat() }
+    // 数值之和，确保不为0以避免除零错误
+    val total = remember(dataSource) { 
+        val sum = dataSource.sumOf { it.value.toDouble() }.toFloat()
+        if (sum == 0f) 1f else sum
+    }
     // 随机颜色
     val colors = remember(dataSource.size) { generateColors(dataSource.size) }
     // 每个数据项的动画实例

@@ -9,28 +9,28 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.ui.components.charts.ChartData
 import com.anou.pagegather.ui.components.charts.WePieChart
-import com.anou.pagegather.ui.feature.statistics.BookTypeDistributionViewModel
+import com.anou.pagegather.ui.feature.statistics.BookSourceDistributionViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeRange
 
 /**
- * 书籍类型分布图表组件
+ * 书籍来源分布图表组件
  */
 @Composable
-fun BookTypeDistributionChart(
+fun BookSourceDistributionChart(
     timeRange: TimeRange,
     modifier: Modifier = Modifier,
-    viewModel: BookTypeDistributionViewModel = hiltViewModel()
+    viewModel: BookSourceDistributionViewModel = hiltViewModel()
 ) {
     // 当时间范围改变时，重新加载数据
     LaunchedEffect(timeRange) {
-        viewModel.loadBookTypeDataByDateRange(timeRange.startDate, timeRange.endDate)
+        viewModel.loadBookSourceDataByDateRange(timeRange.startDate, timeRange.endDate)
     }
     
     val uiState by viewModel.uiState.collectAsState()
     
     // 初始化时加载数据
     LaunchedEffect(Unit) {
-        viewModel.loadBookTypeDataByDateRange(timeRange.startDate, timeRange.endDate)
+        viewModel.loadBookSourceDataByDateRange(timeRange.startDate, timeRange.endDate)
     }
     
     Column(
@@ -44,12 +44,12 @@ fun BookTypeDistributionChart(
                 text = "加载数据失败: ${uiState.error}",
                 color = MaterialTheme.colorScheme.error
             )
-        } else if (uiState.typeData.isNotEmpty()) {
+        } else if (uiState.sourceData.isNotEmpty()) {
             // 将数据转换为图表所需格式
-            val chartData = uiState.typeData.map { (type, count) ->
+            val chartData = uiState.sourceData.map { (source, count) ->
                 ChartData(
                     value = count.toFloat(),
-                    label = type
+                    label = source
                 )
             }.filter { it.value >= 0f } // 过滤掉负值或无效值
             
@@ -62,14 +62,14 @@ fun BookTypeDistributionChart(
                 }
             } else {
                 Text(
-                    text = "暂无有效的书籍类型分布数据",
+                    text = "暂无有效的书籍来源分布数据",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
             Text(
-                text = "暂无书籍类型分布数据",
+                text = "暂无书籍来源分布数据",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

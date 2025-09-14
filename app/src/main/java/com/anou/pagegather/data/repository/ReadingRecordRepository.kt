@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.anou.pagegather.data.local.database.AppDatabase
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
+import com.anou.pagegather.ui.feature.statistics.TimeGranularity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import java.text.SimpleDateFormat
@@ -257,4 +258,395 @@ class ReadingRecordRepository @Inject constructor(
         val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
         return readingRecords.map { record -> record.bookId }.distinct()
     }
+    
+    /**
+     * 获取指定日期范围内的阅读趋势数据
+     * @param startDate 开始日期 (格式: yyyy-MM-dd)
+     * @param endDate 结束日期 (格式: yyyy-MM-dd)
+     * @return 日期到阅读时长的映射
+     */
+    suspend fun getReadingTrendDataByDateRange(startDate: String, endDate: String): Map<String, Long> {
+        val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
+        val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
+        
+        // 按日期分组并计算每天的总阅读时长
+        val trendData = mutableMapOf<String, Long>()
+        readingRecords.forEach { record ->
+            val currentDate = record.date
+            val currentDuration = trendData.getOrDefault(currentDate, 0L)
+            trendData[currentDate] = currentDuration + record.duration
+        }
+        
+        return trendData
+    }
+    
+    /**
+     * 基于时间粒度的阅读时长分布统计
+     * @param startDate 开始日期 (格式: yyyy-MM-dd)
+     * @param endDate 结束日期 (格式: yyyy-MM-dd)
+     * @param granularity 时间粒度 (年/月/周)
+     * @return 时间点到阅读时长的映射
+     */
+    suspend fun getReadingDurationDistributionByTimeGranularity(
+        startDate: String, 
+        endDate: String, 
+        granularity: TimeGranularity
+    ): Map<String, Long> {
+        val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
+        val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
+        
+        return when (granularity) {
+            TimeGranularity.YEAR -> {
+                // 按月份统计
+                val monthlyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从日期中提取月份
+                        val parts = record.date.split("-")
+                        if (parts.size >= 3) {
+                            val month = parts[1] // 获取月份
+                            val currentDuration = monthlyData.getOrDefault(month, 0L)
+                            monthlyData[month] = currentDuration + record.duration
+                        }
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保1-12月都有数据（没有数据的月份为0）
+                val result = mutableMapOf<String, Long>()
+                for (i in 1..12) {
+                    val month = String.format("%02d", i)
+                    result["${month}月"] = monthlyData.getOrDefault(month, 0L)
+                }
+                result
+            }
+            TimeGranularity.MONTH -> {
+                // 按天统计
+                val dailyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从日期中提取天
+                        val parts = record.date.split("-")
+                        if (parts.size >= 3) {
+                            val day = parts[2] // 获取天
+                            val currentDuration = dailyData.getOrDefault(day, 0L)
+                            dailyData[day] = currentDuration + record.duration
+                        }
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保该月的所有天都有数据（没有数据的天为0）
+                val result = mutableMapOf<String, Long>()
+                try {
+                    val parts = startDate.split("-")
+                    if (parts.size >= 3) {
+                        val year = parts[0].toInt()
+                        val month = parts[1].toInt()
+                        val daysInMonth = getDaysInMonth(year, month)
+                        for (i in 1..daysInMonth) {
+                            val dayKey = String.format("%02d", i)
+                            result["${i}日"] = dailyData.getOrDefault(dayKey, 0L)
+                        }
+                    }
+                } catch (e: Exception) {
+                    // 处理日期解析异常
+                    e.printStackTrace()
+                }
+                result
+            }
+            TimeGranularity.WEEK -> {
+                // 按周内天统计
+                val weeklyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从日期计算是周几（1-7，周一到周日）
+                        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val date = dateFormat.parse(record.date)
+                        val calendar = Calendar.getInstance()
+                        calendar.time = date
+                        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+                        // 调整为周一为1，周日为7
+                        val adjustedDayOfWeek = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
+                        val currentDuration = weeklyData.getOrDefault(adjustedDayOfWeek.toString(), 0L)
+                        weeklyData[adjustedDayOfWeek.toString()] = currentDuration + record.duration
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保1-7天都有数据（没有数据的天为0）
+                val result = mutableMapOf<String, Long>()
+                val weekdays = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+                for (i in 1..7) {
+                    result[weekdays[i-1]] = weeklyData.getOrDefault(i.toString(), 0L)
+                }
+                result
+            }
+            TimeGranularity.DAY -> {
+                // 按小时统计
+                val hourlyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从开始时间提取小时
+                        val calendar = Calendar.getInstance()
+                        calendar.timeInMillis = record.startTime
+                        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                        val currentDuration = hourlyData.getOrDefault(hour.toString(), 0L)
+                        hourlyData[hour.toString()] = currentDuration + record.duration
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保0-23小时都有数据（没有数据的小时为0）
+                val result = mutableMapOf<String, Long>()
+                for (i in 0..23) {
+                    result["${i}时"] = hourlyData.getOrDefault(i.toString(), 0L)
+                }
+                result
+            }
+        }
+    }
+    
+    /**
+     * 基于时间粒度的阅读趋势统计
+     * @param startDate 开始日期 (格式: yyyy-MM-dd)
+     * @param endDate 结束日期 (格式: yyyy-MM-dd)
+     * @param granularity 时间粒度 (年/月/周/日)
+     * @return 时间点到阅读时长的映射
+     */
+    suspend fun getReadingTrendDataByTimeGranularity(
+        startDate: String, 
+        endDate: String, 
+        granularity: TimeGranularity
+    ): Map<String, Long> {
+        val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
+        val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
+        
+        return when (granularity) {
+            TimeGranularity.YEAR -> {
+                // 按月份统计趋势
+                val monthlyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从日期中提取月份
+                        val parts = record.date.split("-")
+                        if (parts.size >= 3) {
+                            val month = parts[1] // 获取月份
+                            val currentDuration = monthlyData.getOrDefault(month, 0L)
+                            monthlyData[month] = currentDuration + record.duration
+                        }
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保1-12月都有数据（没有数据的月份为0）
+                val result = mutableMapOf<String, Long>()
+                for (i in 1..12) {
+                    val month = String.format("%02d", i)
+                    result["${month}月"] = monthlyData.getOrDefault(month, 0L)
+                }
+                result
+            }
+            TimeGranularity.MONTH -> {
+                // 按天统计趋势
+                val dailyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从日期中提取天
+                        val parts = record.date.split("-")
+                        if (parts.size >= 3) {
+                            val day = parts[2] // 获取天
+                            val currentDuration = dailyData.getOrDefault(day, 0L)
+                            dailyData[day] = currentDuration + record.duration
+                        }
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保该月的所有天都有数据（没有数据的天为0）
+                val result = mutableMapOf<String, Long>()
+                try {
+                    val parts = startDate.split("-")
+                    if (parts.size >= 3) {
+                        val year = parts[0].toInt()
+                        val month = parts[1].toInt()
+                        val daysInMonth = getDaysInMonth(year, month)
+                        for (i in 1..daysInMonth) {
+                            val dayKey = String.format("%02d", i)
+                            result["${i}日"] = dailyData.getOrDefault(dayKey, 0L)
+                        }
+                    }
+                } catch (e: Exception) {
+                    // 处理日期解析异常
+                    e.printStackTrace()
+                }
+                result
+            }
+            TimeGranularity.WEEK -> {
+                // 按周内天统计趋势
+                val weeklyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从日期计算是周几（1-7，周一到周日）
+                        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val date = dateFormat.parse(record.date)
+                        val calendar = Calendar.getInstance()
+                        calendar.time = date
+                        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+                        // 调整为周一为1，周日为7
+                        val adjustedDayOfWeek = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
+                        val currentDuration = weeklyData.getOrDefault(adjustedDayOfWeek.toString(), 0L)
+                        weeklyData[adjustedDayOfWeek.toString()] = currentDuration + record.duration
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保1-7天都有数据（没有数据的天为0）
+                val result = mutableMapOf<String, Long>()
+                val weekdays = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+                for (i in 1..7) {
+                    result[weekdays[i-1]] = weeklyData.getOrDefault(i.toString(), 0L)
+                }
+                result
+            }
+            TimeGranularity.DAY -> {
+                // 按小时统计趋势
+                val hourlyData = mutableMapOf<String, Long>()
+                readingRecords.forEach { record ->
+                    try {
+                        // 从开始时间提取小时
+                        val calendar = Calendar.getInstance()
+                        calendar.timeInMillis = record.startTime
+                        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                        val currentDuration = hourlyData.getOrDefault(hour.toString(), 0L)
+                        hourlyData[hour.toString()] = currentDuration + record.duration
+                    } catch (e: Exception) {
+                        // 处理日期解析异常
+                        e.printStackTrace()
+                    }
+                }
+                // 确保0-23小时都有数据（没有数据的小时为0）
+                val result = mutableMapOf<String, Long>()
+                for (i in 0..23) {
+                    result["${i}时"] = hourlyData.getOrDefault(i.toString(), 0L)
+                }
+                result
+            }
+        }
+    }
+    
+    /**
+     * 获取指定日期范围内的阅读习惯时间分布数据（按小时统计阅读次数）
+     * @param startDate 开始日期 (格式: yyyy-MM-dd)
+     * @param endDate 结束日期 (格式: yyyy-MM-dd)
+     * @return 小时到阅读次数的映射
+     */
+    suspend fun getReadingHabitDataByDateRange(startDate: String, endDate: String): Map<String, Int> {
+        val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
+        val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
+        
+        // 按小时统计阅读次数
+        val habitData = mutableMapOf<String, Int>()
+        readingRecords.forEach { record ->
+            try {
+                // 从开始时间提取小时
+                val calendar = Calendar.getInstance()
+                calendar.timeInMillis = record.startTime
+                val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                val currentCount = habitData.getOrDefault("${hour}时", 0)
+                habitData["${hour}时"] = currentCount + 1
+            } catch (e: Exception) {
+                // 处理日期解析异常
+                e.printStackTrace()
+            }
+        }
+        
+        // 确保0-23小时都有数据（没有数据的小时为0）
+        val result = mutableMapOf<String, Int>()
+        for (i in 0..23) {
+            result["${i}时"] = habitData.getOrDefault("${i}时", 0)
+        }
+        
+        return result
+    }
+    
+    /**
+     * 获取指定年月的天数
+     */
+    private fun getDaysInMonth(year: Int, month: Int): Int {
+        val calendar = Calendar.getInstance()
+        calendar.set(year, month - 1, 1) // 月份从0开始
+        return calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+    }
+    
+    /**
+     * 基于百分位数的分组：根据用户实际的阅读时长分布来动态划分区间
+     * @param startDate 开始日期 (格式: yyyy-MM-dd)
+     * @param endDate 结束日期 (格式: yyyy-MM-dd)
+     * @return 时长区间到阅读次数的映射
+     */
+    suspend fun getReadingDurationDistributionByPercentiles(startDate: String, endDate: String): Map<String, Int> {
+        // 获取指定日期范围内的所有阅读时长数据
+        val durations = readingRecordDao.getReadingDurationsByDateRange(startDate, endDate)
+        
+        if (durations.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 对时长数据进行排序
+        val sortedDurations = durations.sorted()
+        val size = sortedDurations.size
+        
+        // 计算百分位数
+        val percentile25: Long = sortedDurations[(size * 0.25).toInt().coerceIn(0, size - 1)]
+        val percentile50: Long = sortedDurations[(size * 0.50).toInt().coerceIn(0, size - 1)]
+        val percentile75: Long = sortedDurations[(size * 0.75).toInt().coerceIn(0, size - 1)]
+        
+        // 根据百分位数分组
+        val distribution = mutableMapOf<String, Int>()
+        distribution["快速阅读(<${formatDuration(percentile25)})"] = 0
+        distribution["中等时长(${formatDuration(percentile25)}-${formatDuration(percentile50)})"] = 0
+        distribution["较长阅读(${formatDuration(percentile50)}-${formatDuration(percentile75)})"] = 0
+        distribution["深度阅读(>${formatDuration(percentile75)})"] = 0
+        
+        // 统计各区间的数据
+        durations.forEach { duration ->
+            when {
+                duration < percentile25 -> {
+                    distribution["快速阅读(<${formatDuration(percentile25)})"] = 
+                        distribution["快速阅读(<${formatDuration(percentile25)})"]!! + 1
+                }
+                duration < percentile50 -> {
+                    distribution["中等时长(${formatDuration(percentile25)}-${formatDuration(percentile50)})"] = 
+                        distribution["中等时长(${formatDuration(percentile25)}-${formatDuration(percentile50)})"]!! + 1
+                }
+                duration < percentile75 -> {
+                    distribution["较长阅读(${formatDuration(percentile50)}-${formatDuration(percentile75)})"] = 
+                        distribution["较长阅读(${formatDuration(percentile50)}-${formatDuration(percentile75)})"]!! + 1
+                }
+                else -> {
+                    distribution["深度阅读(>${formatDuration(percentile75)})"] = 
+                        distribution["深度阅读(>${formatDuration(percentile75)})"]!! + 1
+                }
+            }
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 格式化持续时间显示（分钟）
+     */
+    private fun formatDuration(milliseconds: Long): String {
+        val minutes = milliseconds / 60000
+        return "${minutes}分钟"
+    }
+
 }

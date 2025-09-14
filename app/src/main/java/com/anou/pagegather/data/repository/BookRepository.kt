@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flowOf
 import com.anou.pagegather.data.local.entity.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -453,6 +454,23 @@ class BookRepository @Inject constructor(
         return bookDao.getFinishedBooksCount()
     }
     
+    /**
+     * 根据时间范围获取读完的书籍数量
+     * @param bookIds 在指定时间范围内有阅读记录的书籍ID列表
+     * @return 在这些书籍中状态为已完成的书籍数量
+     */
+    suspend fun getFinishedBooksCountByBookIds(bookIds: List<Long>): Int {
+        if (bookIds.isEmpty()) {
+            return 0
+        }
+        
+        // 批量获取书籍信息以提高性能
+        val books: List<BookEntity> = getBooksByIds(bookIds)
+        
+        // 统计状态为已完成的书籍数量
+        return books.count { it.readStatus == 2 } // 2表示已完成
+    }
+    
     /** 获取书籍总数 */
     suspend fun getTotalBooksCount(): Int {
         return bookDao.getTotalBooksCount()
@@ -461,6 +479,11 @@ class BookRepository @Inject constructor(
     /** 获取阅读中的书籍数量 */
     suspend fun getReadingBooksCount(): Int {
         return bookDao.getReadingBooksCount()
+    }
+    
+    /** 根据ID列表批量获取书籍 */
+    suspend fun getBooksByIds(bookIds: List<Long>): List<BookEntity> {
+        return bookDao.getBooksByIds(bookIds)
     }
     
     /**
@@ -502,7 +525,281 @@ class BookRepository @Inject constructor(
         
         return distribution
     }
-
-
+    
+    /**
+     * 获取书籍来源分布数据
+     * 返回一个Map，键为书籍来源名称，值为该来源书籍的数量
+     */
+    suspend fun getBookSourceDistribution(): Map<String, Int> {
+        val books = bookDao.getAllBooksDirect() // 使用直接获取所有书籍的方法
+        val sources = bookSourceDao.getAllSources().first() ?: emptyList()
+        val sourceMap: Map<Int, BookSourceEntity> = sources.associateBy { it.id.toInt() } // 创建来源ID到来源实体的映射
+        
+        val distribution = mutableMapOf<String, Int>()
+        
+        books.forEach { book ->
+            val sourceName = sourceMap[book.bookSourceId]?.name ?: "未知来源"
+            distribution[sourceName] = distribution.getOrDefault(sourceName, 0) + 1
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 根据时间范围获取书籍来源分布数据
+     * @param bookIds 在指定时间范围内有阅读记录的书籍ID列表
+     * @return 返回一个Map，键为书籍来源名称，值为该来源书籍的数量
+     */
+    suspend fun getBookSourceDistributionByBookIds(bookIds: List<Long>): Map<String, Int> {
+        // 如果没有书籍ID，返回空的分布
+        if (bookIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 批量获取书籍信息以提高性能
+        val books: List<BookEntity> = bookDao.getBooksByIds(bookIds)
+        val sources = bookSourceDao.getAllSources().first() ?: emptyList()
+        val sourceMap: Map<Int, BookSourceEntity> = sources.associateBy { it.id.toInt() } // 创建来源ID到来源实体的映射
+        
+        // 统计书籍来源分布
+        val distribution = mutableMapOf<String, Int>()
+        books.forEach { book: BookEntity ->
+            val sourceName = sourceMap[book.bookSourceId]?.name ?: "未知来源"
+            distribution[sourceName] = distribution.getOrDefault(sourceName, 0) + 1
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 获取书籍状态分布数据
+     * 返回一个Map，键为书籍状态名称，值为该状态书籍的数量
+     */
+    suspend fun getBookStatusDistribution(): Map<String, Int> {
+        val books = bookDao.getAllBooksDirect() // 使用直接获取所有书籍的方法
+        val distribution = mutableMapOf<String, Int>()
+        
+        books.forEach { book ->
+            val status = when (book.readStatus) {
+                0 -> "未读"
+                1 -> "正在读"
+                2 -> "已完成"
+                3 -> "已放弃"
+                else -> "未知状态"
+            }
+            distribution[status] = distribution.getOrDefault(status, 0) + 1
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 根据时间范围获取书籍状态分布数据
+     * @param bookIds 在指定时间范围内有阅读记录的书籍ID列表
+     * @return 返回一个Map，键为书籍状态名称，值为该状态书籍的数量
+     */
+    suspend fun getBookStatusDistributionByBookIds(bookIds: List<Long>): Map<String, Int> {
+        // 如果没有书籍ID，返回空的分布
+        if (bookIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 批量获取书籍信息以提高性能
+        val books: List<BookEntity> = bookDao.getBooksByIds(bookIds)
+        
+        // 统计书籍状态分布
+        val distribution = mutableMapOf<String, Int>()
+        books.forEach { book: BookEntity ->
+            val status = when (book.readStatus) {
+                0 -> "未读"
+                1 -> "正在读"
+                2 -> "已完成"
+                3 -> "已放弃"
+                else -> "未知状态"
+            }
+            distribution[status] = distribution.getOrDefault(status, 0) + 1
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 获取书籍标签分布数据
+     * 返回一个Map，键为标签名称，值为使用该标签的书籍数量
+     */
+    suspend fun getBookTagDistribution(): Map<String, Int> {
+        // 获取所有书籍标签关联
+        val bookTagRefs = bookTagRefDao.getAllTagRefs().first() ?: emptyList()
+        
+        // 获取所有标签信息
+        val tags = tagDao.getAllTags().first() ?: emptyList()
+        val tagMap: Map<Long, TagEntity> = tags.associateBy { it.id }
+        
+        // 统计每个标签的书籍数量
+        val distribution = mutableMapOf<String, Int>()
+        bookTagRefs.forEach { ref ->
+            if (!ref.isDeleted) {
+                val tagName = tagMap[ref.tagId]?.name ?: "未知标签"
+                distribution[tagName] = distribution.getOrDefault(tagName, 0) + 1
+            }
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 根据时间范围获取书籍标签分布数据
+     * @param bookIds 在指定时间范围内有阅读记录的书籍ID列表
+     * @return 返回一个Map，键为标签名称，值为使用该标签的书籍数量
+     */
+    suspend fun getBookTagDistributionByBookIds(bookIds: List<Long>): Map<String, Int> {
+        // 如果没有书籍ID，返回空的分布
+        if (bookIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 获取所有标签信息
+        val tags = tagDao.getAllTags().first() ?: emptyList()
+        val tagMap: Map<Long, TagEntity> = tags.associateBy { it.id }
+        
+        // 统计每个标签的书籍数量
+        val distribution = mutableMapOf<String, Int>()
+        
+        // 遍历每个书籍ID，获取其标签并统计
+        for (bookId in bookIds) {
+            val bookTags = tagDao.getTagsByBookId(bookId).first() ?: emptyList()
+            bookTags.forEach { tag ->
+                distribution[tag.name] = distribution.getOrDefault(tag.name, 0) + 1
+            }
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 获取书籍评分分布数据
+     * 返回一个Map，键为评分等级，值为该评分的书籍数量
+     */
+    suspend fun getBookRatingDistribution(): Map<String, Int> {
+        val books = bookDao.getAllBooksDirect() // 使用直接获取所有书籍的方法
+        
+        // 统计每个评分的书籍数量
+        val distribution = mutableMapOf<String, Int>()
+        books.forEach { book ->
+            // 将评分转换为星级显示（0-5星）
+            val rating = book.rating
+            val ratingLabel = when {
+                rating <= 0 -> "未评分"
+                rating <= 1 -> "★"
+                rating <= 2 -> "★★"
+                rating <= 3 -> "★★★"
+                rating <= 4 -> "★★★★"
+                else -> "★★★★★"
+            }
+            distribution[ratingLabel] = distribution.getOrDefault(ratingLabel, 0) + 1
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 根据时间范围获取书籍评分分布数据
+     * @param bookIds 在指定时间范围内有阅读记录的书籍ID列表
+     * @return 返回一个Map，键为评分等级，值为该评分的书籍数量
+     */
+    suspend fun getBookRatingDistributionByBookIds(bookIds: List<Long>): Map<String, Int> {
+        // 如果没有书籍ID，返回空的分布
+        if (bookIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 批量获取书籍信息以提高性能
+        val books: List<BookEntity> = bookDao.getBooksByIds(bookIds)
+        
+        // 统计每个评分的书籍数量
+        val distribution = mutableMapOf<String, Int>()
+        books.forEach { book: BookEntity ->
+            // 将评分转换为星级显示（0-5星）
+            val rating = book.rating
+            val ratingLabel = when {
+                rating <= 0 -> "未评分"
+                rating <= 1 -> "★"
+                rating <= 2 -> "★★"
+                rating <= 3 -> "★★★"
+                rating <= 4 -> "★★★★"
+                else -> "★★★★★"
+            }
+            distribution[ratingLabel] = distribution.getOrDefault(ratingLabel, 0) + 1
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 获取书籍分组分布数据
+     * 返回一个Map，键为分组名称，值为该分组中的书籍数量
+     */
+    suspend fun getBookGroupDistribution(): Map<String, Int> {
+        // 获取所有书籍分组关联
+        val bookGroupRefs: List<BookGroupRefEntity> = bookGroupRefDao.getAllGroupRefs().first()
+        
+        // 获取所有分组信息
+        val groups: List<BookGroupEntity> = bookGroupDao.getAllGroups().first()
+        val groupMap: Map<Long, BookGroupEntity> = groups.associateBy { it.id }
+        
+        // 统计每个分组的书籍数量
+        val distribution = mutableMapOf<String, Int>()
+        bookGroupRefs.forEach { ref: BookGroupRefEntity ->
+            val groupName = groupMap[ref.groupId]?.name ?: "未知分组"
+            distribution[groupName] = distribution.getOrDefault(groupName, 0) + 1
+        }
+        
+        // 添加未分组的书籍数量
+        val ungroupedBooks: List<BookEntity> = bookDao.getUngroupedBooks().first()
+        if (ungroupedBooks.isNotEmpty()) {
+            distribution["未分组"] = ungroupedBooks.size
+        }
+        
+        return distribution
+    }
+    
+    /**
+     * 根据时间范围获取书籍分组分布数据
+     * @param bookIds 在指定时间范围内有阅读记录的书籍ID列表
+     * @return 返回一个Map，键为分组名称，值为该分组中的书籍数量
+     */
+    suspend fun getBookGroupDistributionByBookIds(bookIds: List<Long>): Map<String, Int> {
+        // 如果没有书籍ID，返回空的分布
+        if (bookIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 获取所有分组信息
+        val groups: List<BookGroupEntity> = bookGroupDao.getAllGroups().first()
+        val groupMap: Map<Long, BookGroupEntity> = groups.associateBy { it.id }
+        
+        // 统计每个分组的书籍数量
+        val distribution = mutableMapOf<String, Int>()
+        
+        // 遍历每个书籍ID，获取其分组并统计
+        for (bookId in bookIds) {
+            val bookGroups: List<BookGroupRefEntity> = bookGroupRefDao.getGroupRefsByBookId(bookId).first()
+            bookGroups.forEach { groupRef: BookGroupRefEntity ->
+                val groupName = groupMap[groupRef.groupId]?.name ?: "未知分组"
+                distribution[groupName] = distribution.getOrDefault(groupName, 0) + 1
+            }
+        }
+        
+        // 统计这些书籍中未分组的数量
+        val ungroupedCount = bookIds.count { bookId: Long ->
+            val bookGroups: List<BookGroupRefEntity> = bookGroupRefDao.getGroupRefsByBookId(bookId).first()
+            bookGroups.isEmpty()
+        }
+        if (ungroupedCount > 0) {
+            distribution["未分组"] = ungroupedCount
+        }
+        
+        return distribution
+    }
 
 }

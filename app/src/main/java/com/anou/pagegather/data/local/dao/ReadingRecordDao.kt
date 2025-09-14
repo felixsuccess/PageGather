@@ -5,6 +5,14 @@ import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
+ * 阅读时长分布结果数据类
+ */
+data class DurationDistributionResult(
+    val durationRange: String,
+    val count: Int
+)
+
+/**
  * 阅读记录数据访问对象
  * 提供阅读记录的数据库操作方法
  */
@@ -86,6 +94,12 @@ interface ReadingRecordDao {
     /** 获取指定书籍的最后一次阅读时间 */
     @Query("SELECT MAX(start_time) FROM reading_record WHERE book_id = :bookId")
     suspend fun getLastReadingTimeByBookId(bookId: Long): Long?
+    
+    /**
+     * 根据日期范围获取阅读记录的时长数据
+     */
+    @Query("SELECT duration FROM reading_record WHERE date BETWEEN :startDate AND :endDate")
+    suspend fun getReadingDurationsByDateRange(startDate: String, endDate: String): List<Long>
     
     // ========== 特殊查询 ==========
     

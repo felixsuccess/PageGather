@@ -8,6 +8,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -32,12 +36,44 @@ class ReadingHabitDistributionViewModel @Inject constructor(
     private fun loadReadingHabitData() {
         viewModelScope.launch {
             try {
-                // TODO: 实现具体的阅读习惯时间分布数据加载逻辑
-                // 这里需要从ReadingRecordRepository获取数据并分析
+                // 默认加载最近30天的数据
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val endDate = dateFormat.format(Date())
+                val calendar = Calendar.getInstance()
+                calendar.add(Calendar.DAY_OF_MONTH, -30)
+                val startDate = dateFormat.format(calendar.time)
+                
+                loadReadingHabitDataByDateRange(startDate, endDate)
+            } catch (e: Exception) {
+                // 处理异常
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+    
+    /**
+     * 根据时间范围加载阅读习惯时间分布数据
+     * @param startDate 开始日期 (格式: yyyy-MM-dd)
+     * @param endDate 结束日期 (格式: yyyy-MM-dd)
+     */
+    fun loadReadingHabitDataByDateRange(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                
+                // 使用ReadingRecordRepository获取按小时统计的阅读习惯时间分布数据
+                // 这里统计的是在一天中各个小时的阅读次数，而不是阅读时长
+                val habitData: Map<String, Int> = readingRecordRepository.getReadingHabitDataByDateRange(
+                    startDate, endDate
+                )
                 
                 _uiState.value = ReadingHabitDistributionUiState(
+                    habitData = habitData,
                     isLoading = false
-                    // TODO: 设置实际的数据
                 )
             } catch (e: Exception) {
                 // 处理异常

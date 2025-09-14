@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -65,6 +66,64 @@ class StatisticsOverviewViewModel @Inject constructor(
                     readingBooksCount = readingBooksCount,
                     finishedBooksCount = finishedBooksCount,
                     totalBooksCount = totalBooksCount,
+                    readingDaysCount = readingDaysCount,
+                    noteCount = noteCount,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                // 处理异常
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+
+    /**
+     * 根据时间范围加载统计数据
+     */
+    fun loadStatisticsByDateRange(startDate: String, endDate: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                
+                val totalReadingTime = readingRecordRepository.getTotalReadingTimeByDateRange(startDate, endDate)
+                val readingDaysCount = readingRecordRepository.getReadingDaysCount(startDate, endDate)
+                
+                // 获取在指定时间范围内有阅读记录的书籍ID
+                val bookIds = readingRecordRepository.getBookIdsByDateRange(startDate, endDate)
+                
+                // 根据书籍ID获取完成的书籍数量
+                var finishedBooksCount = 0
+                if (bookIds.isNotEmpty()) {
+                    // 获取这些书籍中状态为已完成的书籍数量
+                    val finishedBooks = bookRepository.getBooksByIds(bookIds)
+                    finishedBooksCount = finishedBooks.count { it.readStatus == 2 } // 2表示已完成
+                }
+                
+                // 获取在指定时间范围内创建的笔记数量
+                val noteCount = noteRepository.getAllNotes().first()?.count { note ->
+                    try {
+                        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val noteDate = Date(note.createdDate)
+                        val start = dateFormat.parse(startDate)
+                        val end = dateFormat.parse(endDate)
+                        !note.isDeleted && noteDate.after(start) && (noteDate.before(end) || noteDate == end)
+                    } catch (e: Exception) {
+                        false
+                    }
+                } ?: 0
+                
+                _uiState.value = StatisticsOverviewUiState(
+                    todayReadingTime = 0, // 在时间范围视图中不需要今日数据
+                    weekReadingTime = 0,  // 在时间范围视图中不需要本周数据
+                    monthReadingTime = 0, // 在时间范围视图中不需要本月数据
+                    totalReadingTime = totalReadingTime,
+                    readingBooksCount = 0, // 在时间范围视图中不显示在读书籍
+                    finishedBooksCount = finishedBooksCount,
+                    totalBooksCount = 0, // 在时间范围视图中不显示书籍总数
                     readingDaysCount = readingDaysCount,
                     noteCount = noteCount,
                     isLoading = false
