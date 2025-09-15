@@ -21,25 +21,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.anou.pagegather.ui.feature.statistics.StatisticsOverviewViewModel
 import com.anou.pagegather.ui.theme.PageGatherTheme
 
 /**
  * 用户信息卡片组件 阅读统计数据
  * - 集成阅读统计数据展示
- * 
- * TODO: 将来需要传入真实的用户数据和统计信息
  */
 @Composable
-fun UserProfileCard() {
+fun UserProfileCard(
+    viewModel: StatisticsOverviewViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
@@ -66,25 +71,24 @@ fun UserProfileCard() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // 统计数据行
-                // TODO: 连接真实的阅读统计数据，可考虑传入ViewModel或Repository
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     UserStatItem(
                         icon = Icons.AutoMirrored.Filled.MenuBook,
-                        value = "12", // TODO: 真实的在读书籍数量
+                        value = "${uiState.readingBooksCount}",
                         label = "在读书籍"
                     )
                     UserStatItem(
                         icon = Icons.Default.Timer,
-                        value = "2.5h", // TODO: 真实的今日阅读时间
+                        value = formatDuration(uiState.todayReadingTime),
                         label = "今日阅读"
                     )
                     UserStatItem(
                         icon = Icons.Default.LocalFireDepartment,
-                        value = "7", // TODO: 真实的连续阅读天数
-                        label = "连续天数"
+                        value = "${uiState.readingDaysCount}",
+                        label = "连续天数?"
                     )
                 }
             }
@@ -128,6 +132,23 @@ private fun UserStatItem(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 12.sp
         )
+    }
+}
+
+/**
+ * 格式化持续时间显示
+ */
+private fun formatDuration(milliseconds: Long): String {
+    if (milliseconds <= 0) return "0分钟"
+    
+    val seconds = milliseconds / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    
+    return when {
+        hours > 0 -> "${hours}h"
+        minutes > 0 -> "${minutes}m"
+        else -> "${seconds}s"
     }
 }
 

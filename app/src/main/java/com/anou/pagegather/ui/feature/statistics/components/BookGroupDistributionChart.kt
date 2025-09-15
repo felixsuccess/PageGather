@@ -1,5 +1,8 @@
 package com.anou.pagegather.ui.feature.statistics.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,12 +30,13 @@ fun BookGroupDistributionChart(
     }
     
     val uiState by viewModel.uiState.collectAsState()
-    
+
+
     // 初始化时加载数据
     LaunchedEffect(Unit) {
         viewModel.loadBookGroupDataByDateRange(timeRange.startDate, timeRange.endDate)
     }
-    
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -52,7 +56,7 @@ fun BookGroupDistributionChart(
                     label = group
                 )
             }.filter { it.value >= 0f } // 过滤掉负值或无效值
-            
+
             // 确保数据不为空且总值大于0后再显示图表
             val totalValue = chartData.sumOf { it.value.toDouble() }.toFloat()
             if (chartData.isNotEmpty() && totalValue > 0f) {
@@ -60,6 +64,9 @@ fun BookGroupDistributionChart(
                 Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
                     WePieChart(dataSource = chartData)
                 }
+
+
+
             } else {
                 Text(
                     text = "暂无有效的书籍分组分布数据",

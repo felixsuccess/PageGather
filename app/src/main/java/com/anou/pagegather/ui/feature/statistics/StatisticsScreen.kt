@@ -25,6 +25,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +35,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,26 +44,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.collectAsState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
-import com.anou.pagegather.ui.components.charts.ChartData
-import com.anou.pagegather.ui.components.charts.WeBarChart
-import com.anou.pagegather.ui.feature.statistics.components.BookTypeDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.BookGroupDistributionChart
+import com.anou.pagegather.ui.feature.statistics.components.BookRatingDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.BookSourceDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.BookStatusDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.BookTagDistributionChart
-import com.anou.pagegather.ui.feature.statistics.components.BookRatingDistributionChart
-import com.anou.pagegather.ui.feature.statistics.components.BookGroupDistributionChart
-import com.anou.pagegather.ui.feature.statistics.components.ReadingDurationDistributionChart
-import com.anou.pagegather.ui.feature.statistics.components.ReadingTrendChart
-import com.anou.pagegather.ui.feature.statistics.components.ReadingOverviewCard
+import com.anou.pagegather.ui.feature.statistics.components.BookTypeDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.FinishedBooksChart
+import com.anou.pagegather.ui.feature.statistics.components.ReadingDurationDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.ReadingHabitDistributionChart
-import com.anou.pagegather.ui.navigation.Routes
+import com.anou.pagegather.ui.feature.statistics.components.ReadingOverviewCard
+import com.anou.pagegather.ui.feature.statistics.components.ReadingTrendChart
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -167,6 +164,8 @@ private fun StatisticsTimelineTab(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
+
+
         // 阅读趋势图表占位符 (移除了年度报告卡片)
         Card(
             modifier = Modifier
@@ -234,6 +233,35 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
         
         // 年度总览卡片（使用ViewModel获取数据）
         item {
+//            var data = listOf(
+//                Pie(label = "Android", data = 20.0, color = Color.Red, selectedColor = Color.Green),
+//                Pie(label = "Windows", data = 45.0, color = Color.Cyan, selectedColor = Color.Blue),
+//                Pie(label = "Linux", data = 35.0, color = Color.Gray, selectedColor = Color.Yellow),
+//            )
+
+//
+//            PieChart(
+//                modifier = Modifier.size(200.dp),
+//                data = data,
+//                onPieClick = {
+//                    println("${it.label} Clicked")
+//                    val pieIndex = data.indexOf(it)
+//                    data = data.mapIndexed { mapIndex, pie -> pie.copy(selected = pieIndex == mapIndex) }
+//                },
+//                selectedScale = 1.2f,
+//                scaleAnimEnterSpec = spring(
+//                    dampingRatio = Spring.DampingRatioMediumBouncy,
+//                    stiffness = Spring.StiffnessLow
+//                ),
+//                colorAnimEnterSpec = tween(300),
+//                colorAnimExitSpec = tween(300),
+//                scaleAnimExitSpec = tween(300),
+//                spaceDegreeAnimExitSpec = tween(300),
+//                style = Pie.Style.Fill
+//            )
+
+
+
 
             Card(
                 modifier = Modifier.fillMaxWidth(),

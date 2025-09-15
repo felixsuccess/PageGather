@@ -1,6 +1,9 @@
 package com.anou.pagegather.ui.feature.statistics.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Book
@@ -10,9 +13,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.anou.pagegather.ui.feature.bookshelf.booklist.GRID_COLUMNS
+import com.anou.pagegather.ui.feature.bookshelf.booklist.GRID_PADDING
+import com.anou.pagegather.ui.feature.bookshelf.booklist.GRID_SPACING
+import com.anou.pagegather.ui.feature.bookshelf.common.BookGridItem
 import com.anou.pagegather.ui.feature.statistics.StatisticsOverviewViewModel
 import com.anou.pagegather.ui.feature.statistics.StatisticsOverviewUiState
 
@@ -42,15 +51,13 @@ fun ReadingOverviewCard(
 
             if (uiState.isLoading) {
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
             } else if (uiState.error != null) {
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "加载数据失败: ${uiState.error}",
@@ -58,76 +65,93 @@ fun ReadingOverviewCard(
                     )
                 }
             } else {
-                // 统计数据行
-                StatisticRow(
-                    icon = Icons.Default.AccessTime,
-                    label = "今日阅读",
-                    value = formatDuration(uiState.todayReadingTime)
-                )
+                val gridState = rememberLazyGridState()
+                //
+                LazyVerticalGrid(
+                    modifier = Modifier.fillMaxWidth(),
+                    columns = GRID_COLUMNS,
+                    contentPadding = GRID_PADDING,
+                    state = gridState,
+                    verticalArrangement = Arrangement.spacedBy(GRID_SPACING),
+                    horizontalArrangement = Arrangement.spacedBy(GRID_SPACING)
+                ) {
+                    item {
+                        // 统计数据行
+                        StatisticRow(
+                            icon = Icons.Default.AccessTime,
+                            label = "今日阅读",
+                            value = formatDuration(uiState.todayReadingTime)
+                        )
 
-                Spacer(modifier = Modifier.height(12.dp))
 
-                StatisticRow(
-                    icon = Icons.Default.CalendarToday,
-                    label = "本周阅读",
-                    value = formatDuration(uiState.weekReadingTime)
-                )
+                    }
+                    item {
+                        StatisticRow(
+                            icon = Icons.Default.CalendarToday,
+                            label = "本周阅读",
+                            value = formatDuration(uiState.weekReadingTime)
+                        )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    item {
 
-                StatisticRow(
-                    icon = Icons.Default.CalendarToday,
-                    label = "本月阅读",
-                    value = formatDuration(uiState.monthReadingTime)
-                )
+                        StatisticRow(
+                            icon = Icons.Default.CalendarToday,
+                            label = "本月阅读",
+                            value = formatDuration(uiState.monthReadingTime)
+                        )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    item {
+                        StatisticRow(
+                            icon = Icons.Default.AccessTime,
+                            label = "总阅读时长",
+                            value = formatDuration(uiState.totalReadingTime)
+                        )
 
-                StatisticRow(
-                    icon = Icons.Default.AccessTime,
-                    label = "总阅读时长",
-                    value = formatDuration(uiState.totalReadingTime)
-                )
+                    }
+                    item {
+                        StatisticRow(
+                            icon = Icons.Default.Book,
+                            label = "在读书籍",
+                            value = "${uiState.readingBooksCount} 本"
+                        )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    }
+                    item {
+                        StatisticRow(
+                            icon = Icons.Default.Book,
+                            label = "读完书籍",
+                            value = "${uiState.finishedBooksCount} 本"
+                        )
 
-                StatisticRow(
-                    icon = Icons.Default.Book,
-                    label = "在读书籍",
-                    value = "${uiState.readingBooksCount} 本"
-                )
+                    }
 
-                Spacer(modifier = Modifier.height(12.dp))
 
-                StatisticRow(
-                    icon = Icons.Default.Book,
-                    label = "读完书籍",
-                    value = "${uiState.finishedBooksCount} 本"
-                )
+                    item {
+                        StatisticRow(
+                            icon = Icons.Default.Book,
+                            label = "书籍总数",
+                            value = "${uiState.totalBooksCount} 本"
+                        )
+                    }
+                    item {
+                        StatisticRow(
+                            icon = Icons.Default.CalendarToday,
+                            label = "阅读天数",
+                            value = "${uiState.readingDaysCount} 天"
+                        )
+                    }
+                    item {
+                        StatisticRow(
+                            icon = Icons.Default.Edit,
+                            label = "笔记数量",
+                            value = "${uiState.noteCount} 条"
+                        )
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(12.dp))
 
-                StatisticRow(
-                    icon = Icons.Default.Book,
-                    label = "书籍总数",
-                    value = "${uiState.totalBooksCount} 本"
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                StatisticRow(
-                    icon = Icons.Default.CalendarToday,
-                    label = "阅读天数",
-                    value = "${uiState.readingDaysCount} 天"
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                StatisticRow(
-                    icon = Icons.Default.Edit,
-                    label = "笔记数量",
-                    value = "${uiState.noteCount} 条"
-                )
             }
         }
     }
@@ -138,36 +162,37 @@ fun ReadingOverviewCard(
  */
 @Composable
 private fun StatisticRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String
+    icon: ImageVector, label: String, value: String
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 18.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 12.sp
         )
     }
 }
@@ -177,11 +202,11 @@ private fun StatisticRow(
  */
 private fun formatDuration(milliseconds: Long): String {
     if (milliseconds <= 0) return "0分钟"
-    
+
     val seconds = milliseconds / 1000
     val minutes = seconds / 60
     val hours = minutes / 60
-    
+
     return when {
         hours > 0 -> "${hours}小时${minutes % 60}分钟"
         minutes > 0 -> "${minutes}分钟"
