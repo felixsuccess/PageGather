@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.ksp)
     id("kotlin-parcelize") // 添加 kotlin-parcelize 插件
     alias(libs.plugins.kotlinx.serialization)// 添加 kotlinx-serialization 插件
 }
@@ -31,20 +31,25 @@ android {
             )
         }
     }
+    
+    // 更新Kotlin JVM目标配置
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
+    
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -72,7 +77,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     // datastore
     implementation(libs.androidx.datastore.preferences)
+    // 测试依赖
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
