@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     // datastore
     implementation(libs.androidx.datastore.preferences)
+    implementation("com.github.2zalab:composecharts:1.0.0")
     // 测试依赖
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

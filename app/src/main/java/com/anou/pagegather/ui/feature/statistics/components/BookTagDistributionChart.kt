@@ -1,16 +1,27 @@
 package com.anou.pagegather.ui.feature.statistics.components
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.anou.pagegather.ui.components.charts.ChartData
-import com.anou.pagegather.ui.components.charts.WePieChart
+import com.anou.pagegather.data.model.BookReadingStatisticsItemData
+import com.anou.pagegather.ui.components.charts.generateColors
 import com.anou.pagegather.ui.feature.statistics.BookTagDistributionViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeRange
+import com.touzalab.composecharts.components.PieChart
+import com.touzalab.composecharts.data.PieChartSegment
 
 /**
  * 书籍标签分布图表组件
@@ -35,7 +46,8 @@ fun BookTagDistributionChart(
     
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceAround
     ) {
         if (uiState.isLoading) {
             CircularProgressIndicator()
@@ -47,19 +59,40 @@ fun BookTagDistributionChart(
         } else if (uiState.tagData.isNotEmpty()) {
             // 将数据转换为图表所需格式
             val chartData = uiState.tagData.map { (tag, count) ->
-                ChartData(
+                BookReadingStatisticsItemData(
                     value = count.toFloat(),
-                    label = tag
+                    label = tag,
+                    groupId = 0
                 )
             }.filter { it.value >= 0f } // 过滤掉负值或无效值
-            
+
             // 确保数据不为空且总值大于0后再显示图表
             val totalValue = chartData.sumOf { it.value.toDouble() }.toFloat()
             if (chartData.isNotEmpty() && totalValue > 0f) {
-                // WePieChart没有modifier参数，所以我们使用Box来应用尺寸限制
-                Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
-                    WePieChart(dataSource = chartData)
+                val segments = mutableListOf<PieChartSegment>()
+
+                val dataCount = chartData.size
+                val dataColors = generateColors(dataCount)
+                chartData.forEachIndexed { index, item ->
+                    segments.add(
+                        PieChartSegment(
+                            value = item.value,
+                            label = item.label,
+                            color = dataColors[index]
+                        )
+                    )
                 }
+
+                PieChart(
+                    segments = segments,
+                    donut = true,
+                    showPercentages = true,
+                    title = "书籍标签分布",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(bottom = 16.dp)
+                )
             } else {
                 Text(
                     text = "暂无有效的书籍标签分布数据",

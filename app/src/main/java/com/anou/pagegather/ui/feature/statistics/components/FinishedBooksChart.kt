@@ -7,10 +7,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.anou.pagegather.ui.components.charts.ChartData
-import com.anou.pagegather.ui.components.charts.WeBarChart
 import com.anou.pagegather.ui.feature.statistics.FinishedBooksViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeRange
+import com.touzalab.composecharts.components.BarChart
+import com.touzalab.composecharts.data.DataPoint
+import com.touzalab.composecharts.data.DataSeries
+import com.touzalab.composecharts.theme.ColorPalettes
 
 /**
  * 读完书籍图表组件
@@ -52,17 +54,31 @@ fun FinishedBooksChart(
             )
         } else {
             // 创建一个简单的柱状图数据，显示读完的书籍数量
-            val chartData = listOf(
-                ChartData(
-                    value = uiState.finishedBooksCount.toFloat(),
+            val chartDataPoints = listOf(
+                DataPoint(
+                    x = 0f,
+                    y = uiState.finishedBooksCount.toFloat(),
                     label = "读完书籍"
                 )
             )
             
-            // 显示柱状图
-            WeBarChart(
-                dataSource = chartData,
-                modifier = Modifier.fillMaxWidth().height(200.dp)
+            val salesData = listOf(
+                DataSeries(
+                    name = "读完书籍",
+                    color = ColorPalettes.Default[0],
+                    points = chartDataPoints
+                )
+            )
+
+            BarChart(
+                dataSeries = salesData,
+                title = "读完书籍统计",
+                xAxisTitle = "类别",
+                yAxisTitle = "数量",
+                stacked = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
             )
         }
     }

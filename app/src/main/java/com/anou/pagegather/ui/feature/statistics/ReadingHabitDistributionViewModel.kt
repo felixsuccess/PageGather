@@ -2,6 +2,7 @@ package com.anou.pagegather.ui.feature.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anou.pagegather.data.model.BookReadingStatisticsItemData
 import com.anou.pagegather.data.repository.ReadingRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,7 +68,7 @@ class ReadingHabitDistributionViewModel @Inject constructor(
                 
                 // 使用ReadingRecordRepository获取按小时统计的阅读习惯时间分布数据
                 // 这里统计的是在一天中各个小时的阅读次数，而不是阅读时长
-                val habitData: Map<String, Int> = readingRecordRepository.getReadingHabitDataByDateRange(
+                val habitData: List<BookReadingStatisticsItemData> = readingRecordRepository.getReadingHabitDataByDateRange(
                     startDate, endDate
                 )
                 
@@ -91,7 +92,7 @@ class ReadingHabitDistributionViewModel @Inject constructor(
  * 阅读习惯时间分布UI状态数据类
  */
 data class ReadingHabitDistributionUiState(
-    val habitData: Map<String, Int> = emptyMap(), // 时间段 -> 阅读次数
+    val habitData:List<BookReadingStatisticsItemData> = emptyList(), // 时间段 -> 阅读次数
     val isLoading: Boolean = true,
     val error: String? = null
 )

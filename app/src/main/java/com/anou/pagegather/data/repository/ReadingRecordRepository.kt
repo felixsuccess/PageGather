@@ -4,11 +4,14 @@ import androidx.room.withTransaction
 import com.anou.pagegather.data.local.database.AppDatabase
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
+import com.anou.pagegather.data.model.BookReadingStatisticsItemData
 import com.anou.pagegather.ui.feature.statistics.TimeGranularity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -54,7 +57,10 @@ class ReadingRecordRepository @Inject constructor(
     }
 
     /** 根据日期范围获取阅读记录 */
-    fun getReadingRecordsByDateRange(startDate: String, endDate: String): Flow<List<ReadingRecordEntity>> {
+    fun getReadingRecordsByDateRange(
+        startDate: String,
+        endDate: String
+    ): Flow<List<ReadingRecordEntity>> {
         return readingRecordDao.getReadingRecordsByDateRange(startDate, endDate)
     }
 
@@ -109,47 +115,47 @@ class ReadingRecordRepository @Inject constructor(
     suspend fun getTotalReadingTime(): Long {
         return readingRecordDao.getTotalReadingTime() ?: 0L
     }
-    
+
     /** 获取指定日期范围内的阅读天数 */
     suspend fun getReadingDaysCount(startDate: String, endDate: String): Int {
         return readingRecordDao.getReadingDaysCount(startDate, endDate)
     }
-    
+
     /** 获取今天的总阅读时长 */
     suspend fun getTodayTotalReadingTime(): Long {
         return readingRecordDao.getTodayTotalReadingTime() ?: 0L
     }
-    
+
     /** 获取本周的总阅读时长 */
     suspend fun getThisWeekTotalReadingTime(): Long {
         return readingRecordDao.getThisWeekTotalReadingTime() ?: 0L
     }
-    
+
     /** 获取本月的总阅读时长 */
     suspend fun getThisMonthTotalReadingTime(): Long {
         return readingRecordDao.getThisMonthTotalReadingTime() ?: 0L
     }
-    
+
     /** 获取阅读中的书籍数量 */
     suspend fun getReadingBooksCount(): Int {
         return readingRecordDao.getReadingBooksCount()
     }
-    
+
     /** 获取指定书籍的阅读记录数量 */
     suspend fun getReadingRecordCountByBookId(bookId: Long): Int {
         return readingRecordDao.getReadingRecordCountByBookId(bookId)
     }
-    
+
     /** 获取指定书籍的平均阅读时长 */
     suspend fun getAverageReadingTimeByBookId(bookId: Long): Long {
         return readingRecordDao.getAverageReadingTimeByBookId(bookId) ?: 0L
     }
-    
+
     /** 获取指定书籍的最后一次阅读时间 */
     suspend fun getLastReadingTimeByBookId(bookId: Long): Long? {
         return readingRecordDao.getLastReadingTimeByBookId(bookId)
     }
-    
+
     // ========== 阅读会话管理 ==========
 
     /** 获取当前正在进行的阅读记录 */
@@ -172,7 +178,7 @@ class ReadingRecordRepository @Inject constructor(
         val currentTime = System.currentTimeMillis()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val date = dateFormat.format(Date(currentTime))
-        
+
         val readingRecord = ReadingRecordEntity(
             bookId = bookId,
             startTime = currentTime,
@@ -182,7 +188,7 @@ class ReadingRecordRepository @Inject constructor(
             notes = notes,
             date = date
         )
-        
+
         return insertReadingRecord(readingRecord)
     }
 
@@ -200,7 +206,7 @@ class ReadingRecordRepository @Inject constructor(
         val record = getReadingRecordById(recordId) ?: return
         val endTime = System.currentTimeMillis()
         val duration = endTime - record.startTime
-        
+
         val updatedRecord = record.copy(
             endTime = endTime,
             duration = duration,
@@ -208,7 +214,7 @@ class ReadingRecordRepository @Inject constructor(
             notes = notes ?: record.notes,
             modifiedDate = endTime
         )
-        
+
         updateReadingRecord(updatedRecord)
     }
 
@@ -231,7 +237,7 @@ class ReadingRecordRepository @Inject constructor(
         notes: String? = null
     ): Long {
         val currentTime = System.currentTimeMillis()
-        
+
         val readingRecord = ReadingRecordEntity(
             bookId = bookId,
             startTime = currentTime - duration,
@@ -243,10 +249,10 @@ class ReadingRecordRepository @Inject constructor(
             notes = notes,
             date = date
         )
-        
+
         return insertReadingRecord(readingRecord)
     }
-    
+
     /**
      * 获取指定日期范围内有阅读记录的书籍ID列表
      * @param startDate 开始日期 (格式: yyyy-MM-dd)
@@ -258,28 +264,43 @@ class ReadingRecordRepository @Inject constructor(
         val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
         return readingRecords.map { record -> record.bookId }.distinct()
     }
-    
+
     /**
      * 获取指定日期范围内的阅读趋势数据
      * @param startDate 开始日期 (格式: yyyy-MM-dd)
      * @param endDate 结束日期 (格式: yyyy-MM-dd)
      * @return 日期到阅读时长的映射
      */
-    suspend fun getReadingTrendDataByDateRange(startDate: String, endDate: String): Map<String, Long> {
+    suspend fun getReadingTrendDataByDateRange(
+        startDate: String,
+        endDate: String
+    ): List<BookReadingStatisticsItemData> {
         val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
         val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
-        
+
         // 按日期分组并计算每天的总阅读时长
         val trendData = mutableMapOf<String, Long>()
         readingRecords.forEach { record ->
             val currentDate = record.date
-            val currentDuration = trendData.getOrDefault(currentDate, 0L)
+            val currentDuration = trendData[currentDate] ?: 0L
             trendData[currentDate] = currentDuration + record.duration
         }
-        
-        return trendData
+
+        val result = mutableListOf<BookReadingStatisticsItemData>()
+
+        trendData.entries.forEachIndexed { index, (key, value) ->
+            result.add(
+                BookReadingStatisticsItemData(
+                    label = key,
+                    groupId = index, // 这里设置默认值，实际使用时可以根据需要设置
+                    value = value.toFloat()
+                )
+            )
+        }
+        return result
+
     }
-    
+
     /**
      * 基于时间粒度的阅读时长分布统计
      * @param startDate 开始日期 (格式: yyyy-MM-dd)
@@ -288,14 +309,14 @@ class ReadingRecordRepository @Inject constructor(
      * @return 时间点到阅读时长的映射
      */
     suspend fun getReadingDurationDistributionByTimeGranularity(
-        startDate: String, 
-        endDate: String, 
+        startDate: String,
+        endDate: String,
         granularity: TimeGranularity
-    ): Map<String, Long> {
+    ): List<BookReadingStatisticsItemData> {
         val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
         val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
-        
-        return when (granularity) {
+
+        val resultMap = when (granularity) {
             TimeGranularity.YEAR -> {
                 // 按月份统计
                 val monthlyData = mutableMapOf<String, Long>()
@@ -305,7 +326,7 @@ class ReadingRecordRepository @Inject constructor(
                         val parts = record.date.split("-")
                         if (parts.size >= 3) {
                             val month = parts[1] // 获取月份
-                            val currentDuration = monthlyData.getOrDefault(month, 0L)
+                            val currentDuration = monthlyData[month] ?: 0L
                             monthlyData[month] = currentDuration + record.duration
                         }
                     } catch (e: Exception) {
@@ -314,13 +335,21 @@ class ReadingRecordRepository @Inject constructor(
                     }
                 }
                 // 确保1-12月都有数据（没有数据的月份为0）
-                val result = mutableMapOf<String, Long>()
+
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 for (i in 1..12) {
                     val month = String.format("%02d", i)
-                    result["${month}月"] = monthlyData.getOrDefault(month, 0L)
+                    result.add(
+                        BookReadingStatisticsItemData(
+                            label = "${month}月",
+                            groupId = i,
+                            value = (monthlyData[month] ?: 0L).toFloat()
+                        )
+                    )
                 }
                 result
             }
+
             TimeGranularity.MONTH -> {
                 // 按天统计
                 val dailyData = mutableMapOf<String, Long>()
@@ -330,7 +359,7 @@ class ReadingRecordRepository @Inject constructor(
                         val parts = record.date.split("-")
                         if (parts.size >= 3) {
                             val day = parts[2] // 获取天
-                            val currentDuration = dailyData.getOrDefault(day, 0L)
+                            val currentDuration = dailyData[day]?: 0L
                             dailyData[day] = currentDuration + record.duration
                         }
                     } catch (e: Exception) {
@@ -338,8 +367,9 @@ class ReadingRecordRepository @Inject constructor(
                         e.printStackTrace()
                     }
                 }
+
                 // 确保该月的所有天都有数据（没有数据的天为0）
-                val result = mutableMapOf<String, Long>()
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 try {
                     val parts = startDate.split("-")
                     if (parts.size >= 3) {
@@ -348,7 +378,13 @@ class ReadingRecordRepository @Inject constructor(
                         val daysInMonth = getDaysInMonth(year, month)
                         for (i in 1..daysInMonth) {
                             val dayKey = String.format("%02d", i)
-                            result["${i}日"] = dailyData.getOrDefault(dayKey, 0L)
+                            result.add(
+                                BookReadingStatisticsItemData(
+                                    label = "${i}日",
+                                    groupId = i,
+                                    value = dailyData.getOrDefault(dayKey, 0L).toFloat()
+                                )
+                            )
                         }
                     }
                 } catch (e: Exception) {
@@ -357,6 +393,7 @@ class ReadingRecordRepository @Inject constructor(
                 }
                 result
             }
+
             TimeGranularity.WEEK -> {
                 // 按周内天统计
                 val weeklyData = mutableMapOf<String, Long>()
@@ -369,8 +406,10 @@ class ReadingRecordRepository @Inject constructor(
                         calendar.time = date
                         val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
                         // 调整为周一为1，周日为7
-                        val adjustedDayOfWeek = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
-                        val currentDuration = weeklyData.getOrDefault(adjustedDayOfWeek.toString(), 0L)
+                        val adjustedDayOfWeek =
+                            if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
+                        val currentDuration =
+                            weeklyData.getOrDefault(adjustedDayOfWeek.toString(), 0L)
                         weeklyData[adjustedDayOfWeek.toString()] = currentDuration + record.duration
                     } catch (e: Exception) {
                         // 处理日期解析异常
@@ -378,13 +417,21 @@ class ReadingRecordRepository @Inject constructor(
                     }
                 }
                 // 确保1-7天都有数据（没有数据的天为0）
-                val result = mutableMapOf<String, Long>()
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 val weekdays = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
                 for (i in 1..7) {
-                    result[weekdays[i-1]] = weeklyData.getOrDefault(i.toString(), 0L)
+                    result.add(
+                        BookReadingStatisticsItemData(
+                            label = weekdays[i - 1],
+                            groupId = i,
+                            value = (weeklyData[i.toString()] ?: 0L).toFloat()
+                        )
+                    )
                 }
+
                 result
             }
+
             TimeGranularity.DAY -> {
                 // 按小时统计
                 val hourlyData = mutableMapOf<String, Long>()
@@ -394,7 +441,7 @@ class ReadingRecordRepository @Inject constructor(
                         val calendar = Calendar.getInstance()
                         calendar.timeInMillis = record.startTime
                         val hour = calendar.get(Calendar.HOUR_OF_DAY)
-                        val currentDuration = hourlyData.getOrDefault(hour.toString(), 0L)
+                        val currentDuration = hourlyData[hour.toString()]?: 0L
                         hourlyData[hour.toString()] = currentDuration + record.duration
                     } catch (e: Exception) {
                         // 处理日期解析异常
@@ -402,15 +449,23 @@ class ReadingRecordRepository @Inject constructor(
                     }
                 }
                 // 确保0-23小时都有数据（没有数据的小时为0）
-                val result = mutableMapOf<String, Long>()
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 for (i in 0..23) {
-                    result["${i}时"] = hourlyData.getOrDefault(i.toString(), 0L)
+                    result.add(
+                        BookReadingStatisticsItemData(
+                            label = "${i}时",
+                            groupId = i,
+                            value = (hourlyData[i.toString()] ?: 0L).toFloat()
+                        )
+                    )
                 }
                 result
             }
         }
+
+        return resultMap
     }
-    
+
     /**
      * 基于时间粒度的阅读趋势统计
      * @param startDate 开始日期 (格式: yyyy-MM-dd)
@@ -419,14 +474,14 @@ class ReadingRecordRepository @Inject constructor(
      * @return 时间点到阅读时长的映射
      */
     suspend fun getReadingTrendDataByTimeGranularity(
-        startDate: String, 
-        endDate: String, 
+        startDate: String,
+        endDate: String,
         granularity: TimeGranularity
-    ): Map<String, Long> {
+    ): List<BookReadingStatisticsItemData> {
         val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
         val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
-        
-        return when (granularity) {
+
+        val resultMap = when (granularity) {
             TimeGranularity.YEAR -> {
                 // 按月份统计趋势
                 val monthlyData = mutableMapOf<String, Long>()
@@ -436,7 +491,7 @@ class ReadingRecordRepository @Inject constructor(
                         val parts = record.date.split("-")
                         if (parts.size >= 3) {
                             val month = parts[1] // 获取月份
-                            val currentDuration = monthlyData.getOrDefault(month, 0L)
+                            val currentDuration = monthlyData[month] ?: 0L
                             monthlyData[month] = currentDuration + record.duration
                         }
                     } catch (e: Exception) {
@@ -445,13 +500,20 @@ class ReadingRecordRepository @Inject constructor(
                     }
                 }
                 // 确保1-12月都有数据（没有数据的月份为0）
-                val result = mutableMapOf<String, Long>()
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 for (i in 1..12) {
                     val month = String.format("%02d", i)
-                    result["${month}月"] = monthlyData.getOrDefault(month, 0L)
+                    result.add(
+                        BookReadingStatisticsItemData(
+                            label = "${month}月",
+                            groupId = i,
+                            value = (monthlyData[month] ?: 0L).toFloat()
+                        )
+                    )
                 }
                 result
             }
+
             TimeGranularity.MONTH -> {
                 // 按天统计趋势
                 val dailyData = mutableMapOf<String, Long>()
@@ -470,7 +532,7 @@ class ReadingRecordRepository @Inject constructor(
                     }
                 }
                 // 确保该月的所有天都有数据（没有数据的天为0）
-                val result = mutableMapOf<String, Long>()
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 try {
                     val parts = startDate.split("-")
                     if (parts.size >= 3) {
@@ -479,7 +541,13 @@ class ReadingRecordRepository @Inject constructor(
                         val daysInMonth = getDaysInMonth(year, month)
                         for (i in 1..daysInMonth) {
                             val dayKey = String.format("%02d", i)
-                            result["${i}日"] = dailyData.getOrDefault(dayKey, 0L)
+                            result.add(
+                                BookReadingStatisticsItemData(
+                                    label = "${i}日",
+                                    groupId = i,
+                                    value = dailyData.getOrDefault(dayKey, 0L).toFloat()
+                                )
+                            )
                         }
                     }
                 } catch (e: Exception) {
@@ -488,6 +556,7 @@ class ReadingRecordRepository @Inject constructor(
                 }
                 result
             }
+
             TimeGranularity.WEEK -> {
                 // 按周内天统计趋势
                 val weeklyData = mutableMapOf<String, Long>()
@@ -500,8 +569,10 @@ class ReadingRecordRepository @Inject constructor(
                         calendar.time = date
                         val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
                         // 调整为周一为1，周日为7
-                        val adjustedDayOfWeek = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
-                        val currentDuration = weeklyData.getOrDefault(adjustedDayOfWeek.toString(), 0L)
+                        val adjustedDayOfWeek =
+                            if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
+                        val currentDuration =
+                            weeklyData.getOrDefault(adjustedDayOfWeek.toString(), 0L)
                         weeklyData[adjustedDayOfWeek.toString()] = currentDuration + record.duration
                     } catch (e: Exception) {
                         // 处理日期解析异常
@@ -509,13 +580,20 @@ class ReadingRecordRepository @Inject constructor(
                     }
                 }
                 // 确保1-7天都有数据（没有数据的天为0）
-                val result = mutableMapOf<String, Long>()
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 val weekdays = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
                 for (i in 1..7) {
-                    result[weekdays[i-1]] = weeklyData.getOrDefault(i.toString(), 0L)
+                    result.add(
+                        BookReadingStatisticsItemData(
+                            label = weekdays[i - 1],
+                            groupId = i,
+                            value = weeklyData.getOrDefault(i.toString(), 0L).toFloat()
+                        )
+                    )
                 }
                 result
             }
+
             TimeGranularity.DAY -> {
                 // 按小时统计趋势
                 val hourlyData = mutableMapOf<String, Long>()
@@ -533,25 +611,36 @@ class ReadingRecordRepository @Inject constructor(
                     }
                 }
                 // 确保0-23小时都有数据（没有数据的小时为0）
-                val result = mutableMapOf<String, Long>()
+                val result = mutableListOf<BookReadingStatisticsItemData>()
                 for (i in 0..23) {
-                    result["${i}时"] = hourlyData.getOrDefault(i.toString(), 0L)
+                    result.add(
+                        BookReadingStatisticsItemData(
+                            label = "${i}时",
+                            groupId = i,
+                            value = hourlyData.getOrDefault(i.toString(), 0L).toFloat()
+                        )
+                    )
                 }
                 result
             }
         }
+
+        return resultMap
     }
-    
+
     /**
      * 获取指定日期范围内的阅读习惯时间分布数据（按小时统计阅读次数）
      * @param startDate 开始日期 (格式: yyyy-MM-dd)
      * @param endDate 结束日期 (格式: yyyy-MM-dd)
      * @return 小时到阅读次数的映射
      */
-    suspend fun getReadingHabitDataByDateRange(startDate: String, endDate: String): Map<String, Int> {
+    suspend fun getReadingHabitDataByDateRange(
+        startDate: String,
+        endDate: String
+    ): List<BookReadingStatisticsItemData> {
         val readingRecordsFlow = getReadingRecordsByDateRange(startDate, endDate)
         val readingRecords = readingRecordsFlow.firstOrNull() ?: emptyList()
-        
+
         // 按小时统计阅读次数
         val habitData = mutableMapOf<String, Int>()
         readingRecords.forEach { record ->
@@ -567,16 +656,21 @@ class ReadingRecordRepository @Inject constructor(
                 e.printStackTrace()
             }
         }
-        
+
         // 确保0-23小时都有数据（没有数据的小时为0）
-        val result = mutableMapOf<String, Int>()
+        val result = mutableListOf<BookReadingStatisticsItemData>()
         for (i in 0..23) {
-            result["${i}时"] = habitData.getOrDefault("${i}时", 0)
+            result.add(
+                BookReadingStatisticsItemData(
+                    label = "${i}时",
+                    groupId = i,
+                    value = habitData.getOrDefault(i.toString(), 0L).toFloat()
+                )
+            )
         }
-        
         return result
     }
-    
+
     /**
      * 获取指定年月的天数
      */
@@ -585,62 +679,86 @@ class ReadingRecordRepository @Inject constructor(
         calendar.set(year, month - 1, 1) // 月份从0开始
         return calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
     }
-    
+
     /**
      * 基于百分位数的分组：根据用户实际的阅读时长分布来动态划分区间
      * @param startDate 开始日期 (格式: yyyy-MM-dd)
      * @param endDate 结束日期 (格式: yyyy-MM-dd)
      * @return 时长区间到阅读次数的映射
      */
-    suspend fun getReadingDurationDistributionByPercentiles(startDate: String, endDate: String): Map<String, Int> {
+    suspend fun getReadingDurationDistributionByPercentiles(
+        startDate: String,
+        endDate: String
+    ): Map<String, Int> {
         // 获取指定日期范围内的所有阅读时长数据
         val durations = readingRecordDao.getReadingDurationsByDateRange(startDate, endDate)
-        
+
         if (durations.isEmpty()) {
             return emptyMap()
         }
-        
+
         // 对时长数据进行排序
         val sortedDurations = durations.sorted()
         val size = sortedDurations.size
-        
+
         // 计算百分位数
         val percentile25: Long = sortedDurations[(size * 0.25).toInt().coerceIn(0, size - 1)]
         val percentile50: Long = sortedDurations[(size * 0.50).toInt().coerceIn(0, size - 1)]
         val percentile75: Long = sortedDurations[(size * 0.75).toInt().coerceIn(0, size - 1)]
-        
+
         // 根据百分位数分组
         val distribution = mutableMapOf<String, Int>()
         distribution["快速阅读(<${formatDuration(percentile25)})"] = 0
-        distribution["中等时长(${formatDuration(percentile25)}-${formatDuration(percentile50)})"] = 0
-        distribution["较长阅读(${formatDuration(percentile50)}-${formatDuration(percentile75)})"] = 0
+        distribution["中等时长(${formatDuration(percentile25)}-${formatDuration(percentile50)})"] =
+            0
+        distribution["较长阅读(${formatDuration(percentile50)}-${formatDuration(percentile75)})"] =
+            0
         distribution["深度阅读(>${formatDuration(percentile75)})"] = 0
-        
+
         // 统计各区间的数据
         durations.forEach { duration ->
             when {
                 duration < percentile25 -> {
-                    distribution["快速阅读(<${formatDuration(percentile25)})"] = 
+                    distribution["快速阅读(<${formatDuration(percentile25)})"] =
                         distribution["快速阅读(<${formatDuration(percentile25)})"]!! + 1
                 }
+
                 duration < percentile50 -> {
-                    distribution["中等时长(${formatDuration(percentile25)}-${formatDuration(percentile50)})"] = 
-                        distribution["中等时长(${formatDuration(percentile25)}-${formatDuration(percentile50)})"]!! + 1
+                    distribution["中等时长(${formatDuration(percentile25)}-${
+                        formatDuration(
+                            percentile50
+                        )
+                    })"] =
+                        distribution["中等时长(${formatDuration(percentile25)}-${
+                            formatDuration(
+                                percentile50
+                            )
+                        })"]!! + 1
                 }
+
                 duration < percentile75 -> {
-                    distribution["较长阅读(${formatDuration(percentile50)}-${formatDuration(percentile75)})"] = 
-                        distribution["较长阅读(${formatDuration(percentile50)}-${formatDuration(percentile75)})"]!! + 1
+                    distribution["较长阅读(${formatDuration(percentile50)}-${
+                        formatDuration(
+                            percentile75
+                        )
+                    })"] =
+                        distribution["较长阅读(${formatDuration(percentile50)}-${
+                            formatDuration(
+                                percentile75
+                            )
+                        })"]!! + 1
                 }
+
                 else -> {
-                    distribution["深度阅读(>${formatDuration(percentile75)})"] = 
+                    distribution["深度阅读(>${formatDuration(percentile75)})"] =
                         distribution["深度阅读(>${formatDuration(percentile75)})"]!! + 1
                 }
             }
         }
-        
+
         return distribution
     }
-    
+
     /**
      * 格式化持续时间显示（分钟）
      */

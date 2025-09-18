@@ -2,6 +2,7 @@ package com.anou.pagegather.ui.feature.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anou.pagegather.data.model.BookReadingStatisticsItemData
 import com.anou.pagegather.data.repository.ReadingRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,14 +67,12 @@ class ReadingDurationDistributionViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                 
                 // 使用基于时间粒度的统计方法获取阅读时长分布数据
-                // 首先将Long映射转换为Int映射以适配UI状态
-                val durationDataLong: Map<String, Long> = readingRecordRepository.getReadingDurationDistributionByTimeGranularity(
+                val durationDataLong: List<BookReadingStatisticsItemData>  = readingRecordRepository.getReadingDurationDistributionByTimeGranularity(
                     startDate, endDate, granularity
                 )
-                val durationData: Map<String, Int> = durationDataLong.mapValues { (_, value) -> value.toInt() }
-                
+
                 _uiState.value = ReadingDurationDistributionUiState(
-                    durationData = durationData,
+                    durationData = durationDataLong,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -92,7 +91,7 @@ class ReadingDurationDistributionViewModel @Inject constructor(
  * 阅读时长分布UI状态数据类
  */
 data class ReadingDurationDistributionUiState(
-    val durationData: Map<String, Int> = emptyMap(), // 时间点 -> 阅读时长(毫秒)
+    val durationData:List<BookReadingStatisticsItemData>  = emptyList(), // 时间点 -> 阅读时长(毫秒)
     val isLoading: Boolean = true,
     val error: String? = null
 )

@@ -1,23 +1,25 @@
 package com.anou.pagegather.ui.feature.statistics.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.runtime.collectAsState
-import com.anou.pagegather.ui.components.charts.WeBarChart
 import com.anou.pagegather.ui.feature.statistics.ReadingHabitDistributionViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeRange
+import com.touzalab.composecharts.components.BarChart
+import com.touzalab.composecharts.data.DataPoint
+import com.touzalab.composecharts.data.DataSeries
+import com.touzalab.composecharts.theme.ColorPalettes
 
 /**
  * 阅读习惯时间分布图表组件
@@ -32,21 +34,21 @@ fun ReadingHabitDistributionChart(
     // 当时间范围改变时，重新加载数据
     LaunchedEffect(timeRange) {
         viewModel.loadReadingHabitDataByDateRange(
-            timeRange.startDate, 
+            timeRange.startDate,
             timeRange.endDate
         )
     }
-    
+
     // 初始化时加载数据
     LaunchedEffect(Unit) {
         viewModel.loadReadingHabitDataByDateRange(
-            timeRange.startDate, 
+            timeRange.startDate,
             timeRange.endDate
         )
     }
-    
+
     val uiState by viewModel.uiState.collectAsState()
-    
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -60,17 +62,36 @@ fun ReadingHabitDistributionChart(
             )
         } else {
             // 准备图表数据
-            val chartData = uiState.habitData.map { (hour, count) ->
-                com.anou.pagegather.ui.components.charts.ChartData(
-                    value = count.toFloat(),
-                    label = hour
+            val chartDataPoints = mutableListOf<DataPoint>()
+
+            uiState.habitData.forEachIndexed { index, item ->
+                chartDataPoints.add(
+                    DataPoint(
+                        x = item.groupId.toFloat(),
+                        y = item.value,
+                        label = item.label
+                    )
                 )
-            }.toList()
-            
-            // 显示柱状图
-            WeBarChart(
-                dataSource = chartData,
-                modifier = Modifier.fillMaxWidth().height(200.dp)
+            }
+
+
+            val salesData = listOf(
+                DataSeries(
+                    name = "阅读习惯分布",
+                    color = ColorPalettes.Default[0],
+                    points = chartDataPoints
+                )
+            )
+
+            BarChart(
+                dataSeries = salesData,
+                title = "阅读习惯时间分布",
+                xAxisTitle = "小时",
+                yAxisTitle = "阅读次数",
+                stacked = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
             )
         }
     }

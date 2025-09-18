@@ -26,3 +26,5 @@ data class BookReadingStatistics(
     /** 阅读进度（百分比） */
     val readingProgress: Double
 )
+
+

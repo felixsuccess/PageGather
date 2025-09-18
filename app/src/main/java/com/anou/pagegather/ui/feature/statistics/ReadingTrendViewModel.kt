@@ -2,6 +2,7 @@ package com.anou.pagegather.ui.feature.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anou.pagegather.data.model.BookReadingStatisticsItemData
 import com.anou.pagegather.data.repository.ReadingRecordRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -118,7 +119,7 @@ class ReadingTrendViewModel @Inject constructor(
  * 阅读趋势UI状态数据类
  */
 data class ReadingTrendUiState(
-    val trendData: Map<String, Long> = emptyMap(), // 时间点 -> 阅读时长(毫秒)
+    val trendData: List<BookReadingStatisticsItemData> = emptyList(), // 时间点 -> 阅读时长(毫秒)
     val isLoading: Boolean = true,
     val error: String? = null
 )
