@@ -84,6 +84,7 @@ fun AppNavigation(
                 onNavigateToBookSourceSettings = { navController.navigate(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) },
                 onNavigateToReadingRecords = { navController.navigate(Routes.ReadingRoutes.READING_RECORDS) },
                 onNavigateToReadingSSRecords = { navController.navigate(Routes.ReadingRoutes.BOOK_READING_STATISTICS) },
+                onNavigateToThemeSettings = { navController.navigate(Routes.ProfileRoutes.THEME_SETTINGS) },
                 onNavigateToHundiStyleDemo = { navController.navigate(Routes.ProfileRoutes.HUNDI_STYLE_DEMO) }
             )
         }
@@ -201,6 +202,13 @@ fun AppNavigation(
         }
         composable(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) {
             BookSourceManagementScreen(navController = navController)
+        }
+        
+        // 主题设置页面
+        composable(Routes.ProfileRoutes.THEME_SETTINGS) {
+            com.anou.pagegather.ui.feature.settings.ThemeSelectionScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
         
         // Hundi 风格展示页面

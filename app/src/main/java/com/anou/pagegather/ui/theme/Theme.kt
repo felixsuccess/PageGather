@@ -97,7 +97,7 @@ fun PageGatherTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = getColorSchemeForTheme(theme, darkTheme)
-    val extendedColors = getExtendedColorsForTheme(theme, darkTheme).toMaterialExtendedColors()
+    val extendedColors = getExtendedColorsForTheme(theme, darkTheme)
 
     ProvideExtendedColors(extendedColors = extendedColors) {
         MaterialTheme(

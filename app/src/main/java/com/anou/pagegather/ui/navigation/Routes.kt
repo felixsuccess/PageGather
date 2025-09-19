@@ -71,6 +71,7 @@ object Routes {
         const val BOOK_GROUP_SETTINGS = "book_group_settings"
         const val BOOK_SOURCE_SETTINGS = "book_source_settings"
         const val DATA_MANAGEMENT = "data_management"
+        const val THEME_SETTINGS = "theme_settings"  // 新增主题设置路由
         const val HUNDI_STYLE_DEMO = "hundi_style_demo"  // 新增 Hundi 风格展示路由
     }
 

@@ -123,41 +123,94 @@ object ElegantWhiteColors {
     /**
      * 典雅白主题的扩展颜色
      */
-    fun getExtendedColors(isDark: Boolean) = if (isDark) {
-        ExtendedColors(
-            success = Success,
-            warning = Warning,
-            info = Info,
-            bookmarkColor = Accent,
-            readingProgress = Success,
-            noteHighlight = Color(0xFF4A4A4A),
-            gradientStart = Primary,
-            gradientEnd = PrimaryLight
-        )
-    } else {
-        ExtendedColors(
-            success = Success,
-            warning = Warning,
-            info = Info,
-            bookmarkColor = Accent,
-            readingProgress = Success,
-            noteHighlight = Color(0xFFFFF9C4),
-            gradientStart = Primary,
-            gradientEnd = PrimaryLight
-        )
+    fun getExtendedColors(isDark: Boolean): com.anou.pagegather.ui.theme.ExtendedColors {
+        return if (isDark) {
+            com.anou.pagegather.ui.theme.ExtendedColors(
+                // 容器颜色
+                primaryContainer = Color(0xFF37474F),
+                secondaryContainer = Color(0xFF616161),
+                tertiaryContainer = Color(0xFF5C6BC0),
+                
+                // 状态颜色
+                success = Success,
+                error = Error,
+                warning = Warning,
+                info = Info,
+                
+                // 文字颜色层次
+                titleColor = Color(0xFFE0E0E0),
+                bodyColor = Color(0xFFE0E0E0),
+                subtitleColor = Color(0xFFBDBDBD),
+                descriptionColor = Color(0xFF9E9E9E),
+                
+                // 功能颜色
+                accentColor = Accent,
+                bookmarkColor = Accent,
+                readingProgress = Success,
+                noteHighlight = Color(0xFF4A4A4A),
+                
+                // 渐变颜色
+                gradientStart = Primary,
+                gradientEnd = PrimaryLight,
+                gradientSecondary = AccentLight,
+                
+                // 中性色
+                neutral100 = Color(0xFF2C2C2C),
+                neutral200 = Color(0xFF424242),
+                neutral300 = Color(0xFF616161),
+                neutral500 = Color(0xFF9E9E9E),
+                neutral700 = Color(0xFFBDBDBD),
+                neutral900 = Color(0xFFE0E0E0),
+                
+                // 边框和分割线
+                borderColor = Color(0xFF424242),
+                dividerColor = Color(0xFF2C2C2C),
+                shadowColor = Color(0x1A000000)
+            )
+        } else {
+            com.anou.pagegather.ui.theme.ExtendedColors(
+                // 容器颜色
+                primaryContainer = Color(0xFFECEFF1),
+                secondaryContainer = Color(0xFFF5F5F5),
+                tertiaryContainer = Color(0xFFE8EAF6),
+                
+                // 状态颜色
+                success = Success,
+                error = Error,
+                warning = Warning,
+                info = Info,
+                
+                // 文字颜色层次
+                titleColor = Color(0xFF212121),
+                bodyColor = Color(0xFF212121),
+                subtitleColor = Color(0xFF757575),
+                descriptionColor = Color(0xFF9E9E9E),
+                
+                // 功能颜色
+                accentColor = Accent,
+                bookmarkColor = Accent,
+                readingProgress = Success,
+                noteHighlight = Color(0xFFFFF9C4),
+                
+                // 渐变颜色
+                gradientStart = Primary,
+                gradientEnd = PrimaryLight,
+                gradientSecondary = AccentLight,
+                
+                // 中性色
+                neutral100 = Color(0xFFF5F5F5),
+                neutral200 = Color(0xFFEEEEEE),
+                neutral300 = Color(0xFFE0E0E0),
+                neutral500 = Color(0xFF9E9E9E),
+                neutral700 = Color(0xFF616161),
+                neutral900 = Color(0xFF212121),
+                
+                // 边框和分割线
+                borderColor = Color(0xFFE0E0E0),
+                dividerColor = Color(0xFFEEEEEE),
+                shadowColor = Color(0x1A000000)
+            )
+        }
     }
 }
 
-/**
- * 扩展颜色数据类
- */
-data class ExtendedColors(
-    val success: Color,
-    val warning: Color,
-    val info: Color,
-    val bookmarkColor: Color,
-    val readingProgress: Color,
-    val noteHighlight: Color,
-    val gradientStart: Color,
-    val gradientEnd: Color
-)

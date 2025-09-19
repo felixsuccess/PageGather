@@ -37,6 +37,7 @@ fun ProfileScreen(
     onNavigateToBookSourceSettings: () -> Unit,
     onNavigateToReadingRecords: () -> Unit,
     onNavigateToReadingSSRecords: () -> Unit,
+    onNavigateToThemeSettings: () -> Unit = {},
     onNavigateToHundiStyleDemo: () -> Unit = {}
 ) {
     LazyColumn(
@@ -197,8 +198,8 @@ fun ProfileScreen(
                     SettingsItem(
                         icon = Icons.Default.Palette,
                         title = "主题设置",
-                        subtitle = "深色/浅色主题切换",
-                        onClick = { /* TODO: 实现主题设置 */ }
+                        subtitle = "选择应用主题和颜色",
+                        onClick = onNavigateToThemeSettings
                     ),
                     SettingsItem(
                         icon = Icons.Default.Backup,

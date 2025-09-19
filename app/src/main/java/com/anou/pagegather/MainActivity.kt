@@ -22,8 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,7 +38,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.anou.pagegather.ui.navigation.MainScreen
 import com.anou.pagegather.ui.theme.PageGatherTheme
 import com.anou.pagegather.ui.theme.extendedColors
-// import com.anou.pagegather.ui.feature.demo.HundiTestScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 
@@ -45,14 +47,27 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PageGatherTheme {
-                SetupImmersiveNavigation()
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainContent(
-                        modifier = Modifier.padding(innerPadding), route = null
-                    )
-                }
-            }
+            MainActivityContent()
+        }
+    }
+}
+
+@Composable
+fun MainActivityContent() {
+    val themeManager = hiltViewModel<com.anou.pagegather.domain.theme.ThemeManagerViewModel>()
+    val currentTheme by themeManager.currentTheme.collectAsState()
+    val isDarkMode by themeManager.isDarkMode.collectAsState()
+    
+    PageGatherTheme(
+        theme = currentTheme,
+        darkTheme = isDarkMode
+    ) {
+        SetupImmersiveNavigation()
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            MainContent(
+                modifier = Modifier.padding(innerPadding), 
+                route = null
+            )
         }
     }
 }
@@ -70,8 +85,6 @@ fun MainContent(
     if (isSplash.value) {
         SplashScreen()
     } else {
-        // 可以在这里切换到 Hundi 测试界面
-        // HundiTestScreen()
         MainScreen()
     }
 }
