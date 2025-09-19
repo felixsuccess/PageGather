@@ -44,34 +44,48 @@ import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    private lateinit var themeManagerViewModel: com.anou.pagegather.domain.theme.ThemeManagerViewModel
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MainActivityContent()
+            MainActivityContent { viewModel ->
+                themeManagerViewModel = viewModel
+            }
         }
     }
     
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // 通知主题管理器配置已更改
-        // 这将在 MainActivityContent 中通过 LaunchedEffect 处理
+        if (::themeManagerViewModel.isInitialized) {
+            themeManagerViewModel.onConfigurationChanged()
+        }
     }
 }
 
 @Composable
-fun MainActivityContent() {
+fun MainActivityContent(
+    onViewModelReady: (com.anou.pagegather.domain.theme.ThemeManagerViewModel) -> Unit = {}
+) {
     val themeManager = hiltViewModel<com.anou.pagegather.domain.theme.ThemeManagerViewModel>()
     val currentTheme by themeManager.currentTheme.collectAsState()
     val themeMode by themeManager.themeMode.collectAsState()
     val isDarkMode by themeManager.isDarkMode.collectAsState()
+    
+    // 通知 Activity ViewModel 已准备好
+    LaunchedEffect(themeManager) {
+        onViewModelReady(themeManager)
+    }
     
     // 监听系统配置变化
     val systemInDarkTheme = isSystemInDarkTheme()
     LaunchedEffect(systemInDarkTheme, themeMode) {
         // 当系统暗色模式变化且用户选择跟随系统时，通知主题管理器
         if (themeMode == com.anou.pagegather.ui.theme.ThemeMode.SYSTEM) {
-            // ThemeManager 会自动处理系统暗色模式变化
+            themeManager.onConfigurationChanged()
         }
     }
     
@@ -79,7 +93,7 @@ fun MainActivityContent() {
         theme = currentTheme,
         darkTheme = isDarkMode
     ) {
-        SetupImmersiveNavigation()
+        SetupImmersiveNavigation(isDarkMode)
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             MainContent(
                 modifier = Modifier.padding(innerPadding), 
@@ -148,9 +162,9 @@ fun SplashScreen() {
 
 @SuppressLint("InlinedApi")
 @Composable
-fun SetupImmersiveNavigation() {
+fun SetupImmersiveNavigation(isDarkMode: Boolean = false) {
     val view = LocalView.current
-    val isLightTheme = !isSystemInDarkTheme()
+    val isLightTheme = !isDarkMode // 使用主题管理器的暗色模式状态
     val window = (view.context as? ComponentActivity)?.window
 
     SideEffect {
@@ -159,6 +173,7 @@ fun SetupImmersiveNavigation() {
             val controller = WindowInsetsControllerCompat(it, view)
 
             // 兼容 Android 6.0 及以上设置状态栏图标颜色
+            // 确保状态栏在暗色模式下具有足够的对比度
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 controller.isAppearanceLightStatusBars = isLightTheme
             }

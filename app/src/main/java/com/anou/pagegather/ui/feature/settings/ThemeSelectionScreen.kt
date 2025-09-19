@@ -24,9 +24,6 @@ import com.anou.pagegather.ui.theme.ThemeMode
 
 /**
  * 主题选择屏幕
- * 需求 1.1: 显示所有可用的主题选项
- * 需求 1.3: 提供主题预览和选择交互
- * 需求 4.1, 4.2: 支持主题切换和视觉反馈
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -263,7 +260,7 @@ private fun ThemeSelectionSection(
                     isSelected = currentTheme == theme,
                     isDarkMode = isDarkMode,
                     onClick = { 
-                        // 需求 4.1: 立即预览主题
+                        // 立即预览主题
                         onThemePreview(theme)
                         // 然后选择主题
                         onThemeSelected(theme)

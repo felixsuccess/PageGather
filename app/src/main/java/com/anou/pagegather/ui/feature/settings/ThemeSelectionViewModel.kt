@@ -31,7 +31,6 @@ class ThemeSelectionViewModel @Inject constructor(
     
     /**
      * 选择主题
-     * 需求 1.2: 用户选择主题时，系统应立即将主题应用到整个应用程序
      */
     fun selectTheme(theme: AppTheme) {
         viewModelScope.launch {
@@ -54,7 +53,6 @@ class ThemeSelectionViewModel @Inject constructor(
     
     /**
      * 选择主题模式
-     * 需求 4.1, 4.2: 支持亮色/暗色/跟随系统模式切换
      */
     fun selectThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
@@ -77,7 +75,6 @@ class ThemeSelectionViewModel @Inject constructor(
     
     /**
      * 预览主题
-     * 需求 4.1: 用户点击主题选项时，系统应立即应用主题预览
      */
     fun previewTheme(theme: AppTheme) {
         // 立即预览主题，不保存到偏好设置

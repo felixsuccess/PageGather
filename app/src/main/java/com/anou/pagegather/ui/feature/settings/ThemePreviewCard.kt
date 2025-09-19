@@ -24,8 +24,6 @@ import com.anou.pagegather.ui.theme.getColorSchemeForTheme
 
 /**
  * 主题预览卡片组件
- * 需求 1.3: 显示主题颜色预览
- * 需求 4.1, 4.2: 添加主题选中状态指示器和视觉反馈
  */
 @Composable
 fun ThemePreviewCard(
