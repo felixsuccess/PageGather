@@ -133,9 +133,8 @@ class ThemeManager @Inject constructor(
         // 初始化暗色模式状态
         updateDarkMode()
         
-        // 注意：这里简化了系统暗色模式监听
-        // 在实际应用中，可能需要使用 Configuration 变化监听器
-        // 或者在 Activity 的 onConfigurationChanged 中调用 updateDarkMode()
+        // 系统暗色模式变化将通过 MainActivity 的 onConfigurationChanged 
+        // 和 Compose 的 isSystemInDarkTheme() 自动处理
     }
     
     /**

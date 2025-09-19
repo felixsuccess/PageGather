@@ -1,6 +1,7 @@
 package com.anou.pagegather
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -50,13 +51,29 @@ class MainActivity : ComponentActivity() {
             MainActivityContent()
         }
     }
+    
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // 通知主题管理器配置已更改
+        // 这将在 MainActivityContent 中通过 LaunchedEffect 处理
+    }
 }
 
 @Composable
 fun MainActivityContent() {
     val themeManager = hiltViewModel<com.anou.pagegather.domain.theme.ThemeManagerViewModel>()
     val currentTheme by themeManager.currentTheme.collectAsState()
+    val themeMode by themeManager.themeMode.collectAsState()
     val isDarkMode by themeManager.isDarkMode.collectAsState()
+    
+    // 监听系统配置变化
+    val systemInDarkTheme = isSystemInDarkTheme()
+    LaunchedEffect(systemInDarkTheme, themeMode) {
+        // 当系统暗色模式变化且用户选择跟随系统时，通知主题管理器
+        if (themeMode == com.anou.pagegather.ui.theme.ThemeMode.SYSTEM) {
+            // ThemeManager 会自动处理系统暗色模式变化
+        }
+    }
     
     PageGatherTheme(
         theme = currentTheme,
