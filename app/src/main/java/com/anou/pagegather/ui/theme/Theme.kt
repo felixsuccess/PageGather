@@ -90,84 +90,16 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun PageGatherTheme(
+    theme: AppTheme = AppTheme.getDefault(),
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
-    // 允许手动覆盖动态颜色
-    overrideDynamicColor: Boolean = false,
+    // 禁用动态颜色以确保主题一致性
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        // 允许手动覆盖动态颜色
-        overrideDynamicColor -> if (darkTheme) DarkColorScheme else LightColorScheme
-        
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            val dynamicScheme = if (darkTheme) {
-                dynamicDarkColorScheme(context)
-            } else {
-                dynamicLightColorScheme(context)
-            }
-            
-            // 确保品牌色一致性
-            dynamicScheme.copy(
-                primary = Primary,
-                secondary = Secondary,
-                tertiary = Accent,
-                primaryContainer = PrimaryContainer,
-                secondaryContainer = SecondaryContainer
-            )
-        }
-        
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = getColorSchemeForTheme(theme, darkTheme)
+    val extendedColors = getExtendedColorsForTheme(theme, darkTheme).toMaterialExtendedColors()
 
-    // 提供 Hundi 风格扩展颜色
-    ProvideExtendedColors(
-        extendedColors = ExtendedColors(
-            // 容器颜色
-            primaryContainer = colorScheme.primaryContainer,
-            secondaryContainer = colorScheme.secondaryContainer,
-            tertiaryContainer = colorScheme.tertiaryContainer,
-            
-            // 状态颜色
-            success = Success,
-            error = Error,
-            warning = Warning,
-            info = Info,
-            
-            // 文字颜色层次
-            titleColor = if (darkTheme) TextWhite else TextPrimary,
-            bodyColor = if (darkTheme) TextWhite else TextPrimary,
-            subtitleColor = if (darkTheme) Color(0xFFB0BEC5) else TextSecondary,
-            descriptionColor = if (darkTheme) Color(0xFF90A4AE) else TextTertiary,
-            
-            // 功能颜色
-            accentColor = Accent,
-            bookmarkColor = BookmarkColor,
-            readingProgress = ReadingProgress,
-            noteHighlight = NoteHighlight,
-            
-            // 渐变颜色
-            gradientStart = GradientStart,
-            gradientEnd = GradientEnd,
-            gradientSecondary = GradientSecondary,
-            
-            // 中性色
-            neutral100 = if (darkTheme) Color(0xFF2C2C2C) else Neutral100,
-            neutral200 = if (darkTheme) Color(0xFF3C3C3C) else Neutral200,
-            neutral300 = if (darkTheme) Color(0xFF4C4C4C) else Neutral300,
-            neutral500 = if (darkTheme) Color(0xFF8C8C8C) else Neutral500,
-            neutral700 = if (darkTheme) Color(0xFFACACAC) else Neutral700,
-            neutral900 = if (darkTheme) Color(0xFFE0E0E0) else Neutral900,
-            
-            // 边框和分割线
-            borderColor = if (darkTheme) Color(0xFF3F484A) else BorderColor,
-            dividerColor = if (darkTheme) Color(0xFF2C3235) else DividerColor,
-            shadowColor = ShadowColor
-        )
-    ) {
+    ProvideExtendedColors(extendedColors = extendedColors) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
