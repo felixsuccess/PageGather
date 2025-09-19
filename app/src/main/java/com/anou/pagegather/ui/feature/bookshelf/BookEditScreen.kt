@@ -84,7 +84,7 @@ import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.components.RateBar
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookSourceSelector
 import com.anou.pagegather.ui.feature.bookshelf.group.BookGroupSelector
-import com.anou.pagegather.ui.theme.TextGray
+import com.anou.pagegather.ui.theme.extendedColors
 import com.anou.pagegather.utils.FileOperator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -741,7 +741,8 @@ fun BookEditScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "评分", color = TextGray,
+                        text = "评分", 
+                        color = MaterialTheme.extendedColors.subtitleColor,
                     )
                     RateBar(
                         rate = formState.value.rating,

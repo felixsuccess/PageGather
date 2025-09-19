@@ -68,7 +68,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.R
 import com.anou.pagegather.data.local.entity.NoteEntity
-import com.anou.pagegather.ui.theme.TextGray
+import com.anou.pagegather.ui.theme.extendedColors
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date

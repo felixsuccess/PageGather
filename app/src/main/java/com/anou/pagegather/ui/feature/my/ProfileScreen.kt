@@ -35,8 +35,9 @@ fun ProfileScreen(
     onNavigateToTagSettings: () -> Unit,
     onNavigateToGroupSettings: () -> Unit,
     onNavigateToBookSourceSettings: () -> Unit,
-    onNavigateToReadingRecords: () -> Unit ,
-    onNavigateToReadingSSRecords:() -> Unit
+    onNavigateToReadingRecords: () -> Unit,
+    onNavigateToReadingSSRecords: () -> Unit,
+    onNavigateToHundiStyleDemo: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -210,6 +211,21 @@ fun ProfileScreen(
                         title = "关于应用",
                         subtitle = "应用版本和开发信息",
                         onClick = { /* TODO: 实现关于页面 */ }
+                    )
+                )
+            )
+        }
+
+        item {
+            // 开发者选项分组
+            SettingsSection(
+                title = "开发者选项",
+                items = listOf(
+                    SettingsItem(
+                        icon = Icons.Default.Brush,
+                        title = "Hundi 风格展示",
+                        subtitle = "查看新的 Hundi 风格设计",
+                        onClick = onNavigateToHundiStyleDemo
                     )
                 )
             )

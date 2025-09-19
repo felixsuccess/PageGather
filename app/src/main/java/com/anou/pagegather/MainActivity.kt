@@ -34,7 +34,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.anou.pagegather.ui.navigation.MainScreen
 import com.anou.pagegather.ui.theme.PageGatherTheme
-import com.anou.pagegather.ui.theme.TextDark
+import com.anou.pagegather.ui.theme.extendedColors
+// import com.anou.pagegather.ui.feature.demo.HundiTestScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 
@@ -69,6 +70,8 @@ fun MainContent(
     if (isSplash.value) {
         SplashScreen()
     } else {
+        // 可以在这里切换到 Hundi 测试界面
+        // HundiTestScreen()
         MainScreen()
     }
 }
@@ -104,7 +107,7 @@ fun SplashScreen() {
                 Text(
                     char.toString(),
                     style = MaterialTheme.typography.titleLarge,
-                    color =  TextDark
+                    color = MaterialTheme.extendedColors.titleColor
                 )
             }
         }
