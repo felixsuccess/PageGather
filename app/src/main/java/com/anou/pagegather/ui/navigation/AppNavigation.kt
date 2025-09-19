@@ -85,6 +85,7 @@ fun AppNavigation(
                 onNavigateToReadingRecords = { navController.navigate(Routes.ReadingRoutes.READING_RECORDS) },
                 onNavigateToReadingSSRecords = { navController.navigate(Routes.ReadingRoutes.BOOK_READING_STATISTICS) },
                 onNavigateToThemeSettings = { navController.navigate(Routes.ProfileRoutes.THEME_SETTINGS) },
+                onNavigateToThemeDebug = { navController.navigate(Routes.ProfileRoutes.THEME_DEBUG) },
                 onNavigateToHundiStyleDemo = { navController.navigate(Routes.ProfileRoutes.HUNDI_STYLE_DEMO) }
             )
         }
@@ -207,6 +208,13 @@ fun AppNavigation(
         // 主题设置页面
         composable(Routes.ProfileRoutes.THEME_SETTINGS) {
             com.anou.pagegather.ui.feature.settings.ThemeSelectionScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        // 主题调试页面
+        composable(Routes.ProfileRoutes.THEME_DEBUG) {
+            com.anou.pagegather.ui.feature.debug.ThemeDebugScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

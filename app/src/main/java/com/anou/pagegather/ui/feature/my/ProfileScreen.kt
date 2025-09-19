@@ -38,7 +38,8 @@ fun ProfileScreen(
     onNavigateToReadingRecords: () -> Unit,
     onNavigateToReadingSSRecords: () -> Unit,
     onNavigateToThemeSettings: () -> Unit = {},
-    onNavigateToHundiStyleDemo: () -> Unit = {}
+    onNavigateToHundiStyleDemo: () -> Unit = {},
+    onNavigateToThemeDebug: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -227,6 +228,12 @@ fun ProfileScreen(
                         title = "Hundi 风格展示",
                         subtitle = "查看新的 Hundi 风格设计",
                         onClick = onNavigateToHundiStyleDemo
+                    ),
+                    SettingsItem(
+                        icon = Icons.Default.BugReport,
+                        title = "主题系统调试",
+                        subtitle = "查看主题系统状态和统计信息",
+                        onClick = onNavigateToThemeDebug
                     )
                 )
             )

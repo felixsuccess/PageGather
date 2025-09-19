@@ -4,7 +4,12 @@ import android.content.Context
 import android.content.res.Configuration
 import com.anou.pagegather.data.preferences.ThemePreferences
 import com.anou.pagegather.ui.theme.AppTheme
+import com.anou.pagegather.ui.theme.CacheStats
+import com.anou.pagegather.ui.theme.ThemeCache
+import com.anou.pagegather.ui.theme.ThemeErrorHandler
+import com.anou.pagegather.ui.theme.ThemeErrorStats
 import com.anou.pagegather.ui.theme.ThemeMode
+import com.anou.pagegather.ui.theme.ThemeSystemHealth
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,19 +47,32 @@ class ThemeManager @Inject constructor(
     init {
         loadSavedPreferences()
         observeSystemDarkMode()
+        preloadThemes()
     }
     
     /**
      * 设置主题
      */
     suspend fun setTheme(theme: AppTheme) {
+        val currentTheme = _currentTheme.value
         try {
             _currentTheme.value = theme
             themePreferences.saveTheme(theme)
             android.util.Log.d("ThemeManager", "Theme changed to: ${theme.displayName}")
         } catch (e: Exception) {
-            android.util.Log.e("ThemeManager", "Failed to set theme: ${theme.displayName}", e)
-            // 保持当前主题不变，不抛出异常以保持应用稳定性
+            // 使用错误处理器处理主题切换错误
+            ThemeErrorHandler.handleThemeSwitchError(currentTheme, theme, e)
+            
+            // 尝试回退到默认主题
+            val fallbackTheme = ThemeErrorHandler.handleThemeLoadError(theme, _isDarkMode.value, e)
+            if (fallbackTheme != theme) {
+                try {
+                    _currentTheme.value = fallbackTheme
+                    themePreferences.saveTheme(fallbackTheme)
+                } catch (fallbackError: Exception) {
+                    android.util.Log.e("ThemeManager", "Failed to set fallback theme", fallbackError)
+                }
+            }
         }
     }
     
@@ -68,7 +86,8 @@ class ThemeManager @Inject constructor(
             updateDarkMode()
             android.util.Log.d("ThemeManager", "Theme mode changed to: ${mode.displayName}")
         } catch (e: Exception) {
-            android.util.Log.e("ThemeManager", "Failed to set theme mode: ${mode.displayName}", e)
+            ThemeErrorHandler.handleThemeSaveError(_currentTheme.value, e)
+            // 保持当前模式不变
         }
     }
     
@@ -157,6 +176,48 @@ class ThemeManager @Inject constructor(
         if (_themeMode.value == ThemeMode.SYSTEM) {
             updateDarkMode()
         }
+    }
+    
+    /**
+     * 预加载所有主题以提升性能
+     */
+    private fun preloadThemes() {
+        scope.launch {
+            try {
+                ThemeCache.preloadAllThemes()
+                android.util.Log.d("ThemeManager", "All themes preloaded successfully")
+            } catch (e: Exception) {
+                android.util.Log.e("ThemeManager", "Failed to preload themes", e)
+            }
+        }
+    }
+    
+    /**
+     * 获取缓存统计信息
+     */
+    fun getCacheStats(): CacheStats {
+        return ThemeCache.getCacheStats()
+    }
+    
+    /**
+     * 获取错误统计信息
+     */
+    fun getErrorStats(): ThemeErrorStats {
+        return ThemeErrorHandler.getErrorStats()
+    }
+    
+    /**
+     * 检查系统健康状态
+     */
+    fun getSystemHealth(): ThemeSystemHealth {
+        return ThemeErrorHandler.checkSystemHealth()
+    }
+    
+    /**
+     * 清除错误历史
+     */
+    fun clearErrorHistory() {
+        ThemeErrorHandler.clearErrorHistory()
     }
 }
 
