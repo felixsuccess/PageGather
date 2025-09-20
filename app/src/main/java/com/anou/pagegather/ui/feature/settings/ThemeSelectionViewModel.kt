@@ -74,6 +74,28 @@ class ThemeSelectionViewModel @Inject constructor(
     }
     
     /**
+     * 设置动态颜色偏好
+     */
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                // 设置加载状态
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                
+                // 应用动态颜色偏好
+                themeManager.setDynamicColor(enabled)
+                
+                android.util.Log.d("ThemeSelectionViewModel", "Dynamic color preference set to: $enabled")
+            } catch (e: Exception) {
+                android.util.Log.e("ThemeSelectionViewModel", "Failed to set dynamic color preference", e)
+            } finally {
+                // 清除加载状态
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }
+        }
+    }
+    
+    /**
      * 预览主题
      */
     fun previewTheme(theme: AppTheme) {
@@ -118,18 +140,25 @@ class ThemeSelectionViewModel @Inject constructor(
             combine(
                 themeManager.currentTheme,
                 themeManager.themeMode,
-                themeManager.isDarkMode
-            ) { theme, mode, isDark ->
-                Triple(theme, mode, isDark)
-            }.collect { (theme, mode, isDark) ->
+                themeManager.isDarkMode,
+                themeManager.useDynamicColor
+            ) { theme, mode, isDark, useDynamicColor ->
+                Quadruple(theme, mode, isDark, useDynamicColor)
+            }.collect { (theme, mode, isDark, useDynamicColor) ->
                 // 更新 UI 状态
                 _uiState.value = _uiState.value.copy(
                     currentTheme = theme,
                     currentMode = mode,
                     isDarkMode = isDark,
+                    useDynamicColor = useDynamicColor,
                     availableThemes = AppTheme.getAllThemes()
                 )
             }
         }
     }
+    
+    /**
+     * 四元组数据类，用于合并多个流
+     */
+    private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 }

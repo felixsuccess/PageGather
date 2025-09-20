@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import kotlin.math.max
 import kotlin.math.min
+import com.anou.pagegather.ui.theme.getColorSchemeForTheme
 
 /**
  * 可访问性工具类
@@ -59,7 +60,7 @@ object AccessibilityUtils {
      * 验证主题的可访问性
      */
     fun validateThemeAccessibility(theme: AppTheme, isDark: Boolean): ThemeAccessibilityReport {
-        val colorScheme = getColorSchemeForTheme(theme, isDark)
+        val colorScheme = getColorSchemeForThemeNonComposable(theme, isDark)
         val issues = mutableListOf<AccessibilityIssue>()
         
         // 验证主要文本对比度

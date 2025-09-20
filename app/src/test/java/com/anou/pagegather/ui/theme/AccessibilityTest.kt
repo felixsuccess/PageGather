@@ -2,6 +2,7 @@ package com.anou.pagegather.ui.theme
 
 import org.junit.Test
 import org.junit.Assert.*
+import com.anou.pagegather.ui.theme.getColorSchemeForThemeNonComposable
 
 /**
  * 主题可访问性测试
@@ -73,7 +74,7 @@ class AccessibilityTest {
     fun `验证所有主题的主要文本对比度`() {
         AppTheme.getAllThemes().forEach { theme ->
             listOf(false, true).forEach { isDark ->
-                val colorScheme = getColorSchemeForTheme(theme, isDark)
+                val colorScheme = getColorSchemeForThemeNonComposable(theme, isDark)
                 val ratio = AccessibilityUtils.calculateContrastRatio(
                     colorScheme.onSurface,
                     colorScheme.surface
@@ -92,7 +93,7 @@ class AccessibilityTest {
     fun `验证所有主题的按钮对比度`() {
         AppTheme.getAllThemes().forEach { theme ->
             listOf(false, true).forEach { isDark ->
-                val colorScheme = getColorSchemeForTheme(theme, isDark)
+                val colorScheme = getColorSchemeForThemeNonComposable(theme, isDark)
                 val ratio = AccessibilityUtils.calculateContrastRatio(
                     colorScheme.onPrimary,
                     colorScheme.primary

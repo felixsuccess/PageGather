@@ -13,6 +13,11 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.anou.pagegather.ui.theme.colors.ElegantWhiteColors
+import com.anou.pagegather.ui.theme.colors.HundiBlueColors
+import com.anou.pagegather.ui.theme.colors.HundiGreenColors
+import com.anou.pagegather.ui.theme.colors.HundiOrangeColors
+import com.anou.pagegather.ui.theme.colors.HundiPurpleColors
 
 // Hundi 风格深色主题
 private val DarkColorScheme = darkColorScheme(
@@ -92,11 +97,11 @@ private val LightColorScheme = lightColorScheme(
 fun PageGatherTheme(
     theme: AppTheme = AppTheme.getDefault(),
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // 禁用动态颜色以确保主题一致性
+    // 启用动态颜色支持
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = getColorSchemeForTheme(theme, darkTheme)
+    val colorScheme = getColorSchemeForTheme(theme, darkTheme, dynamicColor)
     val extendedColors = getExtendedColorsForTheme(theme, darkTheme)
 
     ProvideExtendedColors(extendedColors = extendedColors) {
@@ -105,6 +110,99 @@ fun PageGatherTheme(
             typography = Typography,
             content = content
         )
+    }
+}
+
+/**
+ * 获取指定主题的颜色方案（支持动态颜色）
+ */
+@Composable
+fun getColorSchemeForTheme(theme: AppTheme, isDark: Boolean, useDynamicColor: Boolean = false): androidx.compose.material3.ColorScheme {
+    // 检查是否支持动态颜色且启用动态颜色
+    if (useDynamicColor && theme.supportsDynamicColor) {
+        // 检查Android版本是否支持动态颜色（API 31+）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val context = LocalContext.current
+            return if (isDark) {
+                dynamicDarkColorScheme(context)
+            } else {
+                dynamicLightColorScheme(context)
+            }
+        }
+    }
+    
+    // 使用缓存的传统颜色方案
+    return ThemeCache.getColorScheme(theme, isDark)
+}
+
+/**
+ * 获取指定主题的颜色方案（非Composable版本，不支持动态颜色）
+ */
+fun getColorSchemeForThemeNonComposable(theme: AppTheme, isDark: Boolean): androidx.compose.material3.ColorScheme {
+    // 使用缓存的传统颜色方案
+    return ThemeCache.getColorScheme(theme, isDark)
+}
+
+/**
+ * 获取指定主题的扩展颜色（简化版本，直接返回Material扩展颜色）
+ */
+fun getExtendedColorsForTheme(theme: AppTheme, isDark: Boolean): ExtendedColors {
+    return try {
+        val simpleColors = when (theme) {
+            AppTheme.ELEGANT_WHITE -> ElegantWhiteColors.getExtendedColors(isDark)
+            AppTheme.HUNDI_ORANGE -> HundiOrangeColors.getExtendedColors(isDark)
+            AppTheme.HUNDI_GREEN -> HundiGreenColors.getExtendedColors(isDark)
+            AppTheme.HUNDI_BLUE -> HundiBlueColors.getExtendedColors(isDark)
+            AppTheme.HUNDI_PURPLE -> HundiPurpleColors.getExtendedColors(isDark)
+        }
+
+        // 转换为 Material 扩展颜色
+        ExtendedColors(
+            // 容器颜色 - 使用合理的默认值
+            primaryContainer = Color.Transparent,
+            secondaryContainer = Color.Transparent,
+            tertiaryContainer = Color.Transparent,
+
+            // 状态颜色
+            success = simpleColors.success,
+            error = Color(0xFFE57373),
+            warning = simpleColors.warning,
+            info = simpleColors.info,
+
+            // 文字颜色层次 - 使用合理的默认值
+            titleColor = Color(0xFF212121),
+            bodyColor = Color(0xFF212121),
+            subtitleColor = Color(0xFF757575),
+            descriptionColor = Color(0xFF9E9E9E),
+
+            // 功能颜色
+            accentColor = simpleColors.gradientStart,
+            bookmarkColor = simpleColors.bookmarkColor,
+            readingProgress = simpleColors.readingProgress,
+            noteHighlight = simpleColors.noteHighlight,
+
+            // 渐变颜色
+            gradientStart = simpleColors.gradientStart,
+            gradientEnd = simpleColors.gradientEnd,
+            gradientSecondary = simpleColors.gradientEnd,
+
+            // 中性色 - 使用合理的默认值
+            neutral100 = Color(0xFFF5F5F5),
+            neutral200 = Color(0xFFEEEEEE),
+            neutral300 = Color(0xFFE0E0E0),
+            neutral500 = Color(0xFF9E9E9E),
+            neutral700 = Color(0xFF616161),
+            neutral900 = Color(0xFF212121),
+
+            // 边框和分割线
+            borderColor = Color(0xFFE0E0E0),
+            dividerColor = Color(0xFFEEEEEE),
+            shadowColor = Color(0x1A000000)
+        )
+    } catch (e: Exception) {
+        android.util.Log.e("ThemeColorFactory", "Failed to get extended colors for theme $theme", e)
+        // 回退到默认扩展颜色
+        getExtendedColorsForTheme(AppTheme.getDefault(), isDark)
     }
 }
 

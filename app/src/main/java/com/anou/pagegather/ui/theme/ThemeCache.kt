@@ -1,6 +1,7 @@
 package com.anou.pagegather.ui.theme
 
 import androidx.compose.material3.ColorScheme
+import com.anou.pagegather.ui.theme.colors.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -82,7 +83,13 @@ object ThemeCache {
      * 创建颜色方案（内部方法）
      */
     private fun createColorSchemeForTheme(theme: AppTheme, isDark: Boolean): ColorScheme {
-        return getColorSchemeForThemeInternal(theme, isDark)
+        return when (theme) {
+            AppTheme.ELEGANT_WHITE -> if (isDark) ElegantWhiteColors.DarkColorScheme else ElegantWhiteColors.LightColorScheme
+            AppTheme.HUNDI_ORANGE -> if (isDark) HundiOrangeColors.DarkColorScheme else HundiOrangeColors.LightColorScheme
+            AppTheme.HUNDI_GREEN -> if (isDark) HundiGreenColors.DarkColorScheme else HundiGreenColors.LightColorScheme
+            AppTheme.HUNDI_BLUE -> if (isDark) HundiBlueColors.DarkColorScheme else HundiBlueColors.LightColorScheme
+            AppTheme.HUNDI_PURPLE -> if (isDark) HundiPurpleColors.DarkColorScheme else HundiPurpleColors.LightColorScheme
+        }
     }
 }
 

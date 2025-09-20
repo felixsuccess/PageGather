@@ -42,7 +42,9 @@ class ThemeManager @Inject constructor(
     private val _isDarkMode = MutableStateFlow(false)
     val isDarkMode = _isDarkMode.asStateFlow()
     
-
+    // 是否使用动态颜色
+    private val _useDynamicColor = MutableStateFlow(false)
+    val useDynamicColor = _useDynamicColor.asStateFlow()
     
     init {
         loadSavedPreferences()
@@ -91,7 +93,19 @@ class ThemeManager @Inject constructor(
         }
     }
     
-
+    /**
+     * 设置动态颜色偏好
+     */
+    suspend fun setDynamicColor(enabled: Boolean) {
+        try {
+            _useDynamicColor.value = enabled
+            themePreferences.saveDynamicColor(enabled)
+            android.util.Log.d("ThemeManager", "Dynamic color preference changed to: $enabled")
+        } catch (e: Exception) {
+            ThemeErrorHandler.handleThemeSaveError(_currentTheme.value, e)
+            // 保持当前设置不变
+        }
+    }
     
     /**
      * 检查是否为系统暗色模式
@@ -141,6 +155,23 @@ class ThemeManager @Inject constructor(
                 android.util.Log.e("ThemeManager", "Failed to load theme mode preferences", e)
                 _themeMode.value = ThemeMode.getDefault()
                 updateDarkMode()
+            }
+        }
+        
+        scope.launch {
+            try {
+                // 加载保存的动态颜色偏好设置
+                themePreferences.getDynamicColor()
+                    .catch { exception ->
+                        android.util.Log.e("ThemeManager", "Failed to load dynamic color preference", exception)
+                        emit(false)
+                    }
+                    .collect { useDynamicColor ->
+                        _useDynamicColor.value = useDynamicColor
+                    }
+            } catch (e: Exception) {
+                android.util.Log.e("ThemeManager", "Failed to load dynamic color preference", e)
+                _useDynamicColor.value = false
             }
         }
     }
@@ -220,4 +251,3 @@ class ThemeManager @Inject constructor(
         ThemeErrorHandler.clearErrorHistory()
     }
 }
-

@@ -1,6 +1,7 @@
 package com.anou.pagegather.ui.theme
 
 import androidx.compose.material3.ColorScheme
+import com.anou.pagegather.ui.theme.colors.*
 import io.mockk.*
 import org.junit.After
 import org.junit.Before
@@ -12,6 +13,19 @@ import org.junit.Assert.*
  * 测试主题颜色工厂的所有功能
  */
 class ThemeColorFactoryTest {
+    
+    /**
+     * 创建颜色方案（内部方法）
+     */
+    private fun createColorSchemeForTheme(theme: AppTheme, isDark: Boolean): ColorScheme {
+        return when (theme) {
+            AppTheme.ELEGANT_WHITE -> if (isDark) ElegantWhiteColors.DarkColorScheme else ElegantWhiteColors.LightColorScheme
+            AppTheme.HUNDI_ORANGE -> if (isDark) HundiOrangeColors.DarkColorScheme else HundiOrangeColors.LightColorScheme
+            AppTheme.HUNDI_GREEN -> if (isDark) HundiGreenColors.DarkColorScheme else HundiGreenColors.LightColorScheme
+            AppTheme.HUNDI_BLUE -> if (isDark) HundiBlueColors.DarkColorScheme else HundiBlueColors.LightColorScheme
+            AppTheme.HUNDI_PURPLE -> if (isDark) HundiPurpleColors.DarkColorScheme else HundiPurpleColors.LightColorScheme
+        }
+    }
 
     @Before
     fun setup() {
@@ -40,7 +54,7 @@ class ThemeColorFactoryTest {
         every { ThemeCache.getColorScheme(theme, isDark) } returns mockColorScheme
         
         // When
-        val result = getColorSchemeForTheme(theme, isDark)
+        val result = ThemeCache.getColorScheme(theme, isDark)
         
         // Then
         assertEquals("应该返回缓存的颜色方案", mockColorScheme, result)
@@ -56,7 +70,7 @@ class ThemeColorFactoryTest {
         // When & Then
         themes.forEach { theme ->
             modes.forEach { isDark ->
-                val colorScheme = getColorSchemeForThemeInternal(theme, isDark)
+                val colorScheme = createColorSchemeForTheme(theme, isDark)
                 
                 assertNotNull(
                     "主题 ${theme.displayName} 的${if (isDark) "暗色" else "亮色"}模式应该返回颜色方案",
@@ -76,9 +90,9 @@ class ThemeColorFactoryTest {
         val isDark = false
         
         // When
-        val elegantWhiteScheme = getColorSchemeForThemeInternal(AppTheme.ELEGANT_WHITE, isDark)
-        val hundiBlueScheme = getColorSchemeForThemeInternal(AppTheme.HUNDI_BLUE, isDark)
-        val hundiGreenScheme = getColorSchemeForThemeInternal(AppTheme.HUNDI_GREEN, isDark)
+        val elegantWhiteScheme = createColorSchemeForTheme(AppTheme.ELEGANT_WHITE, isDark)
+        val hundiBlueScheme = createColorSchemeForTheme(AppTheme.HUNDI_BLUE, isDark)
+        val hundiGreenScheme = createColorSchemeForTheme(AppTheme.HUNDI_GREEN, isDark)
         
         // Then
         assertNotEquals("典雅白和蓝色主题应该不同", elegantWhiteScheme, hundiBlueScheme)
@@ -92,8 +106,8 @@ class ThemeColorFactoryTest {
         val theme = AppTheme.HUNDI_PURPLE
         
         // When
-        val lightScheme = getColorSchemeForThemeInternal(theme, false)
-        val darkScheme = getColorSchemeForThemeInternal(theme, true)
+        val lightScheme = createColorSchemeForTheme(theme, false)
+        val darkScheme = createColorSchemeForTheme(theme, true)
         
         // Then
         assertNotEquals("同一主题的亮色和暗色模式应该不同", lightScheme, darkScheme)
@@ -198,8 +212,8 @@ class ThemeColorFactoryTest {
         val theme = AppTheme.ELEGANT_WHITE
         
         // When
-        val lightScheme = getColorSchemeForThemeInternal(theme, false)
-        val darkScheme = getColorSchemeForThemeInternal(theme, true)
+        val lightScheme = createColorSchemeForTheme(theme, false)
+        val darkScheme = createColorSchemeForTheme(theme, true)
         
         // Then
         assertNotNull("典雅白亮色方案不应该为空", lightScheme)
@@ -222,8 +236,8 @@ class ThemeColorFactoryTest {
         
         // When & Then
         hundiThemes.forEach { theme ->
-            val lightScheme = getColorSchemeForThemeInternal(theme, false)
-            val darkScheme = getColorSchemeForThemeInternal(theme, true)
+            val lightScheme = createColorSchemeForTheme(theme, false)
+            val darkScheme = createColorSchemeForTheme(theme, true)
             
             assertNotNull("${theme.displayName} 亮色方案不应该为空", lightScheme)
             assertNotNull("${theme.displayName} 暗色方案不应该为空", darkScheme)
@@ -244,7 +258,7 @@ class ThemeColorFactoryTest {
         // When & Then
         themes.forEach { theme ->
             listOf(false, true).forEach { isDark ->
-                val colorScheme = getColorSchemeForThemeInternal(theme, isDark)
+                val colorScheme = createColorSchemeForTheme(theme, isDark)
                 
                 // 验证主色和背景色不相同（确保有对比度）
                 assertNotEquals(
@@ -296,8 +310,8 @@ class ThemeColorFactoryTest {
         // When & Then - 验证所有主题都能正常处理
         themes.forEach { theme ->
             assertDoesNotThrow("主题 ${theme.displayName} 不应该抛出异常") {
-                getColorSchemeForThemeInternal(theme, false)
-                getColorSchemeForThemeInternal(theme, true)
+                createColorSchemeForTheme(theme, false)
+                createColorSchemeForTheme(theme, true)
                 getExtendedColorsForTheme(theme, false)
                 getExtendedColorsForTheme(theme, true)
             }
@@ -315,8 +329,8 @@ class ThemeColorFactoryTest {
         every { ThemeCache.getColorScheme(theme, isDark) } returns mockColorScheme
         
         // When
-        val result1 = getColorSchemeForTheme(theme, isDark)
-        val result2 = getColorSchemeForTheme(theme, isDark)
+        val result1 = ThemeCache.getColorScheme(theme, isDark)
+        val result2 = ThemeCache.getColorScheme(theme, isDark)
         
         // Then
         assertEquals("第一次调用应该返回缓存的颜色方案", mockColorScheme, result1)

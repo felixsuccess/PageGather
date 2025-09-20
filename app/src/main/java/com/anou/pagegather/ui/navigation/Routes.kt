@@ -74,6 +74,7 @@ object Routes {
         const val THEME_SETTINGS = "theme_settings"  // 新增主题设置路由
         const val THEME_DEBUG = "theme_debug"  // 新增主题调试路由
         const val HUNDI_STYLE_DEMO = "hundi_style_demo"  // 新增 Hundi 风格展示路由
+        const val CUSTOM_THEME_CREATION = "custom_theme_creation"  // 新增自定义主题创建路由
     }
 
     // 时间管理相关路由

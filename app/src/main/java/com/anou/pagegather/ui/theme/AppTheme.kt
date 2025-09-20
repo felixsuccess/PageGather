@@ -12,7 +12,8 @@ enum class AppTheme(
     val description: String,
     val primaryColor: Color,
     val emoji: String,
-    val isDefault: Boolean = false
+    val isDefault: Boolean = false,
+    val supportsDynamicColor: Boolean = true
 ) {
     ELEGANT_WHITE(
         id = "elegant_white",
@@ -20,7 +21,8 @@ enum class AppTheme(
         description = "简洁优雅，极简设计的白色主题",
         primaryColor = Color(0xFF37474F),
         emoji = "🤍",
-        isDefault = true
+        isDefault = true,
+        supportsDynamicColor = true
     ),
     
     HUNDI_ORANGE(
@@ -28,7 +30,8 @@ enum class AppTheme(
         displayName = "Hundi 橙色",
         description = "温暖活力，充满能量的橙色主题",
         primaryColor = Color(0xFFFF6B35),
-        emoji = "🧡"
+        emoji = "🧡",
+        supportsDynamicColor = true
     ),
     
     HUNDI_GREEN(
@@ -36,7 +39,8 @@ enum class AppTheme(
         displayName = "Hundi 绿色",
         description = "自然清新，护眼舒适的绿色主题",
         primaryColor = Color(0xFF4CAF50),
-        emoji = "💚"
+        emoji = "💚",
+        supportsDynamicColor = true
     ),
     
     HUNDI_BLUE(
@@ -44,7 +48,8 @@ enum class AppTheme(
         displayName = "Hundi 蓝色", 
         description = "专业冷静，商务风格的蓝色主题",
         primaryColor = Color(0xFF2196F3),
-        emoji = "💙"
+        emoji = "💙",
+        supportsDynamicColor = true
     ),
     
     HUNDI_PURPLE(
@@ -52,7 +57,8 @@ enum class AppTheme(
         displayName = "Hundi 紫色",
         description = "优雅神秘，创意灵感的紫色主题", 
         primaryColor = Color(0xFF9C27B0),
-        emoji = "💜"
+        emoji = "💜",
+        supportsDynamicColor = true
     );
     
     companion object {
@@ -99,7 +105,8 @@ enum class ThemeMode(val id: String, val displayName: String) {
 data class ThemeConfig(
     val theme: AppTheme,
     val mode: ThemeMode,
-    val isDarkMode: Boolean
+    val isDarkMode: Boolean,
+    val useDynamicColor: Boolean = false
 )
 
 /**
@@ -110,5 +117,6 @@ data class ThemeSelectionUiState(
     val currentTheme: AppTheme = AppTheme.getDefault(),
     val currentMode: ThemeMode = ThemeMode.getDefault(),
     val isDarkMode: Boolean = false,
+    val useDynamicColor: Boolean = false,
     val isLoading: Boolean = false
 )

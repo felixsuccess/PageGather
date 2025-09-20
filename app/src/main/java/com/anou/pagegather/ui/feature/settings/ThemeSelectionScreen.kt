@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.anou.pagegather.ui.feature.settings.ThemePreviewCard
 import com.anou.pagegather.ui.theme.AppTheme
 import com.anou.pagegather.ui.theme.ThemeMode
 
@@ -29,6 +31,7 @@ import com.anou.pagegather.ui.theme.ThemeMode
 @Composable
 fun ThemeSelectionScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToCustomThemeCreation: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ThemeSelectionViewModel = hiltViewModel()
 ) {
@@ -56,7 +59,7 @@ fun ThemeSelectionScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "返回"
                         )
                     }
@@ -84,6 +87,15 @@ fun ThemeSelectionScreen(
                 )
             }
             
+            // 动态颜色开关部分
+            item {
+                DynamicColorSection(
+                    isDynamicColorEnabled = uiState.useDynamicColor,
+                    onDynamicColorChanged = viewModel::setDynamicColor,
+                    isLoading = uiState.isLoading
+                )
+            }
+            
             // 主题选择部分
             item {
                 ThemeSelectionSection(
@@ -92,7 +104,8 @@ fun ThemeSelectionScreen(
                     isDarkMode = uiState.isDarkMode,
                     onThemeSelected = viewModel::selectTheme,
                     onThemePreview = viewModel::previewTheme,
-                    isLoading = uiState.isLoading
+                    isLoading = uiState.isLoading,
+                    onAddCustomTheme = onNavigateToCustomThemeCreation
                 )
             }
         }
@@ -130,6 +143,69 @@ private fun ThemeModeSection(
                     mode = mode,
                     isSelected = currentMode == mode,
                     onClick = { onModeSelected(mode) },
+                    enabled = !isLoading
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 动态颜色开关部分
+ */
+@Composable
+private fun DynamicColorSection(
+    isDynamicColorEnabled: Boolean,
+    onDynamicColorChanged: (Boolean) -> Unit,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 标题
+        Text(
+            text = "动态颜色",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        // 动态颜色开关
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "启用动态颜色",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Text(
+                        text = "根据壁纸自动调整主题颜色（需要Android 12及以上版本）",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+                
+                Switch(
+                    checked = isDynamicColorEnabled,
+                    onCheckedChange = onDynamicColorChanged,
                     enabled = !isLoading
                 )
             }
@@ -220,13 +296,14 @@ private fun ThemeSelectionSection(
     onThemeSelected: (AppTheme) -> Unit,
     onThemePreview: (AppTheme) -> Unit,
     isLoading: Boolean,
+    onAddCustomTheme: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 标题
+        // 标题和添加按钮
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,10 +316,13 @@ private fun ThemeSelectionSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
             
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp
+            IconButton(
+                onClick = onAddCustomTheme,
+                enabled = !isLoading
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "添加自定义主题"
                 )
             }
         }
@@ -334,6 +414,7 @@ private fun CurrentThemeInfo(
 @Composable
 fun ThemeSelectionScreenList(
     onNavigateBack: () -> Unit,
+    onNavigateToCustomThemeCreation: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ThemeSelectionViewModel = hiltViewModel()
 ) {
@@ -367,6 +448,15 @@ fun ThemeSelectionScreenList(
                 ThemeModeSection(
                     currentMode = uiState.currentMode,
                     onModeSelected = viewModel::selectThemeMode,
+                    isLoading = uiState.isLoading
+                )
+            }
+            
+            // 动态颜色开关
+            item {
+                DynamicColorSection(
+                    isDynamicColorEnabled = uiState.useDynamicColor,
+                    onDynamicColorChanged = viewModel::setDynamicColor,
                     isLoading = uiState.isLoading
                 )
             }

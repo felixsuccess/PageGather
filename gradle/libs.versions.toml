@@ -20,6 +20,7 @@ ksp = "2.1.0-1.0.28"
 mockk = "1.13.7"
 kotlinxCollectionsImmutable = "0.3.5"
 kotlinxCoroutines = "1.8.0"
+gson = "2.10.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +49,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose"
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 androidx-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }

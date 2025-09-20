@@ -204,21 +204,33 @@ fun AppNavigation(
         composable(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) {
             BookSourceManagementScreen(navController = navController)
         }
-        
+
         // 主题设置页面
         composable(Routes.ProfileRoutes.THEME_SETTINGS) {
             com.anou.pagegather.ui.feature.settings.ThemeSelectionScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToCustomThemeCreation = { navController.navigate(Routes.ProfileRoutes.CUSTOM_THEME_CREATION) }
             )
         }
-        
+
+        // 自定义主题创建页面
+        composable(Routes.ProfileRoutes.CUSTOM_THEME_CREATION) {
+            com.anou.pagegather.ui.feature.settings.CustomThemeCreationScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onThemeCreated = { customTheme ->
+                    // 主题创建成功后返回主题设置页面
+                    navController.popBackStack()
+                }
+            )
+        }
+
         // 主题调试页面
         composable(Routes.ProfileRoutes.THEME_DEBUG) {
             com.anou.pagegather.ui.feature.debug.ThemeDebugScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        
+
         // Hundi 风格展示页面
         composable(Routes.ProfileRoutes.HUNDI_STYLE_DEMO) {
             com.anou.pagegather.ui.feature.demo.HundiStyleShowcaseScreen(
@@ -948,4 +960,5 @@ fun AppNavigation(
 
 
     }
+
 }
