@@ -3,6 +3,8 @@ package com.anou.pagegather.ui.feature.settings
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.anou.pagegather.ui.feature.my.settings.CompactThemePreviewCard
+import com.anou.pagegather.ui.feature.my.settings.ThemePreviewCard
 import com.anou.pagegather.ui.theme.AppTheme
 import com.anou.pagegather.ui.theme.PageGatherTheme
 import dagger.hilt.android.testing.HiltAndroidRule

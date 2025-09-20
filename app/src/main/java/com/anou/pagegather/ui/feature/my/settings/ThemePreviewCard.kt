@@ -1,4 +1,4 @@
-package com.anou.pagegather.ui.feature.settings
+package com.anou.pagegather.ui.feature.my.settings
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -148,7 +148,7 @@ fun ThemePreviewCard(
  */
 @Composable
 private fun ThemeColorPreview(
-    colorScheme: androidx.compose.material3.ColorScheme,
+    colorScheme: ColorScheme,
     modifier: Modifier = Modifier
 ) {
     Box(

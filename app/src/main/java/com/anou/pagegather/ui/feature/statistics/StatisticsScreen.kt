@@ -242,7 +242,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
 
@@ -255,12 +255,12 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
         // 阅读时长分布图表
         item {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth() ,
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -293,7 +293,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -309,7 +309,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
                         timeRange = selectedTimeRange,
                         timeGranularity = selectedTimeGranularity,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                             .height(200.dp)
                     )
                 }
@@ -324,7 +324,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -357,7 +357,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -391,7 +391,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -421,7 +421,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -453,7 +453,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -485,7 +485,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -517,7 +517,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -549,7 +549,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -581,7 +581,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -610,7 +610,7 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth().background(   MaterialTheme.colorScheme.primaryContainer)
                         .padding(16.dp)
                 ) {
                     Text(
@@ -946,7 +946,7 @@ private fun TimeRangeSelector(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.background(   MaterialTheme.colorScheme.primaryContainer).padding(16.dp)) {
             // 时间粒度选择（日/周/月/年）
             Row(
                 modifier = Modifier.fillMaxWidth(),

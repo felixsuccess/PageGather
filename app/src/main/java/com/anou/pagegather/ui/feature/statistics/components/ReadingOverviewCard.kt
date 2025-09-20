@@ -1,5 +1,6 @@
 package com.anou.pagegather.ui.feature.statistics.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -36,11 +37,11 @@ fun ReadingOverviewCard(
     val uiState by viewModel.uiState.collectAsState()
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth() ,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.background(   MaterialTheme.colorScheme.primaryContainer).padding(16.dp)
         ) {
             Text(
                 text = "阅读概览",

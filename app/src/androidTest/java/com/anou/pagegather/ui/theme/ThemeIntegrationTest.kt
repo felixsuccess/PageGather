@@ -3,7 +3,7 @@ package com.anou.pagegather.ui.theme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.anou.pagegather.ui.feature.settings.ThemeSelectionScreen
+import com.anou.pagegather.ui.feature.my.settings.ThemeSelectionScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test

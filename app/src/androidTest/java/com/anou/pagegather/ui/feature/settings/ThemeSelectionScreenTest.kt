@@ -2,6 +2,7 @@ package com.anou.pagegather.ui.feature.settings
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.anou.pagegather.ui.feature.my.settings.ThemeSelectionScreen
 import com.anou.pagegather.ui.theme.AppTheme
 import com.anou.pagegather.ui.theme.PageGatherTheme
 import com.anou.pagegather.ui.theme.ThemeMode

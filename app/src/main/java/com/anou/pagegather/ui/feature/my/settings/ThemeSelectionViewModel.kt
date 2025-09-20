@@ -1,5 +1,6 @@
-package com.anou.pagegather.ui.feature.settings
+package com.anou.pagegather.ui.feature.my.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anou.pagegather.domain.theme.ThemeManager
@@ -41,9 +42,9 @@ class ThemeSelectionViewModel @Inject constructor(
                 // 应用主题
                 themeManager.setTheme(theme)
                 
-                android.util.Log.d("ThemeSelectionViewModel", "Theme selected: ${theme.displayName}")
+                Log.d("ThemeSelectionViewModel", "Theme selected: ${theme.displayName}")
             } catch (e: Exception) {
-                android.util.Log.e("ThemeSelectionViewModel", "Failed to select theme: ${theme.displayName}", e)
+                Log.e("ThemeSelectionViewModel", "Failed to select theme: ${theme.displayName}", e)
             } finally {
                 // 清除加载状态
                 _uiState.value = _uiState.value.copy(isLoading = false)
@@ -63,9 +64,9 @@ class ThemeSelectionViewModel @Inject constructor(
                 // 应用主题模式
                 themeManager.setThemeMode(mode)
                 
-                android.util.Log.d("ThemeSelectionViewModel", "Theme mode selected: ${mode.displayName}")
+                Log.d("ThemeSelectionViewModel", "Theme mode selected: ${mode.displayName}")
             } catch (e: Exception) {
-                android.util.Log.e("ThemeSelectionViewModel", "Failed to select theme mode: ${mode.displayName}", e)
+                Log.e("ThemeSelectionViewModel", "Failed to select theme mode: ${mode.displayName}", e)
             } finally {
                 // 清除加载状态
                 _uiState.value = _uiState.value.copy(isLoading = false)
@@ -85,9 +86,9 @@ class ThemeSelectionViewModel @Inject constructor(
                 // 应用动态颜色偏好
                 themeManager.setDynamicColor(enabled)
                 
-                android.util.Log.d("ThemeSelectionViewModel", "Dynamic color preference set to: $enabled")
+                Log.d("ThemeSelectionViewModel", "Dynamic color preference set to: $enabled")
             } catch (e: Exception) {
-                android.util.Log.e("ThemeSelectionViewModel", "Failed to set dynamic color preference", e)
+                Log.e("ThemeSelectionViewModel", "Failed to set dynamic color preference", e)
             } finally {
                 // 清除加载状态
                 _uiState.value = _uiState.value.copy(isLoading = false)

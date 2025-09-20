@@ -165,8 +165,6 @@ fun BookDetailScreen(
     }
 
     var showMenu by remember { mutableStateOf(false) }
-    // 当前选中的Tab
-    // var selectedTab by remember { mutableStateOf(BookDetailTab.BASIC_INFO) }
 
 //
 
@@ -181,7 +179,6 @@ fun BookDetailScreen(
 
         ) {
 
-            // book?.let { TopImgLayout(it, imageHeight) }
             book?.let { TopBackImgLayout(it, imageHeight, bookSource) }
             
             // 显示基础信息
@@ -268,7 +265,8 @@ fun BookDetailScreen(
                     
                     DropdownMenu(
                         expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(   MaterialTheme.colorScheme.primaryContainer)
                     ) {
                         DropdownMenuItem(
                             text = { Text("阅读计时") },
@@ -291,8 +289,7 @@ fun BookDetailScreen(
                                         onNavigateToNoteEdit(parsedId)
                                     }
                                 }
-                            }
-                        )
+                            }  )
                         
                         DropdownMenuItem(
                             text = { Text("阅读历史") },
@@ -303,8 +300,7 @@ fun BookDetailScreen(
                                         navController.navigate(Routes.BookRoutes.bookReadingHistory(parsedId))
                                     }
                                 }
-                            }
-                        )
+                            } )
                         
                         DropdownMenuItem(
                             text = { Text("书摘") },
@@ -315,8 +311,7 @@ fun BookDetailScreen(
                                         navController.navigate(Routes.BookRoutes.bookExcerpts(parsedId))
                                     }
                                 }
-                            }
-                        )
+                            } )
                         
                         DropdownMenuItem(
                             text = { Text("书评") },
@@ -327,8 +322,7 @@ fun BookDetailScreen(
                                         navController.navigate(Routes.BookRoutes.bookReviews(parsedId))
                                     }
                                 }
-                            }
-                        )
+                            } )
                         
                         DropdownMenuItem(
                             text = { Text("相关数据") },
@@ -339,8 +333,7 @@ fun BookDetailScreen(
                                         navController.navigate(Routes.BookRoutes.bookRelatedData(parsedId))
                                     }
                                 }
-                            }
-                        )
+                            } )
                     }
                 }
             }
@@ -566,7 +559,7 @@ private fun BasicInfoTab(book: BookEntity) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.background(   MaterialTheme.colorScheme.primaryContainer).padding(16.dp)
             ) {
                 SectionTitle("基本信息")
                 DetailItem(label = "书名", value = book.name ?: "")
@@ -589,7 +582,7 @@ private fun BasicInfoTab(book: BookEntity) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.background(   MaterialTheme.colorScheme.primaryContainer).padding(16.dp)
             ) {
                 SectionTitle("内容简介")
                 Text(
@@ -607,7 +600,7 @@ private fun BasicInfoTab(book: BookEntity) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.background(   MaterialTheme.colorScheme.primaryContainer).padding(16.dp)
             ) {
                 SectionTitle("作者简介")
                 Text(
@@ -625,7 +618,7 @@ private fun BasicInfoTab(book: BookEntity) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.background(   MaterialTheme.colorScheme.primaryContainer).padding(16.dp)
             ) {
                 SectionTitle("阅读状态")
                 DetailItem(

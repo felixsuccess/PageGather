@@ -1,4 +1,4 @@
-package com.anou.pagegather.ui.feature.settings
+package com.anou.pagegather.ui.feature.my.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,9 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Button
@@ -43,10 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import android.graphics.Color as AndroidColor
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.ui.components.ColorPicker
 import com.anou.pagegather.ui.theme.CustomTheme

@@ -22,12 +22,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import android.graphics.Bitmap
+import android.graphics.Canvas as AndroidCanvas
+import android.graphics.Paint
 
 /**
  * 真正的可视化颜色选择器组件
@@ -83,6 +86,7 @@ private fun VisualColorPicker(
     modifier: Modifier = Modifier
 ) {
     var selectorPosition by remember { mutableStateOf(Offset(100f, 100f)) }
+    var colorBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
     
     Box(
         modifier = modifier
@@ -103,8 +107,14 @@ private fun VisualColorPicker(
                 }
             }
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawColorSpectrum(size.width, size.height)
+        Canvas(modifier = Modifier.fillMaxSize()) { 
+            // 只在首次绘制时创建颜色位图，避免重复计算
+            if (colorBitmap == null) {
+                colorBitmap = createColorSpectrumBitmap(size.width.toInt(), size.height.toInt())
+            }
+            colorBitmap?.let { 
+                drawImage(it)
+            }
         }
         
         // 改进的选择指示器
@@ -121,7 +131,7 @@ private fun SelectorIndicator(position: Offset) {
         modifier = Modifier
             .size(30.dp)
             .offset {
-               IntOffset(
+                IntOffset(
                     (position.x - 15).toInt(),
                     (position.y - 15).toInt()
                 )
@@ -153,7 +163,7 @@ private fun SelectorIndicator(position: Offset) {
  * 根据位置获取颜色
  */
 private fun getColorAtPosition(offset: Offset, width: Float, height: Float): Color {
-    // 简化的颜色选择算法
+    // 优化的颜色选择算法
     // X轴控制色相 (0-360度)
     // Y轴控制饱和度和亮度
     val hue = (offset.x / width * 360).coerceIn(0f, 359f)
@@ -165,23 +175,31 @@ private fun getColorAtPosition(offset: Offset, width: Float, height: Float): Col
 }
 
 /**
- * 绘制颜色光谱
+ * 创建颜色光谱位图
  */
-private fun DrawScope.drawColorSpectrum(width: Float, height: Float) {
-    // 创建一个简单的颜色光谱
-    for (y in 0 until height.toInt() step 2) {
+private fun createColorSpectrumBitmap(width: Int, height: Int): androidx.compose.ui.graphics.ImageBitmap {
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = AndroidCanvas(bitmap)
+    
+    // 优化的颜色光谱生成算法
+    for (y in 0 until height step 2) {
         val saturation = y.toFloat() / height
         val value = 1f - y.toFloat() / height
         
-        for (x in 0 until width.toInt() step 2) {
+        for (x in 0 until width step 2) {
             val hue = x.toFloat() / width * 360
-            val color = Color.hsv(hue, saturation, value)
+            val color = android.graphics.Color.HSVToColor(floatArrayOf(hue, saturation, value))
             
-            drawRect(
-                color = color,
-                topLeft = androidx.compose.ui.geometry.Offset(x.toFloat(), y.toFloat()),
-                size = androidx.compose.ui.geometry.Size(2f, 2f)
+            // 绘制2x2的方块以提高性能
+            canvas.drawRect(
+                x.toFloat(), 
+                y.toFloat(), 
+                (x + 2).toFloat(), 
+                (y + 2).toFloat(), 
+                Paint().apply { this.color = color }
             )
         }
     }
+    
+    return bitmap.asImageBitmap()
 }

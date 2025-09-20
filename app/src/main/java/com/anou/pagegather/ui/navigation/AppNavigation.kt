@@ -28,6 +28,8 @@ import com.anou.pagegather.ui.feature.management.BookGroupManagementScreen
 import com.anou.pagegather.ui.feature.management.BookSourceManagementScreen
 import com.anou.pagegather.ui.feature.management.TagManagementScreen
 import com.anou.pagegather.ui.feature.my.ProfileScreen
+import com.anou.pagegather.ui.feature.my.settings.CustomThemeCreationScreen
+import com.anou.pagegather.ui.feature.my.settings.ThemeSelectionScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
 import com.anou.pagegather.ui.feature.notes.NotesScreen
@@ -38,13 +40,13 @@ import com.anou.pagegather.ui.feature.reading.RecordSource
 import com.anou.pagegather.ui.feature.reading.ReadingRecordsScreen
 import com.anou.pagegather.ui.feature.reading.BookReadingStatisticsScreen
 import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
+import com.anou.pagegather.ui.feature.my.settings.debug.ThemeDebugScreen
 import com.anou.pagegather.ui.feature.statistics.StatisticsScreen
 import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
 import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
 import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
-import java.util.Calendar
 
 @Composable
 fun AppNavigation(
@@ -207,7 +209,7 @@ fun AppNavigation(
 
         // 主题设置页面
         composable(Routes.ProfileRoutes.THEME_SETTINGS) {
-            com.anou.pagegather.ui.feature.settings.ThemeSelectionScreen(
+            ThemeSelectionScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToCustomThemeCreation = { navController.navigate(Routes.ProfileRoutes.CUSTOM_THEME_CREATION) }
             )
@@ -215,7 +217,7 @@ fun AppNavigation(
 
         // 自定义主题创建页面
         composable(Routes.ProfileRoutes.CUSTOM_THEME_CREATION) {
-            com.anou.pagegather.ui.feature.settings.CustomThemeCreationScreen(
+            CustomThemeCreationScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onThemeCreated = { customTheme ->
                     // 主题创建成功后返回主题设置页面
@@ -226,7 +228,7 @@ fun AppNavigation(
 
         // 主题调试页面
         composable(Routes.ProfileRoutes.THEME_DEBUG) {
-            com.anou.pagegather.ui.feature.debug.ThemeDebugScreen(
+            ThemeDebugScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

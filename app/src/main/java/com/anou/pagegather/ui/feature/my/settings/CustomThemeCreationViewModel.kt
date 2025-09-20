@@ -1,4 +1,4 @@
-package com.anou.pagegather.ui.feature.settings
+package com.anou.pagegather.ui.feature.my.settings
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -143,7 +143,7 @@ data class CustomThemeCreationUiState(
     val name: String = "",
     val description: String = "",
     val emoji: String = "🎨",
-    val primaryColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color(0xFF6200EE),
+    val primaryColor: Color = Color(0xFF6200EE),
     val isSaveEnabled: Boolean = false,
     val isLoading: Boolean = false,
     val saveSuccess: Boolean = false,
