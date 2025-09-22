@@ -1,0 +1,320 @@
+package com.anou.pagegather.ui.feature.bookshelf.group
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.anou.pagegather.data.local.entity.BookGroupEntity
+import kotlinx.coroutines.delay
+
+/**
+ * 书籍分组选择底部弹出框
+ * 
+ * 功能：
+ * 1. 搜索框，支持关键字搜索分组
+ * 2. 显示分组名称和书籍数量
+ * 3. 管理按钮和添加按钮
+ * 4. 底部取消按钮
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookGroupSelectorBottomSheet(
+    availableGroups: List<BookGroupEntity>,
+    selectedGroupId: Long?,
+    onGroupSelectionChange: (Long?) -> Unit,
+    onDismissRequest: () -> Unit,
+    onAddNewGroup: (String) -> Unit,
+    onManageGroups: () -> Unit,
+    // 每个分组的书籍数量，如果没有提供则不显示数量
+    groupBookCounts: Map<Long, Int> = emptyMap(),
+    sheetState: SheetState = rememberModalBottomSheetState(),
+    // 添加最大高度参数，默认为屏幕高度的70%
+    maxHeight: Float = 0.7f
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = sheetState
+    ) {
+        // 获取屏幕配置
+        val configuration = LocalConfiguration.current
+        val maxHeightDp = (configuration.screenHeightDp * maxHeight).dp
+        
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = maxHeightDp)
+                .padding(bottom = 16.dp)
+        ) {
+            // 顶部标题栏和操作按钮
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "选择书籍分组",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Row {
+                    // 管理按钮
+                    IconButton(
+                        onClick = {
+                            onManageGroups()
+                            // 确保不调用任何关闭逻辑
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "管理分组",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    // 添加按钮
+                    IconButton(
+                        onClick = {
+                            onAddNewGroup("add")
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "添加分组",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+            
+            HorizontalDivider()
+            
+            // 搜索框
+            var searchQuery by remember { mutableStateOf("") }
+            val focusManager = LocalFocusManager.current
+            
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("搜索分组") },
+                leadingIcon = { 
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "搜索"
+                    )
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(
+                            onClick = { searchQuery = "" },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "清除"
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = { focusManager.clearFocus() }
+                ),
+                shape = RoundedCornerShape(8.dp)
+            )
+            
+            // 分组列表
+            val filteredGroups = remember(searchQuery, availableGroups) {
+                if (searchQuery.isEmpty()) {
+                    availableGroups
+                } else {
+                    availableGroups.filter { 
+                        it.getDisplayName().contains(searchQuery, ignoreCase = true) 
+                    }
+                }
+            }
+            
+            if (filteredGroups.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "没有找到匹配的分组",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    // "无分组"选项
+                    item {
+                        GroupItem(
+                            title = "无分组",
+                            isSelected = selectedGroupId == null,
+                            onSelectionChange = { 
+                                onGroupSelectionChange(null)
+                                onDismissRequest()
+                            },
+                            bookCount = null
+                        )
+                    }
+                    
+                    // 分组列表
+                    items(
+                        items = filteredGroups,
+                        key = { it.id }
+                    ) { group ->
+                        GroupItem(
+                            title = group.getDisplayName(),
+                            isSelected = group.id == selectedGroupId,
+                            onSelectionChange = { 
+                                onGroupSelectionChange(group.id)
+                                onDismissRequest()
+                            },
+                            bookCount = groupBookCounts[group.id]
+                        )
+                    }
+                }
+            }
+            
+            // 底部取消按钮
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Button(
+                    onClick = onDismissRequest,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Text("取消")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 分组条目
+ */
+@Composable
+private fun GroupItem(
+    modifier: Modifier = Modifier,
+    title: String,
+    isSelected: Boolean,
+    onSelectionChange: () -> Unit,
+    bookCount: Int? = null
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        } else {
+            Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 200),
+        label = "background_color"
+    )
+    
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .clickable(
+                onClick = onSelectionChange,
+                role = Role.RadioButton
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 选择指示器
+        RadioButton(
+            selected = isSelected,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = MaterialTheme.colorScheme.primary,
+                unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        // 分组名称
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isSelected) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        
+        // 书籍数量
+        if (bookCount != null) {
+            Text(
+                text = "$bookCount 本",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+        }
+        
+        // 选中指示器
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "已选择",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}

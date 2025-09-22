@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -44,8 +45,10 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -58,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,6 +78,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.anou.pagegather.R
@@ -84,6 +89,7 @@ import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.components.RateBar
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookSourceSelector
 import com.anou.pagegather.ui.feature.bookshelf.group.BookGroupSelector
+import com.anou.pagegather.ui.navigation.Routes
 import com.anou.pagegather.ui.theme.extendedColors
 import com.anou.pagegather.utils.FileOperator
 import kotlinx.coroutines.Dispatchers
@@ -149,8 +155,11 @@ fun BookEditScreen(
     val book by viewModel.book.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val formState = remember { mutableStateOf(BookFormState()) }
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    var isFromManage by rememberSaveable { mutableStateOf(false) }
     var localCoverPath by remember { mutableStateOf("") }
     var photoImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showGroupSelector by rememberSaveable { mutableStateOf(false) }
 
     fun updateFormState(book: BookEntity): BookFormState {
         return BookFormState(
@@ -209,9 +218,21 @@ fun BookEditScreen(
         }
     }
     
+    // 监听导航返回事件，处理从分组管理页面返回的情况
+    LaunchedEffect(backStackEntry) {
+        Log.d("BookEditScreen", "导航状态变化: ${backStackEntry?.destination?.route}, isFromManage=$isFromManage")
+        if (isFromManage) {
+            // 如果是从分组管理页面返回，自动打开分组选择器
+            showGroupSelector = true
+            // 重置标记
+            isFromManage = false
+            Log.d("BookEditScreen", "从分组管理返回，打开分组选择器: showGroupSelector=$showGroupSelector")
+        }
+    }
+
     // 获取 context
     val context = LocalContext.current
-    
+
     // 显示错误消息
     uiState.errorMessage?.let { errorMessage ->
         LaunchedEffect(errorMessage) {
@@ -348,7 +369,7 @@ fun BookEditScreen(
                                 // 构建带有新书籍ID的回调URL，使用实际的书籍ID
                                 val separator = if (decodedCallback.contains("?")) "&" else "?"
                                 val callbackWithBookId = "${decodedCallback}${separator}selectedBookId=${actualBookId}"
-                                
+
                                 navController.navigate(callbackWithBookId) {
                                     // 清除当前的书籍编辑页面
                                     popUpTo(navController.currentDestination?.route ?: "") { inclusive = true }
@@ -363,7 +384,7 @@ fun BookEditScreen(
                     }
 
                 }
-              
+
                 Icon(
                     imageVector =   Icons.Default.Save  ,
                     contentDescription = if (bookId != null && bookId.toLongOrNull() != 0L) "保存" else "添加",
@@ -399,7 +420,7 @@ fun BookEditScreen(
                 ) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth() .background(   MaterialTheme.colorScheme.primaryContainer)
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -410,7 +431,7 @@ fun BookEditScreen(
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
-                        
+
                         Box(
                             modifier = Modifier
                                 .size(width = 120.dp, height = 160.dp)
@@ -427,7 +448,7 @@ fun BookEditScreen(
                                 error = painterResource(id = R.mipmap.default_cover),
                                 contentScale = androidx.compose.ui.layout.ContentScale.Crop
                             )
-                            
+
                             // 添加点击提示
                             if (localCoverPath.isEmpty()) {
                                 Column(
@@ -599,16 +620,85 @@ fun BookEditScreen(
                     itemToString = { it.message })
 
                 // 书籍分组选择器
+                var showAddGroupDialog by remember { mutableStateOf(false) }
+                var newGroupName by remember { mutableStateOf("") }
+                // 分组选择器状态由回调显式控制
+
+
+
+                //
                 BookGroupSelector(
                     availableGroups = uiState.availableGroups,
                     selectedGroupId = uiState.selectedGroupId,
                     onGroupSelectionChange = viewModel::updateSelectedGroup,
                     onAddNewGroup = {
-                        // 可以在这里添加快速创建分组的逻辑，或者导航到分组管理页面
-                        // 这里暂时不实现，留给后续优化
+                        // 根据按钮类型执行不同操作
+                        if (it == "add") {
+                            // 显示添加分组对话框
+                            showAddGroupDialog = true
+                        } else {
+                            // 设置标记，表示从编辑页面导航到分组管理
+                            isFromManage = true
+                            Log.d("BookEditScreen", "导航到分组管理页面，设置 isFromManage = true")
+                            navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) {
+                                launchSingleTop = true
+                                // 不使用 popUpTo，确保返回栈保留书籍编辑页面
+                            }
+                        }
                     },
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    // 传递外部控制状态
+                    showBottomSheet = showGroupSelector,
+                    onBottomSheetVisibilityChange = { isVisible ->
+                        Log.d("BookEditScreen", "分组选择器可见性变化: $isVisible")
+                        showGroupSelector = isVisible
+                    }
                 )
+
+                // 添加分组对话框
+                if (showAddGroupDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showAddGroupDialog = false },
+                        title = { Text("添加新分组") },
+                        text = {
+                            Column {
+                                if (uiState.errorMessage != null) {
+                                    Text(
+                                        text = uiState.errorMessage ?: "",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                }
+                                OutlinedTextField(
+                                    value = newGroupName,
+                                    onValueChange = { newGroupName = it },
+                                    label = { Text("分组名称") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.addNewGroup(newGroupName) {
+                                        // 成功添加分组后关闭对话框并清空输入
+                                        showAddGroupDialog = false
+                                        newGroupName = ""
+                                    }
+                                }
+                            ) {
+                                Text("确定")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showAddGroupDialog = false }) {
+                                Text("取消")
+                            }
+                        }
+                    )
+                }
 
                 // 书籍来源选择器
                 BookSourceSelector(
@@ -741,7 +831,7 @@ fun BookEditScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "评分", 
+                        text = "评分",
                         color = MaterialTheme.extendedColors.subtitleColor,
                     )
                     RateBar(
@@ -797,7 +887,8 @@ fun BookEditScreen(
     // 封面选择底部模态
     if (showModal) {
         ModalBottomSheet(
-            onDismissRequest = { showModal = false }, sheetState = sheetState
+            onDismissRequest = { showModal = false },
+            sheetState = sheetState
         ) {
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
                 Text(
