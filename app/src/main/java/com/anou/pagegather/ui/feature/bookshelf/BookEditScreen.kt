@@ -1,6 +1,5 @@
 package com.anou.pagegather.ui.feature.bookshelf
 
-
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.net.Uri
@@ -9,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,10 +30,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -67,12 +70,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.FileProvider
@@ -87,8 +94,8 @@ import com.anou.pagegather.data.local.entity.BookType
 import com.anou.pagegather.data.local.entity.ReadPositionUnit
 import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.components.RateBar
-import com.anou.pagegather.ui.feature.bookshelf.booksource.BookSourceSelector
-import com.anou.pagegather.ui.feature.bookshelf.group.BookGroupSelector
+import com.anou.pagegather.ui.feature.bookshelf.booksource.BookSourceSelectorBottomSheet
+import com.anou.pagegather.ui.feature.bookshelf.group.BookGroupSelectorBottomSheet
 import com.anou.pagegather.ui.navigation.Routes
 import com.anou.pagegather.ui.theme.extendedColors
 import com.anou.pagegather.utils.FileOperator
@@ -156,10 +163,17 @@ fun BookEditScreen(
     val uiState by viewModel.uiState.collectAsState()
     val formState = remember { mutableStateOf(BookFormState()) }
     val backStackEntry by navController.currentBackStackEntryAsState()
-    var isFromManage by rememberSaveable { mutableStateOf(false) }
+    var isFromBookGroupMgr by rememberSaveable { mutableStateOf(false) }
+    var isFromBookSourceMgr by rememberSaveable { mutableStateOf(false) }
     var localCoverPath by remember { mutableStateOf("") }
     var photoImageUri by remember { mutableStateOf<Uri?>(null) }
-    var showGroupSelector by rememberSaveable { mutableStateOf(false) }
+
+    val bookGroupSheetState = rememberModalBottomSheetState()
+    var showBookGroupSelector by rememberSaveable { mutableStateOf(false) }
+
+    // 书籍来源选择器底部弹窗状态
+    val bookSourceSheetState = rememberModalBottomSheetState()
+    var showBookSourceSelector by rememberSaveable { mutableStateOf(false) }
 
     fun updateFormState(book: BookEntity): BookFormState {
         return BookFormState(
@@ -217,16 +231,36 @@ fun BookEditScreen(
             Log.e("BookEditScreen", "更新表单状态失败: ${e.message}", e)
         }
     }
-    
+
     // 监听导航返回事件，处理从分组管理页面返回的情况
     LaunchedEffect(backStackEntry) {
-        Log.d("BookEditScreen", "导航状态变化: ${backStackEntry?.destination?.route}, isFromManage=$isFromManage")
-        if (isFromManage) {
+        Log.d(
+            "BookEditScreen",
+            "导航状态变化: ${backStackEntry?.destination?.route}, isFromManage=$isFromBookGroupMgr"
+        )
+        Log.d(
+            "BookEditScreen",
+            "导航状态变化: ${backStackEntry?.destination?.route}, isFromSourceManage=$isFromBookSourceMgr"
+        )
+        if (isFromBookGroupMgr) {
             // 如果是从分组管理页面返回，自动打开分组选择器
-            showGroupSelector = true
+            showBookGroupSelector = true
             // 重置标记
-            isFromManage = false
-            Log.d("BookEditScreen", "从分组管理返回，打开分组选择器: showGroupSelector=$showGroupSelector")
+            isFromBookGroupMgr = false
+            Log.d(
+                "BookEditScreen",
+                "从分组管理返回，打开分组选择器: showGroupSelector=$showBookGroupSelector"
+            )
+        }
+        if (isFromBookSourceMgr) {
+            // 如果是从来源管理页面返回，自动打开来源选择器
+            showBookSourceSelector = true
+            // 重置标记
+            isFromBookSourceMgr = false
+            Log.d(
+                "BookEditScreen",
+                "从书籍来源管理返回，打开书籍来源选择器: showBookSourceSelector=$showBookSourceSelector"
+            )
         }
     }
 
@@ -259,6 +293,7 @@ fun BookEditScreen(
                         formState.value = formState.value.copy(coverUrl = result.filePath)
                         localCoverPath = result.filePath
                     }
+
                     is ImageResult.Error -> {
                         handleImageResult(context, result)
                     }
@@ -317,7 +352,7 @@ fun BookEditScreen(
                 Text(
                     text = if (bookId != null && bookId.toLongOrNull() != 0L) "编辑书籍" else "新建书籍",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             },
@@ -368,11 +403,14 @@ fun BookEditScreen(
                                 val decodedCallback = Uri.decode(callbackRoute)
                                 // 构建带有新书籍ID的回调URL，使用实际的书籍ID
                                 val separator = if (decodedCallback.contains("?")) "&" else "?"
-                                val callbackWithBookId = "${decodedCallback}${separator}selectedBookId=${actualBookId}"
+                                val callbackWithBookId =
+                                    "${decodedCallback}${separator}selectedBookId=${actualBookId}"
 
                                 navController.navigate(callbackWithBookId) {
                                     // 清除当前的书籍编辑页面
-                                    popUpTo(navController.currentDestination?.route ?: "") { inclusive = true }
+                                    popUpTo(
+                                        navController.currentDestination?.route ?: ""
+                                    ) { inclusive = true }
                                     // 保持在栈顶，不要添加新的实例
                                     launchSingleTop = true
                                 }
@@ -386,7 +424,7 @@ fun BookEditScreen(
                 }
 
                 Icon(
-                    imageVector =   Icons.Default.Save  ,
+                    imageVector = Icons.Default.Save,
                     contentDescription = if (bookId != null && bookId.toLongOrNull() != 0L) "保存" else "添加",
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
@@ -409,25 +447,26 @@ fun BookEditScreen(
                     .padding(10.dp)
             ) {
                 // 封面选择区域
-                androidx.compose.material3.Card(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                    elevation = androidx.compose.material3.CardDefaults.cardElevation(
+                    elevation = CardDefaults.cardElevation(
                         defaultElevation = 2.dp
                     )
                 ) {
                     Column(
                         modifier = Modifier
-                            .fillMaxWidth() .background(   MaterialTheme.colorScheme.primaryContainer)
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "书籍封面",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
@@ -437,16 +476,15 @@ fun BookEditScreen(
                                 .size(width = 120.dp, height = 160.dp)
                                 .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                                .clickable { showModal = true },
-                            contentAlignment = Alignment.Center
+                                .clickable { showModal = true }, contentAlignment = Alignment.Center
                         ) {
                             AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current).data(localCoverPath)
-                                    .crossfade(true).build(),
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(localCoverPath).crossfade(true).build(),
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 error = painterResource(id = R.mipmap.default_cover),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                contentScale = ContentScale.Crop
                             )
 
                             // 添加点击提示
@@ -454,8 +492,8 @@ fun BookEditScreen(
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    androidx.compose.material3.Icon(
-                                        imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                         modifier = Modifier.size(32.dp)
@@ -463,7 +501,9 @@ fun BookEditScreen(
                                     Text(
                                         text = "点击添加封面",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                            alpha = 0.6f
+                                        ),
                                         modifier = Modifier.padding(top = 8.dp)
                                     )
                                 }
@@ -620,45 +660,99 @@ fun BookEditScreen(
                     itemToString = { it.message })
 
                 // 书籍分组选择器
-                var showAddGroupDialog by remember { mutableStateOf(false) }
-                var newGroupName by remember { mutableStateOf("") }
-                // 分组选择器状态由回调显式控制
+                val selectedBookGroup =
+                    uiState.availableBookGroups.find { it.id == uiState.selectedBookGroupId }
+                var showAddBookGroupDialog by remember { mutableStateOf(false) }
+                var newBookGroupName by remember { mutableStateOf("") }
+//
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    border = BorderStroke(
+                        width = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                    )
+                ) {
+                    // 主选择区域
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(
+                                onClick = { showBookGroupSelector = true })
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "书籍分组",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
 
+                            Spacer(modifier = Modifier.height(4.dp))
 
+                            if (selectedBookGroup != null) {
+                                Text(
+                                    text = selectedBookGroup.getDisplayName(),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            } else {
+                                Text(
+                                    text = if (uiState.availableBookGroups.isEmpty()) "暂无分组" else "点击选择分组",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    fontStyle = FontStyle.Italic
+                                )
+                            }
+                        }
 
-                //
-                BookGroupSelector(
-                    availableGroups = uiState.availableGroups,
-                    selectedGroupId = uiState.selectedGroupId,
-                    onGroupSelectionChange = viewModel::updateSelectedGroup,
-                    onAddNewGroup = {
-                        // 根据按钮类型执行不同操作
-                        if (it == "add") {
-                            // 显示添加分组对话框
-                            showAddGroupDialog = true
-                        } else {
+                        // 展开图标
+                        Icon(
+                            imageVector = Icons.Default.ExpandMore,
+                            contentDescription = "展开",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                if (showBookGroupSelector) {
+                    BookGroupSelectorBottomSheet(
+                        sheetState = bookGroupSheetState,
+                        availableGroups = uiState.availableBookGroups,
+                        selectedGroupId = uiState.selectedBookGroupId,
+                        onDismissRequest = { showBookGroupSelector = false },
+                        onGroupSelectionChange = { groupId ->
+                            viewModel.updateSelectedGroup(groupId)
+                            showBookGroupSelector = false
+                        },
+                        onAddNewGroup = {
+                            showAddBookGroupDialog = true
+                        },
+                        onManageGroups = {
                             // 设置标记，表示从编辑页面导航到分组管理
-                            isFromManage = true
-                            Log.d("BookEditScreen", "导航到分组管理页面，设置 isFromManage = true")
+                            isFromBookGroupMgr = true
+                            Log.d(
+                                "BookEditScreen", "导航到分组管理页面，设置 isFromGroupManage = true"
+                            )
                             navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) {
                                 launchSingleTop = true
                                 // 不使用 popUpTo，确保返回栈保留书籍编辑页面
                             }
-                        }
-                    },
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    // 传递外部控制状态
-                    showBottomSheet = showGroupSelector,
-                    onBottomSheetVisibilityChange = { isVisible ->
-                        Log.d("BookEditScreen", "分组选择器可见性变化: $isVisible")
-                        showGroupSelector = isVisible
-                    }
-                )
+                        })
+                }
 
                 // 添加分组对话框
-                if (showAddGroupDialog) {
+                if (showAddBookGroupDialog) {
                     AlertDialog(
-                        onDismissRequest = { showAddGroupDialog = false },
+                        onDismissRequest = { showAddBookGroupDialog = false },
                         title = { Text("添加新分组") },
                         text = {
                             Column {
@@ -671,8 +765,8 @@ fun BookEditScreen(
                                     )
                                 }
                                 OutlinedTextField(
-                                    value = newGroupName,
-                                    onValueChange = { newGroupName = it },
+                                    value = newBookGroupName,
+                                    onValueChange = { newBookGroupName = it },
                                     label = { Text("分组名称") },
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth()
@@ -682,32 +776,156 @@ fun BookEditScreen(
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    viewModel.addNewGroup(newGroupName) {
+                                    viewModel.addNewBookGroup(newBookGroupName) {
                                         // 成功添加分组后关闭对话框并清空输入
-                                        showAddGroupDialog = false
-                                        newGroupName = ""
+                                        showAddBookGroupDialog = false
+                                        newBookGroupName = ""
                                     }
-                                }
-                            ) {
+                                }) {
                                 Text("确定")
                             }
                         },
                         dismissButton = {
-                            TextButton(onClick = { showAddGroupDialog = false }) {
+                            TextButton(onClick = { showAddBookGroupDialog = false }) {
                                 Text("取消")
                             }
-                        }
-                    )
+                        })
                 }
 
                 // 书籍来源选择器
-                BookSourceSelector(
-                    availableBookSources = uiState.availableBookSources,
-                    selectedBookSourceId = uiState.selectedBookSourceId,
-                    onBookSourceSelectionChange = viewModel::updateSelectedBookSource,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                val selectedBookSource =
+                    uiState.availableBookSources.find { it.id == uiState.selectedBookSourceId }
 
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    border = BorderStroke(
+                        width = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                    )
+                ) {
+                    // 主选择区域
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(
+                                onClick = { showBookSourceSelector = true })
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "书籍来源",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            if (selectedBookSource != null) {
+                                Text(
+                                    text = selectedBookSource.getDisplayName(),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            } else {
+                                Text(
+                                    text = if (uiState.availableBookSources.isEmpty()) "暂无来源" else "点击选择来源",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    fontStyle = FontStyle.Italic
+                                )
+                            }
+                        }
+
+                        // 展开图标
+                        Icon(
+                            imageVector = Icons.Default.ExpandMore,
+                            contentDescription = "展开",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+
+                var showAddBookSourceDialog by remember { mutableStateOf(false) }
+                var newBookSourceName by remember { mutableStateOf("") }
+                if (showBookSourceSelector) {
+                    BookSourceSelectorBottomSheet(
+                        sheetState = bookSourceSheetState,
+                        availableSources = uiState.availableBookSources,
+                        selectedSourceId = uiState.selectedBookSourceId,
+                        onDismissRequest = { showBookSourceSelector = false },
+                        onSourceSelectionChange = { sourceId ->
+                            viewModel.updateSelectedBookSource(sourceId)
+                            showBookSourceSelector = false
+                        },
+                        onAddNewSource = {
+                            showAddBookSourceDialog = true
+                        },
+                        onManageSources = {
+                            // 设置标记，表示从编辑页面导航到分组管理
+                            isFromBookSourceMgr = true
+                            Log.d(
+                                "BookEditScreen",
+                                "导航到来源管理页面，设置 isFromSourceManage = true"
+                            )
+                            navController.navigate(Routes.ProfileRoutes.BOOK_SOURCE_SETTINGS) {
+                                launchSingleTop = true
+                                // 不使用 popUpTo，确保返回栈保留书籍编辑页面
+                            }
+                        })
+                }
+                // 添加分组对话框
+                if (showAddBookSourceDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showAddBookSourceDialog = false },
+                        title = { Text("添加新书籍来源") },
+                        text = {
+                            Column {
+                                if (uiState.errorMessage != null) {
+                                    Text(
+                                        text = uiState.errorMessage ?: "",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                }
+                                OutlinedTextField(
+                                    value = newBookSourceName,
+                                    onValueChange = { newBookSourceName = it },
+                                    label = { Text("来源名称") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.addNewBookSource(newBookSourceName) {
+                                        // 成功添加来源后关闭对话框并清空输入
+                                        showAddBookSourceDialog = false
+                                        newBookSourceName = ""
+                                    }
+                                }) {
+                                Text("确定")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showAddBookSourceDialog = false }) {
+                                Text("取消")
+                            }
+                        })
+                }
                 // 标签选择器
                 BookTagSelector(
                     availableTags = uiState.availableTags,
@@ -756,33 +974,25 @@ fun BookEditScreen(
 
                     if (formState.value.positionUnit == ReadPositionUnit.PAGE.code) {
                         CommonTextField(
-                            value = formState.value.readPosition.toString(),
-                            onValueChange = {
+                            value = formState.value.readPosition.toString(), onValueChange = {
                                 val newPagination = it.toIntOrNull() ?: 0
                                 formState.value =
                                     formState.value.copy(readPosition = newPagination.toString())
-                            },
-                            label = "已读页数",
-                            keyboardOptions = KeyboardOptions.Default.copy(
+                            }, label = "已读页数", keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.Number
-                            ),
-                            modifier = Modifier
+                            ), modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(5.dp)
                         )
 
                         CommonTextField(
-                            value = formState.value.totalPagination.toString(),
-                            onValueChange = {
+                            value = formState.value.totalPagination.toString(), onValueChange = {
                                 val newPagination = it.toIntOrNull() ?: 0
                                 formState.value =
                                     formState.value.copy(totalPagination = newPagination)
-                            },
-                            label = "总页数",
-                            keyboardOptions = KeyboardOptions.Default.copy(
+                            }, label = "总页数", keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.Number
-                            ),
-                            modifier = Modifier
+                            ), modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(5.dp)
                         )
@@ -790,17 +1000,13 @@ fun BookEditScreen(
 
 
                         CommonTextField(
-                            value = formState.value.readPosition.toString(),
-                            onValueChange = {
+                            value = formState.value.readPosition.toString(), onValueChange = {
                                 val newPagination = it.toDoubleOrNull() ?: 0
                                 formState.value =
                                     formState.value.copy(readPosition = newPagination.toString())
-                            },
-                            label = "阅读进度",
-                            keyboardOptions = KeyboardOptions.Default.copy(
+                            }, label = "阅读进度", keyboardOptions = KeyboardOptions.Default.copy(
                                 keyboardType = KeyboardType.Decimal
-                            ),
-                            modifier = Modifier
+                            ), modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(5.dp)
                         )
@@ -887,8 +1093,7 @@ fun BookEditScreen(
     // 封面选择底部模态
     if (showModal) {
         ModalBottomSheet(
-            onDismissRequest = { showModal = false },
-            sheetState = sheetState
+            onDismissRequest = { showModal = false }, sheetState = sheetState
         ) {
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
                 Text(
@@ -1090,7 +1295,7 @@ fun CommonTextField(
     var isInputValid by remember { mutableStateOf(true) }
 
     Column {
-        androidx.compose.material3.OutlinedTextField(
+        OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
                 isInputValid = validator(newValue)
@@ -1109,8 +1314,7 @@ fun CommonTextField(
             singleLine = maxLines == 1,
             trailingIcon = trailingIcon,
             readOnly = readOnly,
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-        )
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
 
         if (!isInputValid || (isError && errorMessage.isNotEmpty())) {
             Text(

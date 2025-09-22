@@ -25,8 +25,8 @@ import javax.inject.Inject
  */
 data class BookEditUiState(
     val book: BookEntity? = null,
-    val availableGroups: List<BookGroupEntity> = emptyList(),
-    val selectedGroupId: Long? = null,
+    val availableBookGroups: List<BookGroupEntity> = emptyList(),
+    val selectedBookGroupId: Long? = null,
     val availableBookSources: List<BookSourceEntity> = emptyList(),
     val selectedBookSourceId: Long? = null,
     val availableTags: List<TagEntity> = emptyList(),
@@ -38,16 +38,16 @@ data class BookEditUiState(
 @HiltViewModel
 class BookEditViewModel @Inject constructor(
     private val bookRepository: BookRepository,
-    private val groupRepository: BookGroupRepository,
+    private val bookGroupRepository: BookGroupRepository,
     private val bookSourceRepository: BookSourceRepository,
     private val tagRepository: TagRepository
 ) : ViewModel() {
     private val _book = MutableStateFlow<BookEntity?>(null)
     val book: StateFlow<BookEntity?> = _book
-    
+
     private val _uiState = MutableStateFlow(BookEditUiState())
     val uiState: StateFlow<BookEditUiState> = _uiState
-    
+
     init {
         loadAvailableGroups()
         loadAvailableBookSources()
@@ -60,9 +60,9 @@ class BookEditViewModel @Inject constructor(
     private fun loadAvailableGroups() {
         viewModelScope.launch {
             try {
-                groupRepository.getAllGroups().collect { groups ->
+                bookGroupRepository.getAllGroups().collect { groups ->
                     _uiState.value = _uiState.value.copy(
-                        availableGroups = groups
+                        availableBookGroups = groups
                     )
                 }
             } catch (e: Exception) {
@@ -73,7 +73,7 @@ class BookEditViewModel @Inject constructor(
             }
         }
     }
-    
+
     /**
      * 加载可用书籍来源
      */
@@ -93,7 +93,7 @@ class BookEditViewModel @Inject constructor(
             }
         }
     }
-    
+
     /**
      * 加载可用标签（仅书籍标签）
      */
@@ -113,23 +113,23 @@ class BookEditViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun loadBook(bookId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
-                
+
                 val fetchedBook = bookRepository.getBookById(bookId)
-                
+
                 // 加载书籍关联的分组
                 val groupRefs = bookRepository.getGroupsByBookId(bookId)
                 // 加载书籍关联的标签
                 val tagRefs = bookRepository.getTagsByBookId(bookId)
-                
+
                 combine(
                     groupRefs,
                     tagRefs,
-                    groupRepository.getAllGroups()
+                    bookGroupRepository.getAllGroups()
                 ) { refs, tags, allGroups ->
                     val selectedGroupId = refs.map { it.groupId }.firstOrNull()
                     val selectedTagIds = tags.map { it.id }
@@ -139,8 +139,8 @@ class BookEditViewModel @Inject constructor(
                         _book.value = fetchedBook
                         _uiState.value = _uiState.value.copy(
                             book = fetchedBook,
-                            availableGroups = groups,
-                            selectedGroupId = selectedGroupId,
+                            availableBookGroups = groups,
+                            selectedBookGroupId = selectedGroupId,
                             selectedTagIds = selectedTagIds,
                             selectedBookSourceId = fetchedBook?.bookSourceId?.toLong(),
                             isLoading = false
@@ -163,23 +163,23 @@ class BookEditViewModel @Inject constructor(
      * 更新选中的分组（单选）
      */
     fun updateSelectedGroup(groupId: Long?) {
-        _uiState.value = _uiState.value.copy(selectedGroupId = groupId)
+        _uiState.value = _uiState.value.copy(selectedBookGroupId = groupId)
     }
-    
+
     /**
      * 更新选中的书籍来源
      */
     fun updateSelectedBookSource(bookSourceId: Long?) {
         _uiState.value = _uiState.value.copy(selectedBookSourceId = bookSourceId)
     }
-    
+
     /**
      * 更新选中的标签（多选）
      */
     fun updateSelectedTags(tagIds: List<Long>) {
         _uiState.value = _uiState.value.copy(selectedTagIds = tagIds)
     }
-    
+
     /**
      * 切换标签选中状态
      */
@@ -192,7 +192,7 @@ class BookEditViewModel @Inject constructor(
         }
         _uiState.value = _uiState.value.copy(selectedTagIds = currentSelectedIds)
     }
-    
+
     /**
      * 保存书籍及其分组关联
      */
@@ -210,19 +210,19 @@ class BookEditViewModel @Inject constructor(
                         Log.d("BookEdit", "Updated book with id: ${book.id}")
                         book.id
                     }
-                    
+
                     // 保存分组关联（使用单选分组）
-                    val selectedGroupId = _uiState.value.selectedGroupId
+                    val selectedGroupId = _uiState.value.selectedBookGroupId
                     val groupIds = selectedGroupId?.let { listOf(it) } ?: emptyList()
                     bookRepository.updateBookGroups(finalBookId, groupIds)
                     Log.d("BookEdit", "Updated book group: $selectedGroupId")
-                    
+
                     // 保存标签关联（多选标签）
                     val selectedTagIds = _uiState.value.selectedTagIds
                     bookRepository.updateBookTags(finalBookId, selectedTagIds)
                     Log.d("BookEdit", "Updated book tags: $selectedTagIds")
                 }
-                
+
                 // 只有在事务成功完成后才调用 onSuccess，并传递实际的书籍ID
                 withContext(Dispatchers.Main) {
                     onSuccess(finalBookId)
@@ -241,11 +241,11 @@ class BookEditViewModel @Inject constructor(
     fun deleteBook(book: BookEntity) = viewModelScope.launch {
         bookRepository.deleteBook(book)
     }
-    
+
     /**
      * 添加新分组
      */
-    fun addNewGroup(name: String, onSuccess: (() -> Unit)? = null) {
+    fun addNewBookGroup(name: String, onSuccess: (() -> Unit)? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val trimmedName = name.trim()
@@ -257,9 +257,9 @@ class BookEditViewModel @Inject constructor(
                     }
                     return@launch
                 }
-                
+
                 // 检查名称是否已存在
-                val nameExists = groupRepository.isGroupNameExists(trimmedName)
+                val nameExists = bookGroupRepository.isGroupNameExists(trimmedName)
                 if (nameExists) {
                     withContext(Dispatchers.Main) {
                         _uiState.value = _uiState.value.copy(
@@ -268,7 +268,7 @@ class BookEditViewModel @Inject constructor(
                     }
                     return@launch
                 }
-                
+
                 val currentTime = System.currentTimeMillis()
                 val newGroup = BookGroupEntity(
                     name = trimmedName,
@@ -277,14 +277,14 @@ class BookEditViewModel @Inject constructor(
                     updatedDate = currentTime,
                     lastSyncDate = currentTime
                 )
-                
-                val groupId = groupRepository.insertGroup(newGroup)
+
+                val groupId = bookGroupRepository.insertGroup(newGroup)
                 Log.d("BookEdit", "Created new group with id: $groupId")
-                
+
                 // 自动选中新创建的分组
                 withContext(Dispatchers.Main) {
                     _uiState.value = _uiState.value.copy(
-                        selectedGroupId = groupId,
+                        selectedBookGroupId = groupId,
                         errorMessage = null
                     )
                     onSuccess?.invoke()
@@ -299,7 +299,59 @@ class BookEditViewModel @Inject constructor(
             }
         }
     }
-    
+
+
+    /**
+     * 添加新来源
+     */
+    fun addNewBookSource(name: String, onSuccess: (() -> Unit)? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val trimmedName = name.trim()
+                if (trimmedName.isBlank()) {
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = "书籍来源名称不能为空"
+                        )
+                    }
+                    return@launch
+                }
+
+                // 检查名称是否已存在
+                val nameExists = bookSourceRepository.isSourceNameExists(trimmedName)
+                if (nameExists) {
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = "书籍来源已存在"
+                        )
+                    }
+                    return@launch
+                }
+
+
+                val bookSourceId = bookSourceRepository.addCustomBookSource(trimmedName)
+                Log.d("BookEdit", "Created new source with id: $bookSourceId")
+
+                // 自动选中新创建的分组
+                withContext(Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        selectedBookSourceId = bookSourceId,
+                        errorMessage = null
+                    )
+                    onSuccess?.invoke()
+                }
+            } catch (e: Exception) {
+                Log.e("BookEditViewModel", "创建书籍来源失败: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "创建书籍来源失败: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+
     /**
      * 清除错误消息
      */

@@ -34,7 +34,12 @@ class BookSourceRepository @Inject constructor(
 }
 
     // ========== 增删改操作 ==========
-
+    /**
+     * 检查分组名称是否存在
+     */
+    suspend fun isSourceNameExists(name: String, excludeId: Long = -1): Boolean {
+        return bookSourceDao.isNameExists(name, excludeId) > 0
+    }
     /** 添加自定义来源 */
     suspend fun addCustomBookSource(name: String): Long {
     // 检查名称是否已存在
@@ -44,11 +49,15 @@ class BookSourceRepository @Inject constructor(
 
     // 获取最大排序值+1，确保新来源显示在最前面
     val maxSortOrder = getMaxSortOrder() ?: 0
-    val bookSource = BookSourceEntity(
+        val currentTime = System.currentTimeMillis()
+
+        val bookSource = BookSourceEntity(
         name = name,
         isBuiltIn = false,
         isEnabled = true,
-        sortOrder = maxSortOrder + 1
+        sortOrder = maxSortOrder + 1,
+        createdDate = currentTime,
+        updatedDate = currentTime,
     )
 
     return bookSourceDao.insert(bookSource)
