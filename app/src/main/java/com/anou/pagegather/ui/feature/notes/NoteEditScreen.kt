@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.anou.pagegather.data.local.entity.NoteEntity
-import com.anou.pagegather.ui.feature.bookshelf.NoteTagSelector
+import com.anou.pagegather.ui.feature.bookshelf.tag.NoteTagSelector
 import com.anou.pagegather.utils.FileOperator
 
 @OptIn(ExperimentalMaterial3Api::class)

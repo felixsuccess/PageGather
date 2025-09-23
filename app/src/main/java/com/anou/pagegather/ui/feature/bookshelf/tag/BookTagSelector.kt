@@ -1,16 +1,14 @@
-package com.anou.pagegather.ui.feature.bookshelf
+package com.anou.pagegather.ui.feature.bookshelf.tag
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
@@ -24,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -101,7 +100,7 @@ fun TagSelector(
                                 text = if (filteredTags.isEmpty()) "暂无可用标签" else "点击选择标签",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                fontStyle = FontStyle.Italic
                             )
                         }
                         else -> {
@@ -209,9 +208,9 @@ fun NoteTagSelector(
  */
 @Composable
 private fun TagDisplayRow(
+    modifier: Modifier = Modifier,
     tag: TagEntity,
     showCount: Boolean = false,
-    modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -223,7 +222,7 @@ private fun TagDisplayRow(
             contentDescription = null,
             tint = try {
                 Color((tag.color ?: "#2196F3").toColorInt())
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 MaterialTheme.colorScheme.primary
             },
             modifier = Modifier.size(16.dp)
@@ -294,8 +293,8 @@ private fun TagItem(
             imageVector = Icons.AutoMirrored.Filled.Label,
             contentDescription = null,
             tint = try {
-                Color(android.graphics.Color.parseColor(tag.color ?: "#2196F3"))
-            } catch (e: Exception) {
+                Color((tag.color ?: "#2196F3").toColorInt())
+            } catch (_: Exception) {
                 MaterialTheme.colorScheme.primary
             },
             modifier = Modifier.size(18.dp)

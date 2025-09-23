@@ -96,6 +96,7 @@ import com.anou.pagegather.data.local.entity.ReadStatus
 import com.anou.pagegather.ui.components.RateBar
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookSourceSelectorBottomSheet
 import com.anou.pagegather.ui.feature.bookshelf.group.BookGroupSelectorBottomSheet
+import com.anou.pagegather.ui.feature.bookshelf.tag.BookTagSelector
 import com.anou.pagegather.ui.navigation.Routes
 import com.anou.pagegather.ui.theme.extendedColors
 import com.anou.pagegather.utils.FileOperator
@@ -666,7 +667,9 @@ fun BookEditScreen(
                 var newBookGroupName by remember { mutableStateOf("") }
 //
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
@@ -684,7 +687,8 @@ fun BookEditScreen(
                                 onClick = { showBookGroupSelector = true })
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically) {
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "书籍分组",
@@ -792,12 +796,15 @@ fun BookEditScreen(
                         })
                 }
 
+
                 // 书籍来源选择器
                 val selectedBookSource =
                     uiState.availableBookSources.find { it.id == uiState.selectedBookSourceId }
 
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(5.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
@@ -815,7 +822,8 @@ fun BookEditScreen(
                                 onClick = { showBookSourceSelector = true })
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically) {
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "书籍来源",
@@ -1053,36 +1061,16 @@ fun BookEditScreen(
                         )
                 }
 
-                //TODO:
-                var readStatusExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(
-                    expanded = readStatusExpanded,
-                    onExpandedChange = { readStatusExpanded = !readStatusExpanded }) {
-                    TextField(
-                        readOnly = true,
-                        value = ReadStatus.entries.firstOrNull { it.code == formState.value.readStatusId }?.message
-                            ?: "",
-                        onValueChange = {},
-                        label = { Text("阅读状态") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = readStatusExpanded) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(5.dp)
-                            .menuAnchor(
-                                type = MenuAnchorType.PrimaryNotEditable, enabled = true
-                            ),
-                    )
-                    ExposedDropdownMenu(
-                        expanded = readStatusExpanded,
-                        onDismissRequest = { readStatusExpanded = false }) {
-                        ReadStatus.entries.forEach { status ->
-                            DropdownMenuItem(text = { Text(status.message) }, onClick = {
-                                formState.value.readStatusId = status.code
-                                readStatusExpanded = false
-                            })
-                        }
-                    }
-                }
+                CommonExposedDropdown(
+                    items = ReadStatus.entries,
+                    selectedItem = ReadStatus.entries.firstOrNull { it.code == formState.value.positionUnit }
+                        ?: ReadStatus.WANT_TO_READ,
+                    onItemSelected = {
+                        formState.value = formState.value.copy(readStatusId = it.code)
+                    },
+                    label = "阅读状态",
+                    itemToString = { it.message })
+
             }
 
 
@@ -1243,16 +1231,16 @@ fun <T> CommonExposedDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(5.dp)
+        modifier = Modifier.padding(5.dp)
     ) {
         ExposedDropdownMenuBox(
             expanded = expanded, onExpandedChange = { expanded = !expanded }) {
             CommonTextField(
-                modifier = Modifier.menuAnchor(
-                    type = MenuAnchorType.PrimaryNotEditable, enabled = true
-                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(
+                        type = MenuAnchorType.PrimaryNotEditable, enabled = true
+                    ),
                 readOnly = true,
                 value = itemToString(selectedItem),
                 onValueChange = {},
@@ -1263,12 +1251,23 @@ fun <T> CommonExposedDropdown(
                     )
                 })
             ExposedDropdownMenu(
-                expanded = expanded, onDismissRequest = { expanded = false }) {
+                modifier = Modifier.background(
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                ),
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
                 items.forEach { item ->
-                    DropdownMenuItem(text = { Text(itemToString(item)) }, onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                    })
+                    DropdownMenuItem(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            ),
+                        text = { Text(itemToString(item)) },
+                        onClick = {
+                            onItemSelected(item)
+                            expanded = false
+                        })
                 }
             }
         }
