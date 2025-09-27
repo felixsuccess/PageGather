@@ -1,5 +1,6 @@
 package com.anou.pagegather.ui.feature.statistics
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -42,7 +52,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -63,6 +77,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.min
 
 // 定义统计页面的Tab枚举
 enum class StatisticsTab(val title: String) {
@@ -145,16 +160,84 @@ fun StatisticsScreen(
 
 @Composable
 private fun StatisticsOverviewTab(modifier: Modifier = Modifier, navController: NavController) {
+
+
+
+
     Column(
-        modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 阅读目标卡片
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "今日阅读目标",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "0:00 / 30:00",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 半圆形进度条
+                SemicircularProgressIndicator(
+                    progress = 0f,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                    strokeWidth = 16.dp
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth() ,
+                    textAlign = TextAlign.Center,
+                    text = "继续保持，今天还有时间完成目标！",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth() ,
+                    textAlign = TextAlign.Center,
+                    text = "找一本好书，设定一个目标，杨恒每天阅读的好习惯。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
         // 阅读概览卡片
         ReadingOverviewCard()
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
     }
+
 }
 
 @Composable
@@ -1702,6 +1785,75 @@ private fun AnnualOverviewCard(
         StatisticRow(
             label = "笔记数量",
             value = "${uiState.noteCount} 条"
+        )
+    }
+}
+
+/**
+ * 半圆形进度条组件
+ * @param progress 进度值 (0.0 - 1.0)
+ * @param modifier 修饰符
+ * @param color 进度条颜色
+ * @param trackColor 轨道颜色
+ * @param strokeWidth 线条宽度
+ */
+@Composable
+fun SemicircularProgressIndicator(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    trackColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+    strokeWidth: Dp = 8.dp
+) {
+    val strokeWidthPx = with(LocalDensity.current) { strokeWidth.toPx() }
+    val stroke = Stroke(
+        width = strokeWidthPx,
+        cap = StrokeCap.Round
+    )
+    
+    // 在Composable上下文中创建TextMeasurer
+    val textMeasurer = rememberTextMeasurer()
+    val progressText = "${(progress * 100).toInt()}%"
+    val textLayoutResult = textMeasurer.measure(
+        text = progressText,
+        style = MaterialTheme.typography.displayMedium.copy(color = color)
+    )
+    
+    Canvas(modifier = modifier) {
+        // 计算绘制区域的中心点和半径
+        val center = Offset(size.width / 2, size.height)
+        val radius = min(size.width / 2, size.height) - strokeWidthPx / 2
+        
+        // 绘制背景轨道（半圆）
+        drawArc(
+            color = trackColor,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = Size(radius * 2, radius * 2),
+            style = stroke
+        )
+        
+        // 绘制进度圆弧
+        val progressAngle = progress.coerceIn(0f, 1f) * 180f
+        drawArc(
+            color = color,
+            startAngle = 180f,
+            sweepAngle = progressAngle,
+            useCenter = false,
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = Size(radius * 2, radius * 2),
+            style = stroke
+        )
+        
+        // 在半圆中心绘制进度文本
+        drawText(
+            textLayoutResult = textLayoutResult,
+            topLeft = Offset(
+                center.x - textLayoutResult.size.width / 2,
+                center.y - radius / 2 - textLayoutResult.size.height / 2
+            )
         )
     }
 }
