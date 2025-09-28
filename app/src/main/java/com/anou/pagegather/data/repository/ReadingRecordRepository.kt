@@ -224,6 +224,7 @@ class ReadingRecordRepository @Inject constructor(
      * @param startProgress 开始进度
      * @param endProgress 结束进度
      * @param duration 阅读时长（毫秒）
+     * @param startTime 开始时间（时间戳）
      * @param date 阅读日期（YYYY-MM-DD格式）
      * @param notes 备注信息
      * @return 新创建的阅读记录ID
@@ -233,15 +234,16 @@ class ReadingRecordRepository @Inject constructor(
         startProgress: Double,
         endProgress: Double,
         duration: Long,
+        startTime: Long,
         date: String,
         notes: String? = null
     ): Long {
-        val currentTime = System.currentTimeMillis()
+        val endTime = startTime + duration
 
         val readingRecord = ReadingRecordEntity(
             bookId = bookId,
-            startTime = currentTime - duration,
-            endTime = currentTime,
+            startTime = startTime,
+            endTime = endTime,
             duration = duration,
             startProgress = startProgress,
             endProgress = endProgress,

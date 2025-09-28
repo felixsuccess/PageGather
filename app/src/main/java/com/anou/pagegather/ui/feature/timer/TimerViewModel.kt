@@ -217,6 +217,7 @@ class TimerViewModel @Inject constructor(
                         startProgress = startProgress,
                         endProgress = endProgress,
                         duration = duration,
+                        startTime = startTime,
                         date = date,
                         notes = notes
                     )

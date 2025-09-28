@@ -89,6 +89,7 @@ object Routes {
     // 阅读记录相关路由
     object ReadingRoutes {
         const val SAVE_RECORD = "reading/save"
+        const val MANUAL_RECORD = "reading/manual"  // 添加手动记录路由
         const val RECORD_HISTORY = "reading/history"
         const val EDIT_RECORD = "reading/edit/{recordId}"
         const val RECORD_ANALYTICS = "reading/analytics"

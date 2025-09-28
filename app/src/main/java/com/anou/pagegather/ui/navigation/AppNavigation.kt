@@ -40,6 +40,7 @@ import com.anou.pagegather.ui.feature.reading.RecordSource
 import com.anou.pagegather.ui.feature.reading.ReadingRecordsScreen
 import com.anou.pagegather.ui.feature.reading.BookReadingStatisticsScreen
 import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
+import com.anou.pagegather.ui.feature.reading.ManualRecordScreen  // 添加手动记录页面导入
 import com.anou.pagegather.ui.feature.my.settings.debug.ThemeDebugScreen
 import com.anou.pagegather.ui.feature.statistics.StatisticsScreen
 import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
@@ -285,7 +286,8 @@ fun AppNavigation(
         // 阅读记录列表页面
         composable(Routes.ReadingRoutes.READING_RECORDS) {
             ReadingRecordsScreen(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                navController = navController  // 传递NavController
             )
         }
 
@@ -673,6 +675,35 @@ fun AppNavigation(
                 },
                 elapsedTime = elapsedTime,
                 startTime = startTime,
+                selectedBookId = selectedBookId
+            )
+        }
+
+        // 添加手动记录页面
+        composable(
+            route = "${Routes.ReadingRoutes.MANUAL_RECORD}?selectedBookId={selectedBookId}",
+            arguments = listOf(
+                navArgument("selectedBookId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val selectedBookId =
+                backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
+
+            ManualRecordScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToAddBook = {
+                    // 构建回调URL，包含当前页面的所有参数
+                    val currentRoute = "${Routes.ReadingRoutes.MANUAL_RECORD}" +
+                            (selectedBookId?.let { "?selectedBookId=$it" } ?: "")
+                    val encodedCallback = Uri.encode(currentRoute)
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=$encodedCallback")
+                },
                 selectedBookId = selectedBookId
             )
         }

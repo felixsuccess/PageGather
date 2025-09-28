@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,8 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
+import com.anou.pagegather.ui.navigation.Routes
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,6 +30,7 @@ import java.util.*
 @Composable
 fun ReadingRecordsScreen(
     onBackClick: () -> Unit,
+    navController: NavController,  // 添加NavController参数
     viewModel: ReadingRecordsViewModel = hiltViewModel()
 ) {
     val readingRecords by viewModel.readingRecords.collectAsState()
@@ -52,6 +56,16 @@ fun ReadingRecordsScreen(
                         )
                     }
                 }
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { 
+                    // 导航到手动记录页面
+                    navController.navigate(Routes.ReadingRoutes.MANUAL_RECORD)
+                },
+                icon = { Icon(Icons.Default.Add, "添加手动记录") },
+                text = { Text("手动记录") }
             )
         }
     ) { paddingValues ->

@@ -281,6 +281,18 @@ fun BookDetailScreen(
                         )
                         
                         DropdownMenuItem(
+                            text = { Text("手动记录") },
+                            onClick = {
+                                showMenu = false
+                                bookId?.toLongOrNull()?.let { parsedId ->
+                                    if (parsedId != 0L) {
+                                        navController.navigate("${Routes.ReadingRoutes.MANUAL_RECORD}?selectedBookId=$parsedId")
+                                    }
+                                }
+                            }
+                        )
+                        
+                        DropdownMenuItem(
                             text = { Text("添加笔记") },
                             onClick = {
                                 showMenu = false
