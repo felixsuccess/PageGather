@@ -117,6 +117,11 @@ class NoteRepository @Inject constructor(
         return noteAttachmentDao.insertAttachment(attachment)
     }
 
+    /** 插入多个附件 */
+    suspend fun insertAttachments(attachments: List<NoteAttachmentEntity>): List<Long> {
+        return noteAttachmentDao.insertAttachments(attachments)
+    }
+
     /** 更新附件 */
     suspend fun updateAttachment(attachment: NoteAttachmentEntity) {
         noteAttachmentDao.updateAttachment(attachment)

@@ -1,9 +1,8 @@
 package com.anou.pagegather.ui.feature.notes
 
-import android.content.Context
-import android.net.Uri
-import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +15,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Grid3x3
@@ -46,9 +47,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.anou.pagegather.data.local.entity.NoteEntity
+import com.anou.pagegather.data.local.entity.NoteAttachmentEntity
 import com.anou.pagegather.ui.feature.bookshelf.tag.NoteTagSelector
-import com.anou.pagegather.utils.FileOperator
+import com.anou.pagegather.ui.feature.reading.components.BookSelectorDialog
+import com.anou.pagegather.ui.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,15 +60,40 @@ fun NoteEditScreen(
     viewModel: NoteEditViewModel = hiltViewModel(),
     navController: NavController,
 ) {
-    val note by viewModel.note.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
-    var text by remember { mutableStateOf("") }
-    var idea by remember { mutableStateOf("") }
     
-    var localCoverPath by remember { mutableStateOf("") }
-    var photoImageUri by remember { mutableStateOf<Uri?>(null) }
+    // 附件预览状态
+    var previewAttachment by remember { mutableStateOf<NoteAttachmentEntity?>(null) }
+    
+    // 书籍选择器状态
+    var showBookSelector by remember { mutableStateOf(false) }
+    
+    // 图片选择器
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            uri?.let { 
+                // 处理选择的图片
+                viewModel.processSelectedImage(context, it) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    )
+    
+    // 音频录制器
+    val audioRecorderLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            uri?.let { 
+                // 处理选择的音频
+                viewModel.processSelectedAudio(context, it) { success, message ->
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    )
 
     LaunchedEffect(noteId) {
         noteId?.toLongOrNull()?.let { parsedId ->
@@ -74,11 +101,10 @@ fun NoteEditScreen(
                 viewModel.loadNote(parsedId)
             }
         }
-    }
-
-    LaunchedEffect(note) {
-        text = note?.quote ?: ""
-        idea = note?.idea ?: ""
+        // 如果提供了bookId参数，直接设置为选中的书籍
+        bookId?.let { id ->
+            viewModel.loadNote(id)
+        }
     }
     
     // 显示错误消息
@@ -87,6 +113,35 @@ fun NoteEditScreen(
             android.widget.Toast.makeText(context, errorMessage, android.widget.Toast.LENGTH_LONG).show()
             viewModel.clearError()
         }
+    }
+    
+    // 附件预览对话框
+    previewAttachment?.let { attachment ->
+        AttachmentPreviewDialog(
+            attachment = attachment,
+            onDismiss = { previewAttachment = null },
+            onDelete = {
+                viewModel.removeAttachment(attachment.id)
+                previewAttachment = null
+            }
+        )
+    }
+    
+    // 书籍选择器对话框
+    if (showBookSelector) {
+        BookSelectorDialog(
+            books = uiState.availableBooks,
+            selectedBook = uiState.selectedBook,
+            onBookSelect = { book ->
+                viewModel.selectBook(book)
+                showBookSelector = false
+            },
+            onDismiss = { showBookSelector = false },
+            onNavigateToAddBook = {
+                            // 导航到添加书籍页面
+                            navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
+                        }
+        )
     }
 
     Scaffold(
@@ -120,198 +175,155 @@ fun NoteEditScreen(
                 Text(
                     text = if (noteId != null && noteId.toLongOrNull() != 0L) "保存" else "添加",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (uiState.isSaving) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) 
+                           else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .padding(horizontal = 5.dp)
-                        .clickable(onClick = {
-                            val newNote = NoteEntity(
-                                bookId = bookId,  // 使用传入的书籍ID
-                                title  = "",
-                                quote = text,
-                                idea = idea,
-                                chapterName = "",
-                                position = "0",
-                                positionUnit = 0,
-                                createdDate = System.currentTimeMillis(),
-                                updatedDate = System.currentTimeMillis(),
-                                lastSyncDate = System.currentTimeMillis(),
-                                isDeleted = false
-                            )
-                            viewModel.saveNote(newNote){
+                        .clickable(enabled = !uiState.isSaving, onClick = {
+                            viewModel.saveNote {
                                 navController.popBackStack()
                             }
-
                         }
-
-
-                        ))
+                    )
+                )
             })
         },
         content = {
-
-
-        Column(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .fillMaxWidth()
-        ) {
-            Spacer(modifier = Modifier.height(it.calculateTopPadding()))
             Column(
                 modifier = Modifier
+                    .navigationBarsPadding()
                     .fillMaxWidth()
-                    .background(
-                        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                        color = MaterialTheme.colorScheme.background
-                    )
-                    .padding(16.dp)
             ) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        //  .focusRequester(focusRequester)
-                        .fillMaxWidth()
-                        .heightIn(max = 280.dp)
-                        .clickable { },
-                    value = text,
-                    minLines = 5,
-                    textStyle = MaterialTheme.typography.labelLarge,
-                    onValueChange = { newText ->
-                        text = newText  // 直接赋值新值
-                    },
-                    label = { Text("摘录") },
-                    placeholder =   { Text("摘录") },
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    modifier = Modifier
-                        //  .focusRequester(focusRequester)
-                        .fillMaxWidth()
-                        .heightIn(max = 280.dp)
-                        .clickable { },
-                    value = idea,
-                    minLines = 5,
-                    textStyle = MaterialTheme.typography.labelLarge,
-                    onValueChange = { newText ->
-                        idea = newText  // 直接赋值新值
-                    },
-                    label = { Text("心得感悟") },
-                    placeholder =   { Text("心得感悟") },
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                // 标签选择器
-                NoteTagSelector(
-                    availableTags = uiState.availableTags,
-                    selectedTagIds = uiState.selectedTagIds,
-                    onTagSelectionChange = viewModel::toggleTagSelection,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
+                Spacer(modifier = Modifier.height(it.calculateTopPadding()))
+                // 添加垂直滚动功能
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(color = MaterialTheme.colorScheme.background)
-                        .imePadding(),
-
-                    //.padding(8.dp)
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                        .background(
+                            shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+                            color = MaterialTheme.colorScheme.background
+                        )
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()) // 使用垂直滚动
                 ) {
-
-
-                    // 操作按钮组
+                    // 将书籍选择器移动到最上方
+                    BookSelector(
+                        selectedBook = uiState.selectedBook,
+                        onBookSelect = { book ->
+                            if (book == null) {
+                                // 显示书籍选择器对话框
+                                showBookSelector = true
+                            } else {
+                                // 直接选择书籍
+                                viewModel.selectBook(book)
+                            }
+                        },
+                        availableBooks = uiState.availableBooks,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                   
+                    
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 280.dp)
+                            .clickable { },
+                        value = uiState.quote,
+                        minLines = 5,
+                        textStyle = MaterialTheme.typography.labelLarge,
+                        onValueChange = viewModel::updateQuote,
+                        label = { Text("摘录") },
+                        placeholder =   { Text("摘录") },
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 280.dp)
+                            .clickable { },
+                        value = uiState.idea,
+                        minLines = 5,
+                        textStyle = MaterialTheme.typography.labelLarge,
+                        onValueChange = viewModel::updateIdea,
+                        label = { Text("心得感悟") },
+                        placeholder =   { Text("心得感悟") },
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // 标签部分标题
+                 
+                    // 标签选择器
+                    NoteTagSelector(
+                        availableTags = uiState.availableTags,
+                        selectedTagIds = uiState.selectedTagIds,
+                        onTagSelectionChange = viewModel::toggleTagSelection,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // 底部操作按钮组 - 保留在底部但调整样式
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = MaterialTheme.colorScheme.background)
+                            .imePadding()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        Text(
+                            text = "快速操作",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        // 操作按钮组
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            IconButton(onClick = {
+                                // 选择图片
+                                imagePickerLauncher.launch("image/*")
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Image,
+                                    contentDescription = "选图",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
 
-                        IconButton(onClick = {
-                            //TODO: 选 Tag 逻辑
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Grid3x3,
-                                contentDescription = "选Tag",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        IconButton(onClick = {
-                            //TODO: 选图 逻辑
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Image,
-                                contentDescription = "选图",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                            IconButton(onClick = {
+                                // 选择音频
+                                audioRecorderLauncher.launch("audio/*")
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Voicemail,
+                                    contentDescription = "音频",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
 
+                            //TODO: OCR
 
-                        IconButton(onClick = {
-                            //TODO: 选音频 逻辑
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Voicemail,
-                                contentDescription = "音频",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        //TODO: OCR
-
-                        IconButton(onClick = {
-                            //TODO: 音转文 逻辑
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Mic,
-                                contentDescription = "音转文",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                            IconButton(onClick = {
+                                //TODO: 音转文 逻辑
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Mic,
+                                    contentDescription = "音转文",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
-
-
+                    Spacer(modifier = Modifier.imePadding()) // 添加底部内边距
                 }
-                Spacer(modifier = Modifier.imePadding()) // 添加底部内边距
-
-
             }
-
         }
+    )
 
-    })
-
-}
-
-// 新增统一处理函数
-// 图片处理结果回调
-private sealed class ImageResult {
-    data class Success(val filePath: String) : ImageResult()
-    data class Error(val message: String, val exception: Exception?) : ImageResult()
-}
-
-// 统一处理图片结果
-private fun handleImageResult(context: Context, result: ImageResult) {
-    when (result) {
-        is ImageResult.Success -> {
-            Toast.makeText(context, "封面保存成功", Toast.LENGTH_SHORT).show()
-        }
-
-        is ImageResult.Error -> {
-            val errorMsg = result.message + (result.exception?.localizedMessage ?: "")
-            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-            Log.e("BookEditScreen", errorMsg, result.exception)
-        }
-    }
-}
-
-// 保存图片到本地
-private suspend fun saveImageToLocal(context: Context, uri: Uri): ImageResult {
-    return try {
-        val outputFile = FileOperator.saveBookCover(context, uri)
-        if (outputFile.exists()) {
-            ImageResult.Success(outputFile.absolutePath)
-        } else {
-            ImageResult.Error("封面保存失败: 文件未创建", null)
-        }
-    } catch (e: Exception) {
-        ImageResult.Error("封面保存失败: ", e)
-    }
 }

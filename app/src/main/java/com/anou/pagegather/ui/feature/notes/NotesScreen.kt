@@ -64,11 +64,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.R
 import com.anou.pagegather.data.local.entity.NoteEntity
-import com.anou.pagegather.ui.theme.extendedColors
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -188,9 +186,10 @@ fun NotesScreen(
                             //  viewModel = viewModel,
                             notes = notes,
                             snackbarHostState = snackbarHostState,
-                            onNavigateToNoteEdit = { },
-                            onNavigateToNoteView = { },
+                            onNavigateToNoteEdit = onNavigateToNoteEdit,
+                            onNavigateToNoteView = onNoteClick,
                             onNavigateToNoteRoaming = { },
+                            viewModel = viewModel
                         )
                         SnackbarHost(
                             hostState = snackbarHostState,
@@ -349,9 +348,10 @@ fun NotesScreen(
 fun NoteListScreen(
     notes: List<NoteEntity>,
     snackbarHostState: SnackbarHostState,
-    onNavigateToNoteEdit: (String) -> Unit,
-    onNavigateToNoteView: (String) -> Unit,
+    onNavigateToNoteEdit: (Long) -> Unit,
+    onNavigateToNoteView: (NoteEntity) -> Unit,
     onNavigateToNoteRoaming: (String) -> Unit,
+    viewModel: NoteListViewModel,
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -386,6 +386,31 @@ fun NoteListScreen(
             }
         }
 
+        // 用于上下文菜单的状态管理
+        val selectedNote = remember { mutableStateOf<NoteEntity?>(null) }
+        val showContextMenu = remember { mutableStateOf(false) }
+
+        // 显示上下文菜单
+        if (showContextMenu.value && selectedNote.value != null) {
+            selectedNote.value?.let { note ->
+                ShowNoteContextMenu(
+                    noteEntity = note,
+                    onEdit = {
+                        onNavigateToNoteEdit(note.id)
+                        showContextMenu.value = false
+                    },
+                    onDelete = {
+                        scope.launch {
+                            viewModel.deleteNote(note.id)
+                            showContextMenu.value = false
+                            snackbarHostState.showSnackbar("已删除该笔记")
+                        }
+                    },
+                    onDismiss = { showContextMenu.value = false }
+                )
+            }
+        }
+
         LazyColumn(
             modifier = Modifier
             //.padding(padding)
@@ -393,21 +418,12 @@ fun NoteListScreen(
             items(notes.size) { index ->
                 val note = notes[index]
                 NoteCard(note = note, onNoteClick = {
-                    //onNoteClick(note)
-                    // onNavigateToNoteView();
-                    Log.d("NOTES SCREEN", "onClick");
-
-                    scope.launch {
-                        snackbarHostState.showSnackbar("点击了随记")
-                    }
+                    // 点击笔记导航到详情页
+                    onNavigateToNoteView(note)
                 }, onLongClick = {
-                    //TODO: 长按操作（待实现）：编辑笔记、删除笔记、管理标签、复制内容、分享笔记
-                    // showToast("长按未实现 -》 编辑  删除 标签 复制  分享 等")
-                    Log.d("NOTES SCREEN", "onLongClick");
-                    scope.launch {
-                        snackbarHostState.showSnackbar("长按随记-》未实现 ")
-                    }
-                    //ShowNoteContextMenu(note)
+                    // 长按显示上下文菜单
+                    selectedNote.value = note
+                    showContextMenu.value = true
                 }
 
                 )
@@ -528,29 +544,21 @@ private fun Long.toTimeFormat(formatStr: String): String {
 }
 
 @Composable
-private fun LazyItemScope.ShowNoteContextMenu(noteEntity: NoteEntity) {
-
-    val expanded = remember { mutableStateOf(false) }
-
+private fun ShowNoteContextMenu(
+    noteEntity: NoteEntity,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onDismiss: () -> Unit
+) {
     DropdownMenu(
-        expanded = expanded.value, onDismissRequest = { expanded.value = false }) {
-        DropdownMenuItem(text = { Text("编辑") }, onClick = {
-            expanded.value = false
-            // navController.navigate("note_edit/${noteEntity.id}")
-        })
-        DropdownMenuItem(text = { Text("删除") }, onClick = {
-            expanded.value = false
-            // viewModel.deleteNote(note.id)
-        })
-    }
-
-    // 显示上下文菜单
-    Box(modifier = Modifier.fillMaxSize()) {
-        IconButton(
-            onClick = { expanded.value = true }, modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Icon(Icons.Default.MoreVert, contentDescription = "更多选项")
-        }
+        expanded = true,
+        onDismissRequest = onDismiss,
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(4.dp)
+    ) {
+        DropdownMenuItem(text = { Text("编辑") }, onClick = onEdit)
+        DropdownMenuItem(text = { Text("删除") }, onClick = onDelete)
     }
 
 }
