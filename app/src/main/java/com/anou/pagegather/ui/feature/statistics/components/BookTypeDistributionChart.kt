@@ -12,16 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.anou.pagegather.data.model.BookReadingStatisticsItemData
+import com.anou.pagegather.ui.components.charts.PieChart
+import com.anou.pagegather.ui.components.charts.PieChartSegment
 import com.anou.pagegather.ui.components.charts.generateColors
 import com.anou.pagegather.ui.feature.statistics.BookTypeDistributionViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeRange
-import com.touzalab.composecharts.components.PieChart
-import com.touzalab.composecharts.data.PieChartSegment
 
 /**
  * 书籍类型分布图表组件
@@ -32,15 +33,13 @@ fun BookTypeDistributionChart(
     modifier: Modifier = Modifier,
     viewModel: BookTypeDistributionViewModel = hiltViewModel()
 ) {
-    // 当时间范围改变时，重新加载数据
-    LaunchedEffect(timeRange) {
-        viewModel.loadBookTypeDataByDateRange(timeRange.startDate, timeRange.endDate)
-    }
-
     val uiState by viewModel.uiState.collectAsState()
 
-    // 初始化时加载数据
-    LaunchedEffect(Unit) {
+    // 使用remember保持上一次的有效数据
+    val lastValidData = remember { mutableStateOf<List<PieChartSegment>?>(null) }
+
+    // 只保留一个LaunchedEffect，使用具体的日期作为key避免冲突
+    LaunchedEffect(timeRange.startDate, timeRange.endDate) {
         viewModel.loadBookTypeDataByDateRange(timeRange.startDate, timeRange.endDate)
     }
 
@@ -58,49 +57,67 @@ fun BookTypeDistributionChart(
             )
         } else if (uiState.typeData.isNotEmpty()) {
             // 将数据转换为图表所需格式
-            val chartData = uiState.typeData.map { (type, count) ->
-                BookReadingStatisticsItemData(
-                    value = count.toFloat(),
-                    label = type,
-                    groupId = 0
-                )
-            }.filter { it.value >= 0f } // 过滤掉负值或无效值
-
-            // 确保数据不为空且总值大于0后再显示图表
-            val totalValue = chartData.sumOf { it.value.toDouble() }.toFloat()
-            if (chartData.isNotEmpty() && totalValue > 0f) {
-                val segments = mutableListOf<PieChartSegment>()
-
-                val dataCount = chartData.size
-                val dataColors = generateColors(dataCount)
-                chartData.forEachIndexed { index, item ->
-                    segments.add(   PieChartSegment(
-                        value = item.value,
-                        label = item.label,
+            val validData = uiState.typeData.toList().filter { (_, count) -> count > 0 }
+            
+            if (validData.isNotEmpty()) {
+                val dataColors = generateColors(validData.size)
+                val segments = validData.mapIndexed { index, (type, count) ->
+                    PieChartSegment(
+                        value = count.toFloat(),
+                        label = type,
                         color = dataColors[index]
                     )
-                    )
                 }
+                
+                // 更新缓存的有效数据
+                lastValidData.value = segments
+                
                 PieChart(
                     segments = segments,
-                    donut = true,
+                    title = "",
                     showPercentages = true,
-                    title = "书籍类型分布",
+                    showLegend = true,
+                    isDonut = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
                         .padding(bottom = 16.dp)
                 )
-
             } else {
-                Text(
+                // 如果当前没有有效数据，但有缓存数据，显示缓存数据
+                lastValidData.value?.let { cachedSegments ->
+                    PieChart(
+                        segments = cachedSegments,
+                        title = "",
+                        showPercentages = true,
+                        showLegend = true,
+                        isDonut = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(bottom = 16.dp)
+                    )
+                } ?: Text(
                     text = "暂无有效的书籍类型分布数据",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {
-            Text(
+            // 如果没有数据，但有缓存数据，显示缓存数据
+            lastValidData.value?.let { cachedSegments ->
+                PieChart(
+                    segments = cachedSegments,
+                    title = "",
+                    showPercentages = true,
+                    showLegend = true,
+                    isDonut = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(bottom = 16.dp)
+                )
+            } ?: Text(
                 text = "暂无书籍类型分布数据",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

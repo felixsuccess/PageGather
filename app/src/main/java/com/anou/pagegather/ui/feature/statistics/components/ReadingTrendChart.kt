@@ -10,17 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.anou.pagegather.ui.components.charts.BarChart
+import com.anou.pagegather.ui.components.charts.ChartDataPoint
+import com.anou.pagegather.ui.components.charts.formatDurationToHours
 import com.anou.pagegather.ui.feature.statistics.ReadingTrendViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeGranularity
 import com.anou.pagegather.ui.feature.statistics.TimeRange
-import com.touzalab.composecharts.components.BarChart
-import com.touzalab.composecharts.components.LineChart
-import com.touzalab.composecharts.data.DataPoint
-import com.touzalab.composecharts.data.DataSeries
-import com.touzalab.composecharts.theme.ColorPalettes
 
 
 /**
@@ -55,41 +54,36 @@ fun ReadingTrendChart(
 
     Box(modifier = modifier) {
         if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(androidx.compose.ui.Alignment.Center))
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else if (uiState.error != null) {
             Text(
                 text = "加载数据失败: ${uiState.error}",
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(androidx.compose.ui.Alignment.Center)
+                modifier = Modifier.align(Alignment.Center)
+            )
+        } else if (uiState.trendData.isEmpty()) {
+            Text(
+                text = "暂无阅读趋势数据",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.Center)
             )
         } else {
-  
-            val chartDataPoints = mutableListOf<DataPoint>()
-
-            uiState.trendData.forEachIndexed { index, item ->
-                chartDataPoints.add(
-                    DataPoint(x = item.groupId.toFloat(), y = item.value, label = item.label)
+            val chartDataPoints = uiState.trendData.mapIndexed { index, item ->
+                ChartDataPoint(
+                    x = index.toFloat(),
+                    y = item.value,
+                    label = item.label,
+                    value = formatDurationToHours(item.value.toLong())
                 )
             }
 
-
-            val salesData = listOf(
-                DataSeries(
-                    name = "阅读趋势",
-                    color = ColorPalettes.Default[0],
-                    points = chartDataPoints
-                )
-            )
-
             BarChart(
-                dataSeries = salesData,
-                title = "阅读趋势新",
-                xAxisTitle = "时间段",
-                yAxisTitle = "时长",
-                stacked = false,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
+                data = chartDataPoints,
+                title = "",
+                showValues = true,
+                showGrid = true,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

@@ -24,14 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-    android:name="com.touzalab.composecharts.MainActivity"
-    android:exported="true"
-    android:label="@string/app_name"
-    android:theme="@style/Theme.Composecharts"
-    tools:node="replace">
-    <!-- 移除了 intent-filter 部分 -->
-</activity>
+
     <provider
     android:name="androidx.core.content.FileProvider"
     android:authorities="${applicationId}.provider"

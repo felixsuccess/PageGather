@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -62,6 +63,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.anou.pagegather.data.local.entity.ReadingRecordEntity
 import com.anou.pagegather.data.local.entity.RecordType
+import com.anou.pagegather.ui.components.charts.AdvancedLineChart
+import com.anou.pagegather.ui.components.charts.BarChart
+import com.anou.pagegather.ui.components.charts.ChartDataPoint
+import com.anou.pagegather.ui.components.charts.ChartDataSeries
+import com.anou.pagegather.ui.components.charts.LineChart
+import com.anou.pagegather.ui.components.charts.PieChart
+import com.anou.pagegather.ui.components.charts.PieChartSegment
+import com.anou.pagegather.ui.components.charts.SemicircularProgressIndicator
 import com.anou.pagegather.ui.feature.statistics.components.BookGroupDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.BookRatingDistributionChart
 import com.anou.pagegather.ui.feature.statistics.components.BookSourceDistributionChart
@@ -81,7 +90,7 @@ import kotlin.math.min
 
 // 定义统计页面的Tab枚举
 enum class StatisticsTab(val title: String) {
-    OVERVIEW("概览"), TIMELINE("时间线"), STATISTICS("统计")  // 合并后的统计Tab
+    OVERVIEW("概览"), TIMELINE("时间线"), STATISTICS("统计")
 }
 
 // 时间粒度枚举
@@ -242,45 +251,32 @@ private fun StatisticsOverviewTab(modifier: Modifier = Modifier, navController: 
 
 @Composable
 private fun StatisticsTimelineTab(modifier: Modifier = Modifier) {
-    Column(
+    Box(
         modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        contentAlignment = Alignment.Center
     ) {
-
-        // 阅读趋势图表占位符 (移除了年度报告卡片)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "阅读趋势",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "阅读趋势图表（柱状图）",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+            Text(
+                text = "时间线功能",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "即将推出...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "图表示例已转移到开发者选项 → 图表展示",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -289,6 +285,10 @@ private fun StatisticsTimelineTab(modifier: Modifier = Modifier) {
 private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: NavController) {
     var selectedTimeGranularity by remember { mutableStateOf(TimeGranularity.MONTH) }
     var selectedTimeRange by remember { mutableStateOf(getCurrentMonthRange()) }
+    
+    // 在父组件中集中管理所有ViewModels，避免子组件中的ViewModel回收问题
+    val bookTypeViewModel: BookTypeDistributionViewModel = hiltViewModel()
+    val bookTypeUiState by bookTypeViewModel.uiState.collectAsState()
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -311,6 +311,11 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
                 selectedTimeRange = selectedTimeRange,
                 onTimeRangeChanged = { it: TimeRange -> selectedTimeRange = it }
             )
+            
+            // 将LaunchedEffect移到这里，确保在TimeRangeSelector之后执行
+            LaunchedEffect(selectedTimeRange.startDate, selectedTimeRange.endDate) {
+                bookTypeViewModel.loadBookTypeDataByDateRange(selectedTimeRange.startDate, selectedTimeRange.endDate)
+            }
         }
         
         // 年度总览卡片（使用ViewModel获取数据）
@@ -451,13 +456,70 @@ private fun StatisticsTabContent(modifier: Modifier = Modifier, navController: N
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 使用专门的书籍类型分布图表组件，并传递时间范围参数
-                    BookTypeDistributionChart(
-                        timeRange = selectedTimeRange,
+                    // 使用固定的Box容器，避免条件渲染导致的滚动消失
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp)
-                    )
+                    ) {
+                        if (bookTypeUiState.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        } else if (bookTypeUiState.error != null) {
+                            Text(
+                                text = "加载数据失败: ${bookTypeUiState.error}",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        } else if (bookTypeUiState.typeData.isNotEmpty()) {
+                            // 有真实数据时显示图表
+                            val validData = bookTypeUiState.typeData.toList().filter { (_, count) -> count > 0 }
+                            
+                            if (validData.isNotEmpty()) {
+                                val dataColors = listOf(
+                                    Color(0xFF10B981), Color(0xFF06B6D4), Color(0xFFEF4444),
+                                    Color(0xFF3B82F6), Color(0xFF8B5CF6), Color(0xFFEC4899),
+                                    Color(0xFFF59E0B), Color(0xFF8B5A2B), Color(0xFF6366F1),
+                                    Color(0xFF84CC16)
+                                )
+                                val segments = validData.mapIndexed { index, (type, count) ->
+                                    PieChartSegment(
+                                        value = count.toFloat(),
+                                        label = type,
+                                        color = dataColors[index % dataColors.size]
+                                    )
+                                }
+                                
+                                // 显示真实数据的图表
+                                PieChart(
+                                    segments = segments,
+                                    title = "",
+                                    showPercentages = true,
+                                    showLegend = true,
+                                    isDonut = true,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(bottom = 16.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = "暂无有效的书籍类型分布数据",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "暂无书籍类型分布数据",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
 
 
                 }

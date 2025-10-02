@@ -1,6 +1,5 @@
 package com.anou.pagegather.ui.feature.statistics.components
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,14 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.anou.pagegather.ui.components.charts.ChartData
+import com.anou.pagegather.ui.components.charts.BarChart
+import com.anou.pagegather.ui.components.charts.ChartDataPoint
+import com.anou.pagegather.ui.components.charts.formatDurationToHours
 import com.anou.pagegather.ui.feature.statistics.ReadingDurationDistributionViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeGranularity
 import com.anou.pagegather.ui.feature.statistics.TimeRange
-import com.touzalab.composecharts.components.BarChart
-import com.touzalab.composecharts.data.DataPoint
-import com.touzalab.composecharts.data.DataSeries
-import com.touzalab.composecharts.theme.ColorPalettes
 
 /**
  * 阅读时长分布图表组件
@@ -68,33 +65,28 @@ fun ReadingDurationDistributionChart(
                 text = "加载数据失败: ${uiState.error}",
                 color = MaterialTheme.colorScheme.error
             )
+        } else if (uiState.durationData.isEmpty()) {
+            Text(
+                text = "暂无阅读时长分布数据",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         } else {
-
-            val chartDataPoints = mutableListOf<DataPoint>()
-
-            uiState.durationData.forEachIndexed { index, item ->
-                chartDataPoints.add(
-                    DataPoint(x = item.groupId.toFloat(), y = item.value, label = item.label)
+            val chartDataPoints = uiState.durationData.mapIndexed { index, item ->
+                ChartDataPoint(
+                    x = index.toFloat(),
+                    y = item.value,
+                    label = item.label,
+                    value = formatDurationToHours(item.value.toLong())
                 )
             }
 
-            val salesData = listOf(
-                DataSeries(
-                    name = "阅读时长",
-                    color = ColorPalettes.Default[0],
-                    points = chartDataPoints
-                )
-            )
-
             BarChart(
-                dataSeries = salesData,
-                title = "阅读时长分布",
-                xAxisTitle = "时间段",
-                yAxisTitle = "时长(毫秒)",
-                stacked = false,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(500.dp)
+                data = chartDataPoints,
+                title = "",
+                showValues = true,
+                showGrid = true,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

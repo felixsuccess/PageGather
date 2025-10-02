@@ -39,7 +39,8 @@ fun ProfileScreen(
     onNavigateToReadingSSRecords: () -> Unit,
     onNavigateToThemeSettings: () -> Unit = {},
     onNavigateToHundiStyleDemo: () -> Unit = {},
-    onNavigateToThemeDebug: () -> Unit = {}
+    onNavigateToThemeDebug: () -> Unit = {},
+    onNavigateToChartShowcase: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier
@@ -234,6 +235,12 @@ fun ProfileScreen(
                         title = "主题系统调试",
                         subtitle = "查看主题系统状态和统计信息",
                         onClick = onNavigateToThemeDebug
+                    ),
+                    SettingsItem(
+                        icon = Icons.Default.BarChart,
+                        title = "图表展示",
+                        subtitle = "查看原生图表组件库演示",
+                        onClick = onNavigateToChartShowcase
                     )
                 )
             )

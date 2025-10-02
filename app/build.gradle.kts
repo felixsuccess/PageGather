@@ -79,7 +79,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     // gson
     implementation(libs.gson)
-    implementation("com.github.2zalab:composecharts:1.0.0")
+
     // 测试依赖
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

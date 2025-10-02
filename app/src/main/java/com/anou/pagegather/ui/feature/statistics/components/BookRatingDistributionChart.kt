@@ -16,12 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.anou.pagegather.data.model.BookReadingStatisticsItemData
+
 import com.anou.pagegather.ui.components.charts.generateColors
 import com.anou.pagegather.ui.feature.statistics.BookRatingDistributionViewModel
 import com.anou.pagegather.ui.feature.statistics.TimeRange
-import com.touzalab.composecharts.components.PieChart
-import com.touzalab.composecharts.data.PieChartSegment
+import com.anou.pagegather.ui.components.charts.PieChart
+import com.anou.pagegather.ui.components.charts.PieChartSegment
 
 /**
  * 书籍评分分布图表组件
@@ -58,36 +58,24 @@ fun BookRatingDistributionChart(
             )
         } else if (uiState.ratingData.isNotEmpty()) {
             // 将数据转换为图表所需格式
-            val chartData = uiState.ratingData.map { (rating, count) ->
-                BookReadingStatisticsItemData(
-                    value = count.toFloat(),
-                    label = rating,
-                    groupId = 0
-                )
-            }.filter { it.value >= 0f } // 过滤掉负值或无效值
-
-            // 确保数据不为空且总值大于0后再显示图表
-            val totalValue = chartData.sumOf { it.value.toDouble() }.toFloat()
-            if (chartData.isNotEmpty() && totalValue > 0f) {
-                val segments = mutableListOf<PieChartSegment>()
-
-                val dataCount = chartData.size
-                val dataColors = generateColors(dataCount)
-                chartData.forEachIndexed { index, item ->
-                    segments.add(
-                        PieChartSegment(
-                            value = item.value,
-                            label = item.label,
-                            color = dataColors[index]
-                        )
+            val validData = uiState.ratingData.toList().filter { (_, count) -> count > 0 }
+            
+            if (validData.isNotEmpty()) {
+                val dataColors = generateColors(validData.size)
+                val segments = validData.mapIndexed { index, (rating, count) ->
+                    PieChartSegment(
+                        value = count.toFloat(),
+                        label = rating,
+                        color = dataColors[index]
                     )
                 }
 
                 PieChart(
                     segments = segments,
-                    donut = true,
+                    title = "",
                     showPercentages = true,
-                    title = "书籍评分分布",
+                    showLegend = true,
+                    isDonut = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
