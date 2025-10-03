@@ -80,10 +80,7 @@ object Routes {
 
     // 时间管理相关路由
     object TimeManagementRoutes {
-        const val FORWARD_TIMER = "forward_timer"
-        const val COUNTDOWN_TIMER = "countdown_timer"
-        const val POMODORO_TIMER = "pomodoro_timer"
-        const val TIMER_SELECTION = "timer_selection"
+        const val READING_TIMER = "reading_timer"  // 现在指向统一计时器
         const val GOAL_SETTING = "goal_setting"
         const val READING_PLAN = "reading_plan"
         const val PERIODIC_REMINDER = "periodic_reminder"
@@ -94,16 +91,8 @@ object Routes {
     object ReadingRoutes {
         const val SAVE_RECORD = "reading/save"
         const val MANUAL_RECORD = "reading/manual"  // 添加手动记录路由
-        const val RECORD_HISTORY = "reading/history"
-        const val EDIT_RECORD = "reading/edit/{recordId}"
-        const val RECORD_ANALYTICS = "reading/analytics"
-        const val RECORD_TIMELINE = "reading/timeline"
         const val READING_RECORDS = "reading_records"
         const val BOOK_READING_STATISTICS = "book_reading_statistics"  // 添加书籍阅读统计路由
-        const val LONGEST_READING_BOOKS = "longest_reading_books"  // 添加阅读最久书籍路由 
-        const val READING_HABIT_DISTRIBUTION = "reading_habit_distribution"  // 添加阅读习惯时间分布路由
-        const val BOOK_TYPE_DISTRIBUTION = "book_type_distribution"  // 添加书籍类型分布路由
-        const val PREFERRED_AUTHORS_PUBLISHERS = "preferred_authors_publishers"  // 添加偏好作者和版权方路由
     }
 
     // 快捷操作相关路由

@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -43,13 +42,11 @@ import com.anou.pagegather.ui.feature.reading.ManualRecordScreen
 import com.anou.pagegather.ui.feature.reading.ReadingRecordsScreen
 import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
 import com.anou.pagegather.ui.feature.statistics.StatisticsScreen
-import com.anou.pagegather.ui.feature.timer.CountdownTimerScreen
-import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
+import com.anou.pagegather.ui.feature.timer.ReadingTimerScreen
 import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
-import com.anou.pagegather.ui.feature.timer.PomodoroTimerScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
-import com.anou.pagegather.ui.feature.timer.TimerSelectionScreen
+
 import com.anou.pagegather.ui.feature.timer.navigateToTimerFromBookDetail
 import com.anou.pagegather.ui.feature.timer.navigateToTimerFromBookshelf
 import com.anou.pagegather.ui.feature.timer.navigateToTimerFromGroupDetail
@@ -310,9 +307,9 @@ fun AppNavigation(
         }
 
 
-        // 时间管理相关页面 - 统一使用新架构
+        // 统一计时器页面
         composable(
-            route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?entryContext={entryContext}",
+            route = "${Routes.TimeManagementRoutes.READING_TIMER}?entryContext={entryContext}",
             arguments = listOf(
                 navArgument("entryContext") {
                     type = NavType.StringType
@@ -323,92 +320,28 @@ fun AppNavigation(
         ) { backStackEntry ->
             val entryContextString = backStackEntry.arguments?.getString("entryContext")
             
-
-            
             // 解析入口上下文
             val entryContext = if (!entryContextString.isNullOrEmpty()) {
                 try {
                     com.anou.pagegather.ui.feature.timer.TimerEntryContext.decode(entryContextString)
                 } catch (e: Exception) {
-
                     com.anou.pagegather.ui.feature.timer.TimerEntryContext(
                         entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
                         userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.GENERAL_READING
                     )
                 }
             } else {
-
                 com.anou.pagegather.ui.feature.timer.TimerEntryContext(
                     entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
                     userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.GENERAL_READING
                 )
             }
 
-            ForwardTimerScreen(
+            ReadingTimerScreen(
                 entryContext = entryContext,
                 onNavigateBack = { 
                     navController.popBackStack()
                 },
-                onTimerComplete = { result ->
-                    // 计时完成，导航到保存记录页面
-                    if (result.success && result.duration > 0) {
-
-                        navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?duration=${result.duration}&bookId=${result.bookId ?: ""}")
-                    } else {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
-
-        // 计时器选择页面
-        composable(Routes.TimeManagementRoutes.TIMER_SELECTION) {
-            TimerSelectionScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onSelectTimer = { timerType ->
-                    when (timerType) {
-                        "forward" -> navController.navigate(Routes.TimeManagementRoutes.FORWARD_TIMER)
-                        "countdown" -> navController.navigate(Routes.TimeManagementRoutes.COUNTDOWN_TIMER)
-                        "pomodoro" -> navController.navigate(Routes.TimeManagementRoutes.POMODORO_TIMER)
-                    }
-                }
-            )
-        }
-
-        // 倒计时器（简化版本，内置时长设置）
-        composable(Routes.TimeManagementRoutes.COUNTDOWN_TIMER) {
-            val entryContext = remember {
-                com.anou.pagegather.ui.feature.timer.TimerEntryContext(
-                    entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
-                    userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.FOCUSED_READING
-                )
-            }
-
-            CountdownTimerScreen(
-                entryContext = entryContext,
-                onNavigateBack = { navController.popBackStack() },
-                onTimerComplete = { result ->
-                    if (result.success && result.duration > 0) {
-                        navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?duration=${result.duration}&bookId=${result.bookId ?: ""}")
-                    } else {
-                        navController.popBackStack()
-                    }
-                }
-            )
-        }
-
-        // 番茄钟（简化版本，内置设置）
-        composable(Routes.TimeManagementRoutes.POMODORO_TIMER) {
-            val entryContext = remember {
-                com.anou.pagegather.ui.feature.timer.TimerEntryContext(
-                    entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
-                    userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.FOCUSED_READING
-                )
-            }
-
-            PomodoroTimerScreen(
-                entryContext = entryContext,
-                onNavigateBack = { navController.popBackStack() },
                 onTimerComplete = { result ->
                     if (result.success && result.duration > 0) {
                         navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?duration=${result.duration}&bookId=${result.bookId ?: ""}")
