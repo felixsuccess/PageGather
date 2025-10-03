@@ -5,8 +5,6 @@ import androidx.navigation.NavController
 import com.anou.pagegather.ui.navigation.Routes
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,7 +35,7 @@ class TimerEntryManager @Inject constructor() {
      * 构建计时器路由
      */
     private fun buildTimerRoute(context: TimerEntryContext): String {
-        return "${Routes.TimeManagementRoutes.FORWARD_TIMER}" +
+        return "${Routes.TimeManagementRoutes.READING_TIMER}" +
                "?entryContext=${context.encode()}"
     }
     
@@ -264,7 +262,7 @@ fun NavController.navigateToTimer(
         userIntent = userIntent
     )
     
-    navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?entryContext=${context.encode()}")
+    navigate("${Routes.TimeManagementRoutes.READING_TIMER}?entryContext=${context.encode()}")
 }
 
 /**
