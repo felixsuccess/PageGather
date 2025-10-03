@@ -5,6 +5,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Note
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,13 +23,13 @@ import com.anou.pagegather.ui.theme.extendedColors
  */
 @Composable
 fun HundiHomeLayout(
+    modifier: Modifier = Modifier,
     recentBooks: List<BookEntity> = emptyList(),
     readingStats: ReadingStats = ReadingStats(),
     onBookClick: (BookEntity) -> Unit = {},
     onAddBookClick: () -> Unit = {},
     onTimerClick: () -> Unit = {},
-    onStatisticsClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onStatisticsClick: () -> Unit = {}
 ) {
     HundiGradientBackground(
         modifier = modifier.fillMaxSize()
@@ -168,10 +171,14 @@ private fun StatisticsOverviewSection(
         ) {
             items(
                 listOf(
-                    StatItem("本月阅读", "${stats.monthlyBooks}", "本书", Icons.Default.MenuBook),
+                    StatItem("本月阅读", "${stats.monthlyBooks}", "本书",
+                        Icons.AutoMirrored.Filled.MenuBook
+                    ),
                     StatItem("阅读时长", "${stats.readingHours}", "小时", Icons.Default.Schedule),
-                    StatItem("完成进度", "${stats.completionRate}%", "完成", Icons.Default.TrendingUp),
-                    StatItem("笔记数量", "${stats.noteCount}", "条", Icons.Default.Note)
+                    StatItem("完成进度", "${stats.completionRate}%", "完成",
+                        Icons.AutoMirrored.Filled.TrendingUp
+                    ),
+                    StatItem("笔记数量", "${stats.noteCount}", "条", Icons.AutoMirrored.Filled.Note)
                 )
             ) { item ->
                 HundiStatCard(

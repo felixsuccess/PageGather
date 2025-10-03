@@ -81,10 +81,13 @@ object Routes {
     // 时间管理相关路由
     object TimeManagementRoutes {
         const val FORWARD_TIMER = "forward_timer"
-        const val REVERSE_TIMER = "reverse_timer"
+        const val COUNTDOWN_TIMER = "countdown_timer"
+        const val POMODORO_TIMER = "pomodoro_timer"
+        const val TIMER_SELECTION = "timer_selection"
         const val GOAL_SETTING = "goal_setting"
         const val READING_PLAN = "reading_plan"
         const val PERIODIC_REMINDER = "periodic_reminder"
+        
     }
 
     // 阅读记录相关路由

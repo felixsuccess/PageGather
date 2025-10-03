@@ -2,7 +2,6 @@ package com.anou.pagegather.ui.feature.reading.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,27 +12,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.data.local.entity.BookEntity
+import com.anou.pagegather.ui.feature.reading.BookSelectorViewModel
 
+/**
+ * 统一的书籍选择对话框
+ * 使用 ViewModel 自动管理数据，支持实时搜索
+ */
 @Composable
 fun BookSelectorDialog(
-    books: List<BookEntity>,
-    selectedBook: BookEntity?,
+    selectedBook: BookEntity? = null,
     onBookSelect: (BookEntity) -> Unit,
     onDismiss: () -> Unit,
-    onNavigateToAddBook: () -> Unit
+    onNavigateToAddBook: () -> Unit = {},
+    viewModel: BookSelectorViewModel = hiltViewModel()
 ) {
-    var searchQuery by remember { mutableStateOf("") }
+    // 收集状态
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val books by viewModel.books.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
     
-    // 过滤书籍列表
-    val filteredBooks = remember(books, searchQuery) {
-        if (searchQuery.isBlank()) {
-            books
-        } else {
-            books.filter { 
-                it.name?.contains(searchQuery, ignoreCase = true) == true ||
-                it.author?.contains(searchQuery, ignoreCase = true) == true
-            }
+    // 处理错误
+    error?.let { errorMessage ->
+        LaunchedEffect(errorMessage) {
+            viewModel.clearError()
         }
     }
     
@@ -59,7 +63,7 @@ fun BookSelectorDialog(
                 ) {
                     OutlinedTextField(
                         value = searchQuery,
-                        onValueChange = { searchQuery = it },
+                        onValueChange = { viewModel.updateSearchQuery(it) },
                         label = { Text("搜索书籍") },
                         leadingIcon = {
                             Icon(
@@ -89,7 +93,21 @@ fun BookSelectorDialog(
                     }
                 }
                 
-                if (filteredBooks.isEmpty() && searchQuery.isBlank()) {
+                // 加载状态
+                if (isLoading) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "搜索中...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else if (books.isEmpty() && searchQuery.isBlank()) {
                     // 如果没有书籍
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -106,7 +124,7 @@ fun BookSelectorDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                } else if (filteredBooks.isEmpty() && searchQuery.isNotBlank()) {
+                } else if (books.isEmpty() && searchQuery.isNotBlank()) {
                     // 搜索无结果
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -125,7 +143,8 @@ fun BookSelectorDialog(
                             .heightIn(max = 300.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(filteredBooks) { book ->
+                        items(books.size) { index ->
+                            val book = books[index]
                             val isSelected = selectedBook?.id == book.id
                             Card(
                                 modifier = Modifier
@@ -170,7 +189,6 @@ fun BookSelectorDialog(
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
-
                                         }
                                         
                                         // 选中标记
@@ -191,7 +209,7 @@ fun BookSelectorDialog(
             }
         },
         confirmButton = {
-            if (filteredBooks.isEmpty() && searchQuery.isBlank()) {
+            if (books.isEmpty() && searchQuery.isBlank()) {
                 Button(
                     onClick = { 
                         onDismiss()
@@ -205,7 +223,7 @@ fun BookSelectorDialog(
             }
         },
         dismissButton = {
-            if (filteredBooks.isNotEmpty() || searchQuery.isNotBlank()) {
+            if (books.isNotEmpty() || searchQuery.isNotBlank()) {
                 TextButton(
                     onClick = onDismiss,
                     shape = RoundedCornerShape(8.dp)

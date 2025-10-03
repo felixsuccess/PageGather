@@ -561,7 +561,6 @@ fun ManualDataInfoCard(
 
     if (showBookSelector) {
         BookSelectorDialog(
-            books = books,
             selectedBook = selectedBook,
             onBookSelect = { book ->
                 onBookSelect(book)

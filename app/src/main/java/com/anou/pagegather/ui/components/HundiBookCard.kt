@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -25,10 +26,10 @@ import com.anou.pagegather.ui.theme.extendedColors
  */
 @Composable
 fun HundiBookCard(
+    modifier: Modifier = Modifier,
     book: BookEntity,
     onClick: () -> Unit,
     onLongClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
     isSelected: Boolean = false
 ) {
     HundiCard(
@@ -315,7 +316,7 @@ private fun BookCoverImage(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MenuBook,
+                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
                         contentDescription = null,
                         tint = MaterialTheme.extendedColors.neutral500,
                         modifier = Modifier.size(24.dp)

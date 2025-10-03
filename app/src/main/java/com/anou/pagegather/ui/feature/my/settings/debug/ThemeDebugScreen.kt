@@ -3,6 +3,8 @@ package com.anou.pagegather.ui.feature.my.settings.debug
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,7 +52,7 @@ fun ThemeDebugScreen(
                 title = { Text("主题系统调试") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "返回")
                     }
                 },
                 actions = {
@@ -128,7 +130,7 @@ private fun SystemHealthCard(health: ThemeSystemHealth?) {
                         ThemeSystemHealth.GOOD -> Icons.Default.Check
                         ThemeSystemHealth.FAIR -> Icons.Default.Warning
                         ThemeSystemHealth.POOR -> Icons.Default.Error
-                        null -> Icons.Default.Help
+                        null -> Icons.AutoMirrored.Filled.Help
                     },
                     contentDescription = null,
                     tint = when (health) {

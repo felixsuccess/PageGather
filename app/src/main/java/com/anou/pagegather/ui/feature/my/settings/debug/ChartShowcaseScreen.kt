@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -306,9 +307,9 @@ private fun LabelVsLegendComparisonDemo() {
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
-        
-        Divider()
-        
+
+        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
         // 图例模式
         Column(
             horizontalAlignment = Alignment.CenterHorizontally

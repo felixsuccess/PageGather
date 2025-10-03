@@ -96,6 +96,8 @@ class ReadingRecordRepository @Inject constructor(
         return readingRecordDao.getTotalReadingTimeByBookId(bookId) ?: 0L
     }
 
+
+
     /** 获取指定日期的总阅读时长（毫秒） */
     suspend fun getTotalReadingTimeByDate(date: String): Long {
         return readingRecordDao.getTotalReadingTimeByDate(date) ?: 0L

@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Note
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -158,7 +161,7 @@ private fun StatisticsTabContent() {
                             modifier = Modifier.weight(1f),
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.MenuBook,
+                                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -191,7 +194,7 @@ private fun StatisticsTabContent() {
                             modifier = Modifier.weight(1f),
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.TrendingUp,
+                                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -205,7 +208,7 @@ private fun StatisticsTabContent() {
                             modifier = Modifier.weight(1f),
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.Note,
+                                    imageVector = Icons.AutoMirrored.Filled.Note,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary
                                 )

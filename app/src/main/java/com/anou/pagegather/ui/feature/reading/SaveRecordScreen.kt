@@ -1,26 +1,26 @@
 package com.anou.pagegather.ui.feature.reading
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,7 +29,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,71 +40,107 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.anou.pagegather.data.local.entity.BookEntity
-import com.anou.pagegather.data.local.entity.BookType
-import com.anou.pagegather.ui.feature.reading.components.BookSelectorDialog
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.anou.pagegather.data.local.entity.ReadPositionUnit
+import com.anou.pagegather.ui.feature.timer.TimerManager
 
+
+/**
+ * 简化版本的保存记录页面
+ * 
+ * 优势：
+ * 1. 从TimerService获取会话数据，无需复杂参数传递
+ * 2. 使用TimerManager统一保存逻辑
+ * 3. 简化的UI和交互
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaveRecordScreen(
-    source: RecordSource,
-    onNavigateBack: () -> Unit,  // 恢复原来的签名
-    onNavigateToAddBook: () -> Unit,
-    elapsedTime: Long? = null,
-    startTime: Long? = null,
-    selectedBookId: Long? = null,
-    viewModel: SaveRecordViewModel = hiltViewModel()
+    duration: Long = 0L,
+    bookId: Long? = null,
+    onNavigateBack: () -> Unit = {},
+    onSaveComplete: () -> Unit = {},
+    onNavigateToBookEdit: () -> Unit = {},
+    onReturnToTimer: () -> Unit = {},  // 返回继续计时（不保存）
+    onStartNewTimer: (Long) -> Unit = {}  // 保存并开始新计时
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    // 获取依赖注入的实例
+    val timerManager: TimerManager = hiltViewModel()
     
-        LaunchedEffect(source, elapsedTime, startTime, selectedBookId) {
-        // 添加调试日志
-        println("SaveRecordScreen: 接收到的参数 - source: $source, elapsedTime: $elapsedTime, startTime: $startTime, selectedBookId: $selectedBookId")
+
+    
+    // UI状态
+    var selectedBookId by remember { mutableStateOf(bookId) }
+    var selectedBook by remember { mutableStateOf<BookEntity?>(null) }
+    
+    // 根据传入的bookId获取书籍信息
+    LaunchedEffect(bookId) {
+        if (bookId != null) {
+            try {
+                // 从数据库获取真实的书籍信息
+                val book = timerManager.getBookById(bookId)
+                if (book != null) {
+                    selectedBook = book
+                    selectedBookId = book.id
+                } else {
+                    // 如果没找到书籍，创建一个默认对象
+                    selectedBook = BookEntity(
+                        id = bookId,
+                        name = "书籍 ID: $bookId",
+                        author = "未知作者",
+                        type = 0,
+                        totalPagination = 300,
+                        readPosition = 0.0
+                    )
+                }
+            } catch (e: Exception) {
+                // 获取失败时使用默认值
+                selectedBook = BookEntity(
+                    id = bookId,
+                    name = "书籍 ID: $bookId",
+                    author = "未知作者",
+                    type = 0,
+                    totalPagination = 300,
+                    readPosition = 0.0
+                )
+            }
+        }
+    }
+    
+    var startProgress by remember { mutableStateOf(0.0) }
+    var endProgress by remember { mutableStateOf(0.0) }
+    var notes by remember { mutableStateOf("") }
+    var markAsFinished by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var showBookSelector by remember { mutableStateOf(false) }
+    
+    // 当选择书籍时，自动带出书籍的当前阅读进度
+    LaunchedEffect(selectedBook) {
+        selectedBook?.let { book ->
+            // 直接使用书籍信息中的当前阅读进度
+            startProgress = book.readPosition
+        }
+    }
+    
+    // 获取TimerManager状态用于监听保存完成
+    val managerState by timerManager.uiState.collectAsState()
+    
+    // 监听保存完成 - 简化逻辑
+    LaunchedEffect(managerState.showSaveSuccess, managerState.isLoading, managerState.error) {
+        println("DEBUG: 状态变化 - showSaveSuccess: ${managerState.showSaveSuccess}, isLoading: ${managerState.isLoading}, error: ${managerState.error}")
         
-        if (selectedBookId != null && selectedBookId > 0) {
-             viewModel.selectNewlyAddedBook(selectedBookId)
-        } else {
-            println("SaveRecordScreen: selectedBookId 为空或无效: $selectedBookId")
-            viewModel.initialize(source, elapsedTime, startTime, null)
+        if (managerState.showSaveSuccess) {
+            println("DEBUG: 保存成功，调用 onSaveComplete()")
+            isLoading = false // 重置加载状态
+            timerManager.resetSaveSuccessState() // 重置成功状态
+            onSaveComplete()
         }
-    }
-    
-    // 添加UI状态的调试日志
-    LaunchedEffect(uiState) {
-        println("SaveRecordScreen: UI状态更新 - source: ${uiState.source}, elapsedTime: ${uiState.elapsedTime}, startTime: ${uiState.startTime}, selectedBook: ${uiState.selectedBook?.name}")
-    }
-    
-    // 当selectedBookId不为空时，我们也需要初始化计时信息
-    LaunchedEffect(selectedBookId) {
-        if (selectedBookId != null && selectedBookId > 0) {
-            // 先调用initialize设置计时信息，但不设置书籍
-            viewModel.initialize(source, elapsedTime, startTime, null)
-        }
-    }
-    
-    LaunchedEffect(uiState.isSaved) {
-         if (uiState.isSaved) {
-            onNavigateBack()
-        }
-    }
-
-    LaunchedEffect(uiState.isBackToTimer) {
-        if (uiState.isBackToTimer) {
-            onNavigateBack()
-        }
-    }
-
-
-    
-    uiState.errorMessage?.let { error ->
-        LaunchedEffect(error) {
-            viewModel.clearError()
+        
+        if (managerState.error != null) {
+            println("DEBUG: 保存失败 - ${managerState.error}")
+            isLoading = false // 重置加载状态
         }
     }
     
@@ -130,57 +165,186 @@ fun SaveRecordScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (uiState.source == RecordSource.TIMER) {
-                item {
-                    TimerInfoCard(
-                        elapsedTime = uiState.elapsedTime,
-                        startTime = uiState.startTime
-                    )
-                }
-            }
-
-            item {
-                DataInfoCard(
-                    selectedBook = uiState.selectedBook,
-                    onBookSelect = { book -> viewModel.selectBook(book) },
-                    onNavigateToAddBook = onNavigateToAddBook,
-                    viewModel = viewModel,
-                    markAsFinished = uiState.markAsFinished,
-                    onMarkAsFinishedChange = { marked -> viewModel.setMarkAsFinished(marked) },
-                    startProgress = uiState.startProgress,
-                    endProgress = uiState.endProgress,
-                    onStartProgressChange = { progress -> viewModel.setStartProgress(progress) },
-                    onEndProgressChange = { progress -> viewModel.setEndProgress(progress) }
+            // 可滚动内容
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+            // 计时信息卡片（简化版本）
+            if (duration > 0) {
+                TimingInfoCard(
+                    duration = duration,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             
-            item {
-                ActionButtonsCard(
-                    onSave = { viewModel.saveRecord() },
-                    onContinueReading = { viewModel.continueReading() },
-                    onCancel = onNavigateBack,
-                    isLoading = uiState.isLoading,
-                    canSave = uiState.selectedBook != null
+            // 书籍选择卡片（必选）
+            BookSelectionCard(
+                selectedBook = selectedBook,
+                onBookSelect = { book -> 
+                    selectedBook = book
+                    selectedBookId = book.id
+                },
+                onShowBookSelector = { showBookSelector = true },
+                onAddNewBook = onNavigateToBookEdit,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            // 书籍选择对话框
+            if (showBookSelector) {
+                com.anou.pagegather.ui.feature.reading.components.BookSelectorDialog(
+                    selectedBook = selectedBook,
+                    onBookSelect = { book ->
+                        selectedBook = book
+                        selectedBookId = book.id
+                        showBookSelector = false
+                    },
+                    onDismiss = { showBookSelector = false },
+                    onNavigateToAddBook = onNavigateToBookEdit
                 )
+            }
+            
+            // 阅读详情卡片（进度 + 笔记）
+            selectedBook?.let { book ->
+                ReadingDetailsCard(
+                    selectedBook = book,
+                    startProgress = startProgress,
+                    endProgress = endProgress,
+                    onStartProgressChange = { startProgress = it },
+                    onEndProgressChange = { endProgress = it },
+                    markAsFinished = markAsFinished,
+                    onMarkAsFinishedChange = { markAsFinished = it },
+                    notes = notes,
+                    onNotesChange = { notes = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            
+            }
+            
+            // 底部按钮区域
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // 保存完成按钮（主要操作 - 保存并返回）
+                Button(
+                    onClick = {
+                        selectedBookId?.let { bookId ->
+                            isLoading = true
+                            timerManager.saveRecordManually(
+                                bookId = bookId,
+                                startProgress = startProgress,
+                                endProgress = endProgress,
+                                notes = notes,
+                                duration = duration,
+                                startTime = System.currentTimeMillis() - duration,
+                                endTime = System.currentTimeMillis()
+                            )
+                            // 保存操作会触发 LaunchedEffect 中的 onSaveComplete()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = selectedBookId != null && !isLoading && !managerState.isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Save,
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        if (isLoading || managerState.isLoading) "保存中..." 
+                        else if (selectedBookId == null) "请先选择书籍"
+                        else "保存完成"
+                    )
+                }
+                
+                // 第二行：其他操作按钮
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // 返回继续计时按钮（不保存当前记录）
+                    OutlinedButton(
+                        onClick = onReturnToTimer,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            "继续计时",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    
+                    // 保存并开始新计时
+                    Button(
+                        onClick = {
+                            selectedBookId?.let { bookId ->
+                                isLoading = true
+                                timerManager.saveRecordManually(
+                                    bookId = bookId,
+                                    startProgress = startProgress,
+                                    endProgress = endProgress,
+                                    notes = notes,
+                                    duration = duration,
+                                    startTime = System.currentTimeMillis() - duration,
+                                    endTime = System.currentTimeMillis()
+                                )
+                                // 直接开始新计时
+                                onStartNewTimer(bookId)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = selectedBookId != null && !isLoading && !managerState.isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            if (isLoading || managerState.isLoading) "保存中..." 
+                            else if (selectedBookId == null) "请先选择书籍"
+                            else "保存并开始新计时",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+/**
+ * 计时信息卡片（简化版本）
+ */
 @Composable
-fun TimerInfoCard(
-    elapsedTime: Long,
-    startTime: Long
+private fun TimingInfoCard(
+    duration: Long,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
@@ -190,7 +354,7 @@ fun TimerInfoCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "本次阅读信息",
+                text = "本次计时信息",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium
             )
@@ -199,258 +363,25 @@ fun TimerInfoCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "阅读时长:")
                 Text(
-                    text = formatTime(elapsedTime),
+                    text = "计时时长：",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = formatDuration(duration),
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
             }
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "开始时间:")
-                Text(
-                    text = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault()).format(Date(startTime))
-                )
-            }
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "结束时间:")
-                Text(
-                    text = SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault()).format(Date(startTime + elapsedTime))
-                )
-            }
         }
     }
 }
 
-@Composable
-fun DataInfoCard(
-    selectedBook: BookEntity?,
-    onBookSelect: (BookEntity) -> Unit,
-    onNavigateToAddBook: () -> Unit,
-    markAsFinished: Boolean,
-    onMarkAsFinishedChange: (Boolean) -> Unit,
-    viewModel: SaveRecordViewModel,
-    startProgress: Double,
-    endProgress: Double,
-    onStartProgressChange: (Double) -> Unit,
-    onEndProgressChange: (Double) -> Unit
-) {
-    var showBookSelector by remember { mutableStateOf(false) }
-
-    val books by viewModel.getAllBooks().collectAsState(initial = emptyList())
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "本次阅读信息",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "阅读书籍:")
-                Row(
-                    modifier = Modifier
-                        .clickable { showBookSelector = true }
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                  //  verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        if (selectedBook != null) {
-                            Text(
-                                text = selectedBook.name ?: "",
-                                fontWeight = FontWeight.Medium
-                            )
-                            selectedBook.author?.let { author ->
-                                Text(
-                                    text = author,
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
-                            }
-                        } else {
-                            Text(
-                                text = "选择书籍",
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "选择书籍",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            var endProgressText by remember { mutableStateOf(endProgress.toString()) }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "阅读位置:")
-                if ( selectedBook == null || selectedBook.type == BookType.PAPER_BOOK.code    ) {
-                OutlinedTextField(
-                    value = endProgressText,
-                    onValueChange = { value ->
-                        if (value.isEmpty() || value.all { it.isDigit() }) {
-                            endProgressText = value
-                            value.toIntOrNull()?.let { number ->
-                                onEndProgressChange(number.toDouble())
-                            }
-                        }
-                    },
-                    label = { Text("结束页") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-
-                Text("页")
-                } else {
-                OutlinedTextField(
-                    value = endProgressText,
-                    onValueChange = { value ->
-                        val number = value.toDoubleOrNull()
-                        if (number != null && number in 0.0..100.0) {
-                            endProgressText = value
-                            onEndProgressChange(number)
-                        } else if (value.isEmpty()) {
-                            endProgressText = value
-                        }
-                    },
-                    label = { Text("结束进度") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp)
-                )
-
-                Text("%")
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = markAsFinished,
-                    onCheckedChange = onMarkAsFinishedChange
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "标记为已完成",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-        }
-    }
-
-    if (showBookSelector) {
-        BookSelectorDialog(
-            books = books,
-            selectedBook = selectedBook,
-            onBookSelect = { book ->
-                onBookSelect(book)
-                showBookSelector = false
-            },
-            onDismiss = { showBookSelector = false },
-            onNavigateToAddBook = {
-                showBookSelector = false
-                onNavigateToAddBook()
-            }
-        )
-    }
-}
-
-
-
-
-@Composable
-fun ActionButtonsCard(
-    onSave: () -> Unit,
-    onContinueReading: () -> Unit,
-    onCancel: () -> Unit,
-    isLoading: Boolean,
-    canSave: Boolean
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Button(
-                onClick = onSave,
-                enabled = canSave && !isLoading,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                Text("保存记录")
-            }
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onContinueReading,
-                    enabled = !isLoading,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("继续阅读")
-                }
-                
-                TextButton(
-                    onClick = onCancel,
-                    enabled = !isLoading,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("取消")
-                }
-            }
-        }
-    }
-}
-
-private fun formatTime(timeInMs: Long): String {
-    val totalSeconds = timeInMs / 1000
+/**
+ * 格式化时长
+ */
+private fun formatDuration(durationMs: Long): String {
+    val totalSeconds = durationMs / 1000
     val hours = totalSeconds / 3600
     val minutes = (totalSeconds % 3600) / 60
     val seconds = totalSeconds % 60
@@ -460,4 +391,307 @@ private fun formatTime(timeInMs: Long): String {
     } else {
         String.format("%02d:%02d", minutes, seconds)
     }
+}
+
+/**
+ * 书籍选择卡片
+ */
+@Composable
+private fun BookSelectionCard(
+    selectedBook: BookEntity?,
+    onBookSelect: (BookEntity) -> Unit,
+    onShowBookSelector: () -> Unit,
+    onAddNewBook: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = if (selectedBook != null) 
+                MaterialTheme.colorScheme.surfaceVariant 
+            else MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "选择书籍 *",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = if (selectedBook != null) 
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.onErrorContainer
+                )
+                
+                if (selectedBook != null) {
+                    OutlinedButton(
+                        onClick = onShowBookSelector
+                    ) {
+                        Text("更换")
+                    }
+                }
+            }
+            
+            if (selectedBook != null) {
+                Column {
+                    Text(
+                        text = selectedBook.name ?: "未知书籍",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                    if (!selectedBook.author.isNullOrEmpty()) {
+                        Text(
+                            text = "作者: ${selectedBook.author}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = "请选择要记录的书籍",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onShowBookSelector,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("选择书籍")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = onAddNewBook,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("添加新书")
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 阅读详情卡片（进度 + 笔记的整合）
+ */
+@Composable
+private fun ReadingDetailsCard(
+    selectedBook: BookEntity,
+    startProgress: Double,
+    endProgress: Double,
+    onStartProgressChange: (Double) -> Unit,
+    onEndProgressChange: (Double) -> Unit,
+    markAsFinished: Boolean,
+    onMarkAsFinishedChange: (Boolean) -> Unit,
+    notes: String,
+    onNotesChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // 卡片标题
+            Text(
+                text = "阅读详情",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            
+            // 书籍信息摘要
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = selectedBook.name ?: "未知书籍",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                if (!selectedBook.author.isNullOrEmpty()) {
+                    Text(
+                        text = "作者: ${selectedBook.author}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            // 分隔线
+            androidx.compose.material3.HorizontalDivider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            )
+            
+            // 阅读进度部分
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "阅读进度",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                // 根据书籍的进度单位显示不同的进度输入方式
+                val positionUnit = ReadPositionUnit.entries.find { 
+                    it.code == selectedBook.positionUnit 
+                } ?: ReadPositionUnit.PAGE
+                
+                val (progressUnit, maxValue) = when (positionUnit) {
+                    ReadPositionUnit.PAGE -> {
+                        "页" to (selectedBook.totalPagination?.toDouble() ?: 999.0)
+                    }
+                    ReadPositionUnit.CHAPTER -> {
+                        "章" to (selectedBook.totalChapters?.toDouble() ?: 99.0)
+                    }
+                    ReadPositionUnit.PERCENT -> {
+                        "%" to 100.0
+                    }
+                }
+                
+                // 进度提示 - 选择书籍后显示
+                if (selectedBook.readPosition > 0) {
+                    val progressText = when (positionUnit) {
+                        ReadPositionUnit.PERCENT -> "${selectedBook.readPosition.toInt()}%"
+                        else -> "${selectedBook.readPosition.toInt()} $progressUnit"
+                    }
+                    Text(
+                        text = "📖 已自动填入当前阅读进度：$progressText",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = if (startProgress == 0.0) "" else startProgress.toInt().toString(),
+                        onValueChange = { 
+                            if (it.isEmpty()) {
+                                onStartProgressChange(0.0)
+                            } else {
+                                it.toIntOrNull()?.let { value ->
+                                    if (value >= 0 && value <= maxValue) {
+                                        onStartProgressChange(value.toDouble())
+                                    }
+                                }
+                            }
+                        },
+                        label = { Text("开始 ($progressUnit)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    
+                    OutlinedTextField(
+                        value = if (endProgress == 0.0) "" else endProgress.toInt().toString(),
+                        onValueChange = { 
+                            if (it.isEmpty()) {
+                                onEndProgressChange(0.0)
+                            } else {
+                                it.toIntOrNull()?.let { value ->
+                                    if (value >= 0 && value <= maxValue) {
+                                        onEndProgressChange(value.toDouble())
+                                    }
+                                }
+                            }
+                        },
+                        label = { Text("结束 ($progressUnit)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                }
+                
+                // 进度提示和完成标记
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = when (positionUnit) {
+                            ReadPositionUnit.PAGE -> 
+                                "总页数: ${selectedBook.totalPagination} 页"
+                            ReadPositionUnit.CHAPTER -> 
+                                "总章节: ${selectedBook.totalChapters ?: 0} 章"
+                            ReadPositionUnit.PERCENT -> 
+                                "进度范围: 0-100%"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = markAsFinished,
+                            onCheckedChange = onMarkAsFinishedChange
+                        )
+                        Text(
+                            text = "已完成",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+            
+            // 分隔线
+            androidx.compose.material3.HorizontalDivider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            )
+            
+            // 阅读笔记部分
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "阅读笔记",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = onNotesChange,
+                    placeholder = { Text("记录你的阅读感悟、重要内容或想法...") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    maxLines = 4
+                )
+            }
+        }
+    }
+}
+
+
+
+/**
+ * 格式化时间
+ */
+private fun formatTime(timestamp: Long): String {
+    val date = java.util.Date(timestamp)
+    val format = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+    return format.format(date)
 }

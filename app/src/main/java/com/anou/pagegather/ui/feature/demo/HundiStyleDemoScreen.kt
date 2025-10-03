@@ -5,6 +5,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Note
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -82,10 +85,10 @@ fun HundiStyleDemoScreen(
                             icon = {
                                 Icon(
                                     imageVector = when (title) {
-                                        "本月阅读" -> Icons.Default.MenuBook
+                                        "本月阅读" -> Icons.AutoMirrored.Filled.MenuBook
                                         "阅读时长" -> Icons.Default.Schedule
-                                        "完成进度" -> Icons.Default.TrendingUp
-                                        else -> Icons.Default.Note
+                                        "完成进度" -> Icons.AutoMirrored.Filled.TrendingUp
+                                        else -> Icons.AutoMirrored.Filled.Note
                                     },
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary
@@ -161,7 +164,7 @@ fun HundiStyleDemoScreen(
                             }
                             
                             Icon(
-                                imageVector = Icons.Default.MenuBook,
+                                imageVector = Icons.AutoMirrored.Filled.MenuBook,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
                             )

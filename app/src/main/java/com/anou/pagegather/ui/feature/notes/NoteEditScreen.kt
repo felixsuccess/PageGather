@@ -130,7 +130,6 @@ fun NoteEditScreen(
     // 书籍选择器对话框
     if (showBookSelector) {
         BookSelectorDialog(
-            books = uiState.availableBooks,
             selectedBook = uiState.selectedBook,
             onBookSelect = { book ->
                 viewModel.selectBook(book)
@@ -138,9 +137,9 @@ fun NoteEditScreen(
             },
             onDismiss = { showBookSelector = false },
             onNavigateToAddBook = {
-                            // 导航到添加书籍页面
-                            navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
-                        }
+                // 导航到添加书籍页面
+                navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
+            }
         )
     }
 

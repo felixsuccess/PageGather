@@ -21,9 +21,9 @@ import com.anou.pagegather.ui.theme.extendedColors
  */
 @Composable
 fun HundiRateBar(
+    modifier: Modifier = Modifier,
     rating: Int,
     onRatingChanged: (Int) -> Unit,
-    modifier: Modifier = Modifier,
     maxRating: Int = 5,
     starSize: Dp = 24.dp,
     activeColor: Color = MaterialTheme.extendedColors.warning,

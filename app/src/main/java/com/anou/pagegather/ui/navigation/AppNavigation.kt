@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -12,12 +13,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.anou.pagegather.ui.feature.bookshelf.BookDetailScreen
-import com.anou.pagegather.ui.feature.bookshelf.BookReadingHistoryScreen
-import com.anou.pagegather.ui.feature.bookshelf.BookExcerptsScreen
-import com.anou.pagegather.ui.feature.bookshelf.BookReviewsScreen
-import com.anou.pagegather.ui.feature.bookshelf.BookRelatedDataScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookEditScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookExcerptsScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookListViewModel
+import com.anou.pagegather.ui.feature.bookshelf.BookReadingHistoryScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookRelatedDataScreen
+import com.anou.pagegather.ui.feature.bookshelf.BookReviewsScreen
 import com.anou.pagegather.ui.feature.bookshelf.BookShelfScreen
 import com.anou.pagegather.ui.feature.bookshelf.booksource.BookShelfSourceDetailScreen
 import com.anou.pagegather.ui.feature.bookshelf.group.BookShelfGroupDetailScreen
@@ -30,24 +31,28 @@ import com.anou.pagegather.ui.feature.management.TagManagementScreen
 import com.anou.pagegather.ui.feature.my.ProfileScreen
 import com.anou.pagegather.ui.feature.my.settings.CustomThemeCreationScreen
 import com.anou.pagegather.ui.feature.my.settings.ThemeSelectionScreen
+import com.anou.pagegather.ui.feature.my.settings.debug.ThemeDebugScreen
 import com.anou.pagegather.ui.feature.notes.NoteEditScreen
 import com.anou.pagegather.ui.feature.notes.NoteViewScreen
 import com.anou.pagegather.ui.feature.notes.NotesScreen
 import com.anou.pagegather.ui.feature.quickactions.QuickActionsScreen
 import com.anou.pagegather.ui.feature.quickactions.QuickNoteScreen
 import com.anou.pagegather.ui.feature.quickactions.QuickReviewScreen
-import com.anou.pagegather.ui.feature.reading.RecordSource
-import com.anou.pagegather.ui.feature.reading.ReadingRecordsScreen
 import com.anou.pagegather.ui.feature.reading.BookReadingStatisticsScreen
+import com.anou.pagegather.ui.feature.reading.ManualRecordScreen
+import com.anou.pagegather.ui.feature.reading.ReadingRecordsScreen
 import com.anou.pagegather.ui.feature.reading.SaveRecordScreen
-import com.anou.pagegather.ui.feature.reading.ManualRecordScreen  // 添加手动记录页面导入
-import com.anou.pagegather.ui.feature.my.settings.debug.ThemeDebugScreen
 import com.anou.pagegather.ui.feature.statistics.StatisticsScreen
+import com.anou.pagegather.ui.feature.timer.CountdownTimerScreen
 import com.anou.pagegather.ui.feature.timer.ForwardTimerScreen
 import com.anou.pagegather.ui.feature.timer.GoalSettingScreen
 import com.anou.pagegather.ui.feature.timer.PeriodicReminderScreen
+import com.anou.pagegather.ui.feature.timer.PomodoroTimerScreen
 import com.anou.pagegather.ui.feature.timer.ReadingPlanScreen
-import com.anou.pagegather.ui.feature.timer.ReverseTimerScreen
+import com.anou.pagegather.ui.feature.timer.TimerSelectionScreen
+import com.anou.pagegather.ui.feature.timer.navigateToTimerFromBookDetail
+import com.anou.pagegather.ui.feature.timer.navigateToTimerFromBookshelf
+import com.anou.pagegather.ui.feature.timer.navigateToTimerFromGroupDetail
 
 @Composable
 fun AppNavigation(
@@ -109,8 +114,7 @@ fun AppNavigation(
                 },
                 onNavigateToBookGroups = { navController.navigate(Routes.ProfileRoutes.BOOK_GROUP_SETTINGS) },
                 onNavigateToTimer = { bookId ->
-                    val bookIdParam = if (bookId > 0L) "?selectedBookId=$bookId" else ""
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}$bookIdParam")
+                    navController.navigateToTimerFromBookshelf(bookId)
                 },
                 onNavigateToQuickActions = { navController.navigate(Routes.QuickActionsRoutes.QUICK_ACTIONS) },
                 onNavigateToNoteEdit = { noteId, bookId ->
@@ -184,8 +188,7 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onNavigateToTimer = { bookId ->
-                    // 从书籍详情页导航到正向计时器，传递来源信息
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId&from=book_detail&bookId=$bookId")
+                    navController.navigateToTimerFromBookDetail(bookId)
                 }
             )
         }
@@ -307,383 +310,165 @@ fun AppNavigation(
         }
 
 
-        // 时间管理相关页面
+        // 时间管理相关页面 - 统一使用新架构
         composable(
-            route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId={selectedBookId}&from={from}&bookId={bookId}&groupId={groupId}&groupName={groupName}&sourceId={sourceId}&sourceName={sourceName}&tagId={tagId}&tagName={tagName}&status={status}&statusName={statusName}&rating={rating}&ratingValue={ratingValue}",
+            route = "${Routes.TimeManagementRoutes.FORWARD_TIMER}?entryContext={entryContext}",
             arguments = listOf(
-                navArgument("selectedBookId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("from") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("bookId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("groupId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("groupName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("sourceId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("sourceName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("tagId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("tagName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("status") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("statusName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("rating") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("ratingValue") {
+                navArgument("entryContext") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 }
             )
         ) { backStackEntry ->
-            val selectedBookId =
-                backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
-            val from = backStackEntry.arguments?.getString("from")
-            val bookId = backStackEntry.arguments?.getString("bookId")
-            val groupId = backStackEntry.arguments?.getString("groupId")
-            val groupName = backStackEntry.arguments?.getString("groupName")
-            val sourceId = backStackEntry.arguments?.getString("sourceId")
-            val sourceName = backStackEntry.arguments?.getString("sourceName")
-            val tagId = backStackEntry.arguments?.getString("tagId")
-            val tagName = backStackEntry.arguments?.getString("tagName")
-            val status = backStackEntry.arguments?.getString("status")
-            val statusName = backStackEntry.arguments?.getString("statusName")
-            val rating = backStackEntry.arguments?.getString("rating")
-            val ratingValue = backStackEntry.arguments?.getString("ratingValue")
+            val entryContextString = backStackEntry.arguments?.getString("entryContext")
+            
+
+            
+            // 解析入口上下文
+            val entryContext = if (!entryContextString.isNullOrEmpty()) {
+                try {
+                    com.anou.pagegather.ui.feature.timer.TimerEntryContext.decode(entryContextString)
+                } catch (e: Exception) {
+
+                    com.anou.pagegather.ui.feature.timer.TimerEntryContext(
+                        entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
+                        userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.GENERAL_READING
+                    )
+                }
+            } else {
+
+                com.anou.pagegather.ui.feature.timer.TimerEntryContext(
+                    entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
+                    userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.GENERAL_READING
+                )
+            }
 
             ForwardTimerScreen(
+                entryContext = entryContext,
+                onNavigateBack = { 
+                    navController.popBackStack()
+                },
+                onTimerComplete = { result ->
+                    // 计时完成，导航到保存记录页面
+                    if (result.success && result.duration > 0) {
+
+                        navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?duration=${result.duration}&bookId=${result.bookId ?: ""}")
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+            )
+        }
+
+        // 计时器选择页面
+        composable(Routes.TimeManagementRoutes.TIMER_SELECTION) {
+            TimerSelectionScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToSaveRecord = { elapsedTime, startTime, bookId ->
-                    val bookIdParam = bookId?.let { "&selectedBookId=$it" } ?: ""
-                    val fromParam = from?.let { "&from=$it" } ?: ""
-                    val fromBookIdParam = bookId?.let { "&bookId=$it" } ?: ""
-                    val groupIdParam = groupId?.let { "&groupId=$it" } ?: ""
-                    val groupNameParam = groupName?.let { "&groupName=$it" } ?: ""
-                    val sourceIdParam = sourceId?.let { "&sourceId=$it" } ?: ""
-                    val sourceNameParam = sourceName?.let { "&sourceName=$it" } ?: ""
-                    val tagIdParam = tagId?.let { "&tagId=$it" } ?: ""
-                    val tagNameParam = tagName?.let { "&tagName=$it" } ?: ""
-                    val statusParam = status?.let { "&status=$it" } ?: ""
-                    val statusNameParam = statusName?.let { "&statusName=$it" } ?: ""
-                    val ratingParam = rating?.let { "&rating=$it" } ?: ""
-                    val ratingValueParam = ratingValue?.let { "&ratingValue=$it" } ?: ""
-                    println("AppNavigation: 导航到保存记录页面")
-                    println("AppAppNavigation: elapsedTime = $elapsedTime")
-                    println("AppNavigation: startTime = $startTime")
-                    println("AppNavigation: bookId = $bookId")
-                    navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?source=TIMER&elapsedTime=$elapsedTime&startTime=$startTime$bookIdParam$fromParam$fromBookIdParam$groupIdParam$groupNameParam$sourceIdParam$sourceNameParam$tagIdParam$tagNameParam$statusParam$statusNameParam$ratingParam$ratingValueParam")
-                },
-                selectedBookId = selectedBookId
+                onSelectTimer = { timerType ->
+                    when (timerType) {
+                        "forward" -> navController.navigate(Routes.TimeManagementRoutes.FORWARD_TIMER)
+                        "countdown" -> navController.navigate(Routes.TimeManagementRoutes.COUNTDOWN_TIMER)
+                        "pomodoro" -> navController.navigate(Routes.TimeManagementRoutes.POMODORO_TIMER)
+                    }
+                }
             )
         }
 
-        composable(Routes.TimeManagementRoutes.REVERSE_TIMER) {
-            ReverseTimerScreen(
-                onNavigateBack = { navController.popBackStack() }
+        // 倒计时器（简化版本，内置时长设置）
+        composable(Routes.TimeManagementRoutes.COUNTDOWN_TIMER) {
+            val entryContext = remember {
+                com.anou.pagegather.ui.feature.timer.TimerEntryContext(
+                    entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
+                    userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.FOCUSED_READING
+                )
+            }
+
+            CountdownTimerScreen(
+                entryContext = entryContext,
+                onNavigateBack = { navController.popBackStack() },
+                onTimerComplete = { result ->
+                    if (result.success && result.duration > 0) {
+                        navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?duration=${result.duration}&bookId=${result.bookId ?: ""}")
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
             )
         }
-        composable(Routes.TimeManagementRoutes.GOAL_SETTING) { GoalSettingScreen() }
-        composable(Routes.TimeManagementRoutes.READING_PLAN) { ReadingPlanScreen() }
-        composable(Routes.TimeManagementRoutes.PERIODIC_REMINDER) { PeriodicReminderScreen() }
 
-        // 阅读记录相关页面
+        // 番茄钟（简化版本，内置设置）
+        composable(Routes.TimeManagementRoutes.POMODORO_TIMER) {
+            val entryContext = remember {
+                com.anou.pagegather.ui.feature.timer.TimerEntryContext(
+                    entrySource = com.anou.pagegather.ui.feature.timer.TimerEntrySource.DIRECT,
+                    userIntent = com.anou.pagegather.ui.feature.timer.TimerUserIntent.FOCUSED_READING
+                )
+            }
+
+            PomodoroTimerScreen(
+                entryContext = entryContext,
+                onNavigateBack = { navController.popBackStack() },
+                onTimerComplete = { result ->
+                    if (result.success && result.duration > 0) {
+                        navController.navigate("${Routes.ReadingRoutes.SAVE_RECORD}?duration=${result.duration}&bookId=${result.bookId ?: ""}")
+                    } else {
+                        navController.popBackStack()
+                    }
+                }
+            )
+        }
+
+        composable(Routes.TimeManagementRoutes.GOAL_SETTING) { 
+            GoalSettingScreen() 
+        }
+        composable(Routes.TimeManagementRoutes.READING_PLAN) { 
+            ReadingPlanScreen() 
+        }
+        composable(Routes.TimeManagementRoutes.PERIODIC_REMINDER) { 
+            PeriodicReminderScreen() 
+        }
+
+        // 阅读记录保存 - 恢复完整逻辑
         composable(
-            route = "${Routes.ReadingRoutes.SAVE_RECORD}?source={source}&elapsedTime={elapsedTime}&startTime={startTime}&selectedBookId={selectedBookId}&from={from}&bookId={bookId}&groupId={groupId}&groupName={groupName}&sourceId={sourceId}&sourceName={sourceName}&tagId={tagId}&tagName={tagName}&status={status}&statusName={statusName}&rating={rating}&ratingValue={ratingValue}",
+            route = "${Routes.ReadingRoutes.SAVE_RECORD}?duration={duration}&bookId={bookId}",
             arguments = listOf(
-                navArgument("source") {
-                    type = NavType.StringType
-                    defaultValue = "MANUAL"
-                },
-                navArgument("elapsedTime") {
+                navArgument("duration") {
                     type = NavType.StringType
                     nullable = true
-                    defaultValue = null
-                },
-                navArgument("startTime") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("selectedBookId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("from") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
+                    defaultValue = "0"
                 },
                 navArgument("bookId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("groupId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("groupName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("sourceId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("sourceName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("tagId") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("tagName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("status") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("statusName") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("rating") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                },
-                navArgument("ratingValue") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
                 }
             )
         ) { backStackEntry ->
-            val sourceStr = backStackEntry.arguments?.getString("source") ?: "MANUAL"
-            val source = try {
-                RecordSource.valueOf(sourceStr)
-            } catch (e: IllegalArgumentException) {
-                RecordSource.MANUAL
-            }
-            val elapsedTime = backStackEntry.arguments?.getString("elapsedTime")?.toLongOrNull()
-            val startTime = backStackEntry.arguments?.getString("startTime")?.toLongOrNull()
-            val selectedBookId =
-                backStackEntry.arguments?.getString("selectedBookId")?.toLongOrNull()
-            val from = backStackEntry.arguments?.getString("from")
-            val bookId = backStackEntry.arguments?.getString("bookId")
-            val groupId = backStackEntry.arguments?.getString("groupId")
-            val groupName = backStackEntry.arguments?.getString("groupName")
-            val sourceId = backStackEntry.arguments?.getString("sourceId")
-            val sourceName = backStackEntry.arguments?.getString("sourceName")
-            val tagId = backStackEntry.arguments?.getString("tagId")
-            val tagName = backStackEntry.arguments?.getString("tagName")
-            val status = backStackEntry.arguments?.getString("status")
-            val statusName = backStackEntry.arguments?.getString("statusName")
-            val rating = backStackEntry.arguments?.getString("rating")
-            val ratingValue = backStackEntry.arguments?.getString("ratingValue")
-
+            val duration = backStackEntry.arguments?.getString("duration")?.toLongOrNull() ?: 0L
+            val bookId = backStackEntry.arguments?.getString("bookId")?.toLongOrNull()
+            
+            // 保存记录页面
             SaveRecordScreen(
-                source = source,
-                onNavigateBack = {
-                    // 根据用户是否更改了书籍来决定返回路径
-                    val returnBookId = when (from) {
-                        "book_detail" -> bookId?.toLongOrNull()
-                        else -> null
-                    }
-
-                    if (returnBookId != null && returnBookId > 0) {
-                        // 如果有返回书籍ID，返回到该书籍的详情页
-                        navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$returnBookId") {
-                            // 清除导航堆栈中保存记录页面及以下的所有页面
-                            popUpTo(Routes.ReadingRoutes.SAVE_RECORD) { inclusive = true }
-                        }
-                    } else {
-                        // 根据来源决定返回路径
-                        when (from) {
-                            "book_detail" -> {
-                                // 如果来自书籍详情页，返回到对应的书籍详情页
-                                bookId?.let {
-                                    navController.navigate("${Routes.BookRoutes.BOOK_DETAIL}/$it") {
-                                        // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } ?: navController.popBackStack()
-                            }
-
-                            "book_group_detail" -> {
-                                // 如果来自分组详情页面，返回到对应的分组详情页面
-                                groupId?.let {
-                                    navController.navigate(
-                                        Routes.BookRoutes.bookGroupDetail(
-                                            groupId.toLong(),
-                                            groupName ?: ""
-                                        )
-                                    ) {
-                                        // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } ?: navController.popBackStack()
-                            }
-
-                            "book_source_detail" -> {
-                                // 如果来自来源详情页面，返回到对应的来源详情页面
-                                sourceId?.let {
-                                    navController.navigate(
-                                        Routes.BookRoutes.bookSourceDetail(
-                                            sourceId.toLong(),
-                                            sourceName ?: ""
-                                        )
-                                    ) {
-                                        // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } ?: navController.popBackStack()
-                            }
-
-                            "book_tag_detail" -> {
-                                // 如果来自标签详情页面，返回到对应的标签详情页面
-                                tagId?.let {
-                                    navController.navigate(
-                                        Routes.BookRoutes.bookTagDetail(
-                                            tagId.toLong(),
-                                            tagName ?: ""
-                                        )
-                                    ) {
-                                        // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } ?: navController.popBackStack()
-                            }
-
-                            "book_status_detail" -> {
-                                // 如果来自状态详情页面，返回到对应的状态详情页面
-                                status?.let {
-                                    navController.navigate(
-                                        Routes.BookRoutes.bookStatusDetail(
-                                            status.toInt(),
-                                            statusName ?: ""
-                                        )
-                                    ) {
-                                        // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } ?: navController.popBackStack()
-                            }
-
-                            "book_rating_detail" -> {
-                                // 如果来自评分详情页面，返回到对应的评分详情页面
-                                rating?.let {
-                                    navController.navigate(
-                                        Routes.BookRoutes.bookRatingDetail(
-                                            rating.toInt(),
-                                            ratingValue ?: ""
-                                        )
-                                    ) {
-                                        // 清除导航堆栈中保存记录页面及以下的所有页面
-                                        popUpTo(Routes.ReadingRoutes.SAVE_RECORD) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } ?: navController.popBackStack()
-                            }
-
-                            else -> {
-                                // 默认返回逻辑
-                                navController.popBackStack()
-                            }
-                        }
-                    }
-
-                    // 移除对全局变量的重置
+                duration = duration,
+                bookId = bookId,
+                onNavigateBack = { navController.popBackStack() },
+                onSaveComplete = { 
+                    // 保存完成后返回到合适的页面
+                    navController.popBackStack()
                 },
-                onNavigateToAddBook = {
-                    // 构建回调URL，包含当前页面的所有参数
-                    val currentRoute = "${Routes.ReadingRoutes.SAVE_RECORD}?source=$sourceStr" +
-                            (elapsedTime?.let { "&elapsedTime=$it" } ?: "") +
-                            (startTime?.let { "&startTime=$it" } ?: "") +
-                            (selectedBookId?.let { "&selectedBookId=$it" } ?: "") +
-                            (from?.let { "&from=$it" } ?: "") +
-                            (bookId?.let { "&bookId=$it" } ?: "") +
-                            (groupId?.let { "&groupId=$it" } ?: "") +
-                            (groupName?.let { "&groupName=$it" } ?: "") +
-                            (sourceId?.let { "&sourceId=$it" } ?: "") +
-                            (sourceName?.let { "&sourceName=$it" } ?: "") +
-                            (tagId?.let { "&tagId=$it" } ?: "") +
-                            (tagName?.let { "&tagName=$it" } ?: "") +
-                            (status?.let { "&status=$it" } ?: "") +
-                            (statusName?.let { "&statusName=$it" } ?: "") +
-                            (rating?.let { "&rating=$it" } ?: "") +
-                            (ratingValue?.let { "&ratingValue=$it" } ?: "")
-                    val encodedCallback = Uri.encode(currentRoute)
-                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0?callback=$encodedCallback")
+                onNavigateToBookEdit = {
+                    // 导航到添加新书籍页面
+                    navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/0")
                 },
-                elapsedTime = elapsedTime,
-                startTime = startTime,
-                selectedBookId = selectedBookId
+                onReturnToTimer = {
+                    // 返回继续计时（不保存当前记录）
+                    navController.popBackStack()
+                },
+                onStartNewTimer = { selectedBookId ->
+                    // 保存并开始新计时：导航回计时器页面
+                    navController.navigateToTimerFromBookshelf(selectedBookId)
+                }
             )
         }
 
@@ -752,8 +537,11 @@ fun AppNavigation(
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 },
                 onNavigateToTimer = { bookId ->
-                    // 导航到正向计时器页面，传递书籍ID和来源信息作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId&from=book_group_detail&groupId=$groupId&groupName=$groupName")
+                    navController.navigateToTimerFromGroupDetail(
+                        bookId = bookId,
+                        groupId = groupId,
+                        groupName = groupName
+                    )
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -793,8 +581,7 @@ fun AppNavigation(
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 },
                 onNavigateToTimer = { bookId ->
-                    // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId&from=book_source_detail")
+                    navController.navigateToTimerFromBookshelf(bookId)
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -841,8 +628,7 @@ fun AppNavigation(
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 },
                 onNavigateToTimer = { bookId ->
-                    // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId&from=book_tag_detail")
+                    navController.navigateToTimerFromBookshelf(bookId)
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -882,8 +668,7 @@ fun AppNavigation(
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 },
                 onNavigateToTimer = { bookId ->
-                    // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId&from=book_status_detail")
+                    navController.navigateToTimerFromBookshelf(bookId)
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -923,8 +708,7 @@ fun AppNavigation(
                     navController.navigate("${Routes.BookRoutes.BOOK_EDIT}/$bookId")
                 },
                 onNavigateToTimer = { bookId ->
-                    // 导航到正向计时器页面，传递书籍ID作为参数
-                    navController.navigate("${Routes.TimeManagementRoutes.FORWARD_TIMER}?selectedBookId=$bookId&from=book_rating_detail")
+                    navController.navigateToTimerFromBookshelf(bookId)
                 },
                 onNavigateToNoteEdit = { bookId ->
                     // 导航到笔记编辑页面，传递书籍ID作为参数
@@ -997,6 +781,23 @@ fun AppNavigation(
                     navController.popBackStack()
                 }
             )
+        }
+
+    
+        
+        // 目标设置
+        composable(Routes.TimeManagementRoutes.GOAL_SETTING) {
+            GoalSettingScreen()
+        }
+        
+        // 阅读计划
+        composable(Routes.TimeManagementRoutes.READING_PLAN) {
+            ReadingPlanScreen()
+        }
+        
+        // 定期提醒
+        composable(Routes.TimeManagementRoutes.PERIODIC_REMINDER) {
+            PeriodicReminderScreen()
         }
 
 
